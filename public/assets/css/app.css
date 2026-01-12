@@ -20,7 +20,7 @@ File: Main Css File
   --bs-footer-bg: #fff;
   --bs-sidebar-item: #10141d;
   --bs-sidebar-item-hover: #a6f979;
-  --bs-sidebar-item-active: #fff;
+  --bs-sidebar-item-active: #eeba0f;
   --bs-sidebar-item-active-bg: #019934;
   --bs-main-nav-item-color: #2f384f;
   --bs-topbar-menu-nav-link-color: #4a5a6b;
@@ -201,8 +201,8 @@ html[data-bs-theme=dark] {
   --bs-body-bg-rgb: 16, 16, 20;
   --bs-emphasis-color: #fff;
   --bs-emphasis-color-rgb: 255, 255, 255;
-  --bs-secondary-color: rgba(222, 226, 230, 0.75);
-  --bs-secondary-color-rgb: 222, 226, 230;
+  --bs-secondary-color: rgba(34, 35, 36, 0.75);
+  --bs-secondary-color-rgb: 34, 35, 36;
   --bs-secondary-bg: #1f2028;
   --bs-secondary-bg-rgb: 31, 32, 40;
   --bs-tertiary-color: rgba(222, 226, 230, 0.5);
@@ -3521,19 +3521,19 @@ fieldset:disabled .btn {
 
 .btn-secondary {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #5F01B9;
-  --bs-btn-border-color: #5F01B9;
+  --bs-btn-bg: #f3bf22;
+  --bs-btn-border-color: #b96601;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #5601a7;
-  --bs-btn-hover-border-color: #5601a7;
+  --bs-btn-hover-bg: #a66605;
+  --bs-btn-hover-border-color: #a75101;
   --bs-btn-focus-shadow-rgb: 119, 39, 196;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #5601a7;
-  --bs-btn-active-border-color: #5601a7;
+  --bs-btn-active-bg: #a06404;
+  --bs-btn-active-border-color: #b37905;
   --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
   --bs-btn-disabled-color: #fff;
-  --bs-btn-disabled-bg: #5F01B9;
-  --bs-btn-disabled-border-color: #5F01B9;
+  --bs-btn-disabled-bg: #b98b01;
+  --bs-btn-disabled-border-color: #b97501;
 }
 
 .btn-success {

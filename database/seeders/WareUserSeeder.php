@@ -17,7 +17,7 @@ class WareUserSeeder extends Seeder
         WareUser::create([
             'name' => 'Warehouse Admin',
             'email' => 'warehouse@admin.com',
-            'password' => bcrypt('password'),
+            'password' => bcrypt('12345678'),
         ]);
     }
 }

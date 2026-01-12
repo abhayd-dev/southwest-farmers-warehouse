@@ -5,6 +5,8 @@ use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Warehouse\ProductController;
+use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\WarehouseController;
 
 /*
@@ -55,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/warehouse', [WarehouseController::class, 'index'])
         ->name('warehouse.index');
 
+
     Route::get('/warehouse/edit/{warehouse}', [WarehouseController::class, 'edit'])
         ->name('warehouse.edit');
 
@@ -63,4 +66,52 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/warehouse/update-status', [WarehouseController::class, 'updateStatus'])
         ->name('warehouse.update-status');
+
+    Route::prefix('warehouse')->group(function () {
+
+        Route::resource('product-options', ProductOptionController::class)
+            ->names('warehouse.product-options')->except(['show']);
+
+        Route::post(
+            'product-options/status',
+            [ProductOptionController::class, 'changeStatus']
+        )->name('warehouse.product-options.status');
+
+        Route::post(
+            'product-options/import',
+            [ProductOptionController::class, 'import']
+        )->name('warehouse.product-options.import');
+
+        Route::get(
+            'product-options/export',
+            [ProductOptionController::class, 'export']
+        )->name('warehouse.product-options.export');
+
+        Route::get(
+            'product-options/sample',
+            [ProductOptionController::class, 'sample']
+        )->name('warehouse.product-options.sample');
+
+        Route::get('fetch-subcategories/{category}', [ProductOptionController::class, 'fetchSubcategories'])->name('warehouse.product-options.fetch-subcategories');
+
+        Route::resource('products', ProductController::class)
+            ->names('warehouse.products')->except(['show']);
+
+        Route::post('products/status', [ProductController::class, 'changeStatus'])
+            ->name('warehouse.products.status');
+
+        Route::post('products/import', [ProductController::class, 'import'])
+            ->name('warehouse.products.import');
+
+        Route::get('products/export', [ProductController::class, 'export'])
+            ->name('warehouse.products.export');
+
+        Route::get('products/sample', [ProductController::class, 'sample'])
+            ->name('warehouse.products.sample');
+
+        Route::get(
+            'products/fetch-option/{option}',
+            [ProductController::class, 'fetchOption']
+        )->name('warehouse.products.fetch-option');
+    });
 });

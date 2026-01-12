@@ -2,7 +2,6 @@
     <div class="h-100" data-simplebar>
         <div id="sidebar-menu">
 
-            <!-- LOGO -->
             <div class="logo-box">
                 <a href="{{ route('dashboard') }}" class="logo logo-light">
                     <span class="logo-sm">
@@ -24,8 +23,7 @@
 
             <ul id="sidebar-menu">
 
-                <!-- ================= MAIN ================= -->
-                <li class="menu-title">Main</li>
+                <li class="menu-title">Overview</li>
                 <li>
                     <a href="{{ route('dashboard') }}"
                         class="tp-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -36,137 +34,195 @@
                     </a>
                 </li>
 
-                <!-- ================= INVENTORY MANAGEMENT ================= -->
-                <li class="menu-title mt-2">Inventory Management</li>
+                <li class="menu-title mt-2">Inventory & Operations</li>
 
-                <!-- Warehouse -->
                 <li>
                     <a href="#sidebarWarehouse" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('warehouse.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.edit') ? 'active' : '' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:building-warehouse"></iconify-icon>
                         </span>
                         <span class="sidebar-text">Warehouse</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('warehouse.*') ? 'show' : '' }}" id="sidebarWarehouse">
+                    <div class="collapse {{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.edit') ? 'show' : '' }}"
+                        id="sidebarWarehouse">
                         <ul class="nav-second-level">
-                            <!-- WAREHOUSE (MAIN) -->
                             <li>
                                 <a href="{{ route('warehouse.index') }}"
-                                    class="tp-link {{ request()->routeIs('warehouse.*') ? 'active' : '' }}">
-                                    <iconify-icon icon="tabler:home" class="me-1"></iconify-icon>
-                                    Warehouse (Main)
+                                    class="{{ request()->routeIs('warehouse.index') ? 'active' : '' }}">
+                                    Manage Warehouses
                                 </a>
                             </li>
-                            <li><a href="#">Master Stock Repository</a></li>
                             <li><a href="#">Receiving Goods</a></li>
                             <li><a href="#">Stock Audits</a></li>
-                            <li><a href="#">Damage / Loss Adjustment</a></li>
+                            <li><a href="#">Loss Adjustment</a></li>
                         </ul>
                     </div>
                 </li>
 
-                <!-- Stores -->
                 <li>
-                    <a href="#sidebarStores" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('stores.*') ? 'active' : '' }}">
+                    <a href="#sidebarStores" data-bs-toggle="collapse">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:building-store"></iconify-icon>
                         </span>
                         <span class="sidebar-text">Stores</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('stores.*') ? 'show' : '' }}" id="sidebarStores">
+                    <div class="collapse" id="sidebarStores">
                         <ul class="nav-second-level">
-                            <li><a href="#">Register Stores</a></li>
-                            <li><a href="#">Assign Store Managers</a></li>
-                            <li><a href="#">Activate / Deactivate Stores</a></li>
+                            <li><a href="#">All Stores List</a></li>
+                            <li><a href="#">Register New Store</a></li>
+                            <li><a href="#">Store Managers</a></li>
                         </ul>
                     </div>
                 </li>
 
-                <!-- Products -->
+                <li>
+                    <a href="#sidebarStock" data-bs-toggle="collapse">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:stack-2"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">Stock Control</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarStock">
+                        <ul class="nav-second-level">
+                            <li><a href="#">Allocate to Store</a></li>
+                            <li><a href="#">Recall Stock</a></li>
+                            <li><a href="#">Store Stock Levels</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title mt-2">Product Catalog</li>
+
                 <li>
                     <a href="#sidebarProducts" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('products.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
                         <span class="nav-icon">
-                            <iconify-icon icon="tabler:box"></iconify-icon>
+                            <iconify-icon icon="tabler:box-seam"></iconify-icon>
                         </span>
                         <span class="sidebar-text">Products</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('products.*') ? 'show' : '' }}" id="sidebarProducts">
+                    <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') ? 'show' : '' }}"
+                        id="sidebarProducts">
                         <ul class="nav-second-level">
-                            <li><a href="#">Master Product Catalog</a></li>
-                            <li><a href="#">SKU / Barcode / Category</a></li>
+                            <li>
+                                <a href="{{ route('warehouse.products.index') }}"
+                                    class="{{ request()->routeIs('warehouse.products.*') ? 'active' : '' }}">
+                                    All Products
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('warehouse.products.create') }}"
+                                    class="{{ request()->routeIs('warehouse.products.create') ? 'active' : '' }}">
+                                    Add New Product
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('warehouse.product-options.index') }}"
+                                    class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                                    Product Options
+                                </a>
+                            </li>
+                            <li><a href="#">Categories</a></li>
                             <li><a href="#">Tax & Pricing Rules</a></li>
                         </ul>
                     </div>
                 </li>
 
-                <!-- Stock Management -->
+                <li class="menu-title mt-2">Order Management</li>
+
                 <li>
-                    <a href="#sidebarStock" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('stock.*') ? 'active' : '' }}">
+                    <a href="#sidebarOrders" data-bs-toggle="collapse">
                         <span class="nav-icon">
-                            <iconify-icon icon="tabler:stack"></iconify-icon>
+                            <iconify-icon icon="tabler:shopping-cart"></iconify-icon>
                         </span>
-                        <span class="sidebar-text">Stock Management</span>
+                        <span class="sidebar-text">Orders</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('stock.*') ? 'show' : '' }}" id="sidebarStock">
+                    <div class="collapse" id="sidebarOrders">
                         <ul class="nav-second-level">
-                            <li><a href="#">Allocate Stock to Stores</a></li>
-                            <li><a href="#">Recall Stock</a></li>
-                            <li><a href="#">View Store Stock Levels</a></li>
+                            <li><a href="#">All Store Orders</a></li>
+                            <li><a href="#">Pending POs</a></li>
+                            <li><a href="#">Escalations</a></li>
                         </ul>
                     </div>
                 </li>
 
-                <!-- ================= ORDERS ================= -->
-                <li class="menu-title mt-2">Orders</li>
+                <li class="menu-title mt-2">Finance & Reports</li>
+
+                <li>
+                    <a href="#sidebarFinance" data-bs-toggle="collapse">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:coin"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">Finance</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarFinance">
+                        <ul class="nav-second-level">
+                            <li><a href="#">Total Revenue</a></li>
+                            <li><a href="#">Transaction Ledger</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="#sidebarReports" data-bs-toggle="collapse">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:chart-infographic"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">Reports</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarReports">
+                        <ul class="nav-second-level">
+                            <li><a href="#">Inventory Reports</a></li>
+                            <li><a href="#">Sales Analytics</a></li>
+                            <li><a href="#">Store Performance</a></li>
+                            <li><a href="#">Audit Logs</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title mt-2">Administration</li>
+
+                <li>
+                    <a href="#sidebarStaff" data-bs-toggle="collapse">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:users-group"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">User Management</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarStaff">
+                        <ul class="nav-second-level">
+                            <li><a href="#">Warehouse Staff</a></li>
+                            <li><a href="#">Roles & Permissions</a></li>
+                        </ul>
+                    </div>
+                </li>
+
                 <li>
                     <a href="#">
                         <span class="nav-icon">
-                            <iconify-icon icon="tabler:shopping-cart"></iconify-icon>
+                            <iconify-icon icon="tabler:headset"></iconify-icon>
                         </span>
-                        <span class="sidebar-text">Store Orders</span>
+                        <span class="sidebar-text">Support Tickets</span>
                     </a>
                 </li>
 
-                <!-- ================= SALES & REVENUE ================= -->
-                <li class="menu-title mt-2">Sales & Revenue</li>
-                <li><a href="#"><iconify-icon icon="tabler:cash"></iconify-icon> Total Revenue</a></li>
-
-                <!-- ================= REPORTS ================= -->
-                <li class="menu-title mt-2">Reports</li>
-                <li><a href="#"><iconify-icon icon="tabler:report"></iconify-icon> Inventory Reports</a></li>
-                <li><a href="#"><iconify-icon icon="tabler:chart-bar"></iconify-icon> Sales Reports</a></li>
-                <li><a href="#"><iconify-icon icon="tabler:building"></iconify-icon> Store Performance</a></li>
-                <li><a href="#"><iconify-icon icon="tabler:clipboard-check"></iconify-icon> Audit Reports</a>
+                <li>
+                    <a href="#">
+                        <span class="nav-icon">
+                            <iconify-icon icon="tabler:settings"></iconify-icon>
+                        </span>
+                        <span class="sidebar-text">Settings</span>
+                    </a>
                 </li>
-
-                <!-- ================= TRANSACTIONS ================= -->
-                <li class="menu-title mt-2">Transaction History</li>
-                <li><a href="#"><iconify-icon icon="tabler:history"></iconify-icon> Ledger</a></li>
-
-                <!-- ================= SUPPORT ================= -->
-                <li class="menu-title mt-2">Support</li>
-                <li><a href="#"><iconify-icon icon="tabler:headset"></iconify-icon> Support Tickets</a></li>
-
-                <!-- ================= STAFF MANAGEMENT ================= -->
-                <li class="menu-title mt-2">Staff Management</li>
-                <li><a href="#"><iconify-icon icon="tabler:users"></iconify-icon> Warehouse Staff</a></li>
-
-                <!-- ================= ROLES & PERMISSIONS ================= -->
-                <li class="menu-title mt-2">Access Control</li>
-                <li><a href="#"><iconify-icon icon="tabler:shield-lock"></iconify-icon> Roles & Permissions</a>
-                </li>
-
-                <!-- ================= SETTINGS ================= -->
-                <li class="menu-title mt-2">System</li>
-                <li><a href="#"><iconify-icon icon="tabler:settings"></iconify-icon> Settings</a></li>
 
             </ul>
         </div>
