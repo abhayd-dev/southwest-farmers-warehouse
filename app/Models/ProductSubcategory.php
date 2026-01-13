@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductSubcategory extends Model
 {
-
     protected $fillable = [
         'category_id',
         'name',
+        'code',
         'is_active',
     ];
 
@@ -20,7 +20,12 @@ class ProductSubcategory extends Model
 
     public function productOptions()
     {
-        return $this->hasMany(ProductOption::class);
+        return $this->hasMany(ProductOption::class, 'subcategory_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'subcategory_id');
     }
 
     public function scopeActive($query)

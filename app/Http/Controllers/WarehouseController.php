@@ -42,6 +42,8 @@ class WarehouseController extends Controller
             'state'          => 'nullable|string|max:100',
             'country'        => 'nullable|string|max:100',
             'pincode'        => 'nullable|string|max:10',
+            'latitude'       => 'nullable|numeric|between:-90,90',
+            'longitude'      => 'nullable|numeric|between:-180,180',
         ]);
 
         $warehouse->update($request->all());

@@ -18637,3 +18637,29 @@ body {
   font-size: 20px;
   margin-left: 10px;
 }
+/* Warehouse Stats Card Numbers */
+.stats-number {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.stats-number-primary {
+    color: #0d6efd;
+}
+
+.stats-number-success {
+    color: #198754;
+}
+
+.stats-number-warning {
+    color: #ffc107;
+}
+
+.stats-number-info {
+    color: #0dcaf0;
+}
+.stats-number-red {
+    color: #dc3545 !important;
+    font-weight: 700;
+}

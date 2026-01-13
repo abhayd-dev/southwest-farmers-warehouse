@@ -2,7 +2,6 @@
 
     <div class="container-fluid">
 
-        {{-- HEADER SECTION --}}
         <div class="bg-white border-bottom shadow-sm mb-4">
             <div class="py-3">
                 <div class="d-flex flex-column gap-2">
@@ -19,14 +18,11 @@
             @csrf
 
             <div class="row">
-                {{-- MAIN FORM --}}
                 <div class="col-lg-8">
                     @include('warehouse.products._form')
                 </div>
 
-                {{-- SIDEBAR --}}
                 <div class="col-lg-4">
-                    {{-- INFO CARD --}}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-primary text-white border-0 py-3">
                             <h6 class="mb-0 fw-semibold">
@@ -56,7 +52,6 @@
                         </div>
                     </div>
 
-                    {{-- ACTIONS CARD --}}
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <div class="d-grid gap-2">
@@ -64,8 +59,7 @@
                                     <i class="mdi mdi-check-circle me-1"></i>
                                     Save Product
                                 </button>
-                                <a href="{{ route('warehouse.products.index') }}" 
-                                   class="btn btn-outline-secondary">
+                                <a href="{{ route('warehouse.products.index') }}" class="btn btn-outline-secondary">
                                     <i class="mdi mdi-close-circle me-1"></i>
                                     Cancel
                                 </a>

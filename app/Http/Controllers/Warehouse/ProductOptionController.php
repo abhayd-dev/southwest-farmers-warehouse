@@ -127,32 +127,23 @@ class ProductOptionController extends Controller
     /**
      * UPDATE
      */
-    public function update(Request $request, ProductOption $productOption)
+    public function update(Request $request, Product $product)
     {
         try {
             $request->validate([
-                'option_name'   => 'required|string|max:255',
-                'sku'           => 'required|string|max:100|unique:product_options,sku,' . $productOption->id,
-                'category_id'   => 'required|exists:product_categories,id',
-                'subcategory_id' => 'required|exists:product_subcategories,id',
-                'unit'          => 'required',
+                'category_id' => 'required',
+                'subcategory_id' => 'required',
+                'product_name' => 'required',
+                'unit' => 'required',
+                'price' => 'required|numeric',
+                'sku' => 'nullable|string|max:255|unique:products,sku,' . $product->id,
+                'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $product->id,
             ]);
 
-            $productOption->update([
-                'option_name'   => $request->option_name,
-                'sku'           => $request->sku,
-                'category_id'   => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'unit'          => $request->unit,
-                'tax_percent'   => $request->tax_percent,
-                'cost_price'    => $request->cost_price,
-                'base_price'    => $request->base_price,
-                'mrp'           => $request->mrp,
-            ]);
-
-            return back()->with('success', 'Product option updated successfully');
+            $product->update($request->all());
+            return back()->with('success', 'Product updated successfully');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            return back()->with('error', 'Update failed');
         }
     }
 

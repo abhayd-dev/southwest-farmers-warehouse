@@ -9,6 +9,7 @@ class ProductCategory extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'is_active',
     ];
 

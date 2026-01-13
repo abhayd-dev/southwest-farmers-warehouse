@@ -21,6 +21,8 @@ class Warehouse extends Model
         'state',
         'country',
         'pincode',
+        'latitude',
+        'longitude',
         'is_active',
     ];
 }

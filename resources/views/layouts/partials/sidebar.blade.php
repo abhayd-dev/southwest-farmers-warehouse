@@ -99,14 +99,14 @@
 
                 <li>
                     <a href="#sidebarProducts" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') ? 'active' : '' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                         </span>
                         <span class="sidebar-text">Products</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') ? 'show' : '' }}"
+                    <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.product-options.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') ? 'show' : '' }}"
                         id="sidebarProducts">
                         <ul class="nav-second-level">
                             <li>
@@ -127,8 +127,18 @@
                                     Product Options
                                 </a>
                             </li>
-                            <li><a href="#">Categories</a></li>
-                            <li><a href="#">Tax & Pricing Rules</a></li>
+                            <li>
+                                <a href="{{ route('warehouse.categories.index') }}"
+                                    class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
+                                    Categories
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('warehouse.subcategories.index') }}"
+                                    class="{{ request()->routeIs('warehouse.subcategories.*') ? 'active' : '' }}">
+                                    Subcategories
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>

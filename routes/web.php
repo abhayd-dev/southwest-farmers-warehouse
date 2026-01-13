@@ -7,6 +7,8 @@ use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
+use App\Http\Controllers\Warehouse\ProductCategoryController;
+use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\WarehouseController;
 
 /*
@@ -57,7 +59,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/warehouse', [WarehouseController::class, 'index'])
         ->name('warehouse.index');
 
-
     Route::get('/warehouse/edit/{warehouse}', [WarehouseController::class, 'edit'])
         ->name('warehouse.edit');
 
@@ -69,31 +70,58 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('warehouse')->group(function () {
 
+        // ================= PRODUCT OPTIONS =================
         Route::resource('product-options', ProductOptionController::class)
             ->names('warehouse.product-options')->except(['show']);
 
-        Route::post(
-            'product-options/status',
-            [ProductOptionController::class, 'changeStatus']
-        )->name('warehouse.product-options.status');
+        Route::post('product-options/status', [ProductOptionController::class, 'changeStatus'])
+            ->name('warehouse.product-options.status');
 
-        Route::post(
-            'product-options/import',
-            [ProductOptionController::class, 'import']
-        )->name('warehouse.product-options.import');
+        Route::post('product-options/import', [ProductOptionController::class, 'import'])
+            ->name('warehouse.product-options.import');
 
-        Route::get(
-            'product-options/export',
-            [ProductOptionController::class, 'export']
-        )->name('warehouse.product-options.export');
+        Route::get('product-options/export', [ProductOptionController::class, 'export'])
+            ->name('warehouse.product-options.export');
 
-        Route::get(
-            'product-options/sample',
-            [ProductOptionController::class, 'sample']
-        )->name('warehouse.product-options.sample');
+        Route::get('product-options/sample', [ProductOptionController::class, 'sample'])
+            ->name('warehouse.product-options.sample');
 
-        Route::get('fetch-subcategories/{category}', [ProductOptionController::class, 'fetchSubcategories'])->name('warehouse.product-options.fetch-subcategories');
+        Route::get('fetch-subcategories/{category}', [ProductOptionController::class, 'fetchSubcategories'])
+            ->name('warehouse.product-options.fetch-subcategories');
 
+        // ================= CATEGORIES =================
+        Route::resource('categories', ProductCategoryController::class)
+            ->names('warehouse.categories')->except(['show']);
+
+        Route::post('categories/status', [ProductCategoryController::class, 'changeStatus'])
+            ->name('warehouse.categories.status');
+
+        Route::post('categories/import', [ProductCategoryController::class, 'import'])
+            ->name('warehouse.categories.import');
+
+        Route::get('categories/export', [ProductCategoryController::class, 'export'])
+            ->name('warehouse.categories.export');
+
+        Route::get('categories/sample', [ProductCategoryController::class, 'sample'])
+            ->name('warehouse.categories.sample');
+
+        // ================= SUBCATEGORIES =================
+        Route::resource('subcategories', ProductSubcategoryController::class)
+            ->names('warehouse.subcategories')->except(['show']);
+
+        Route::post('subcategories/status', [ProductSubcategoryController::class, 'changeStatus'])
+            ->name('warehouse.subcategories.status');
+
+        Route::post('subcategories/import', [ProductSubcategoryController::class, 'import'])
+            ->name('warehouse.subcategories.import');
+
+        Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])
+            ->name('warehouse.subcategories.export');
+
+        Route::get('subcategories/sample', [ProductSubcategoryController::class, 'sample'])
+            ->name('warehouse.subcategories.sample');
+
+        // ================= PRODUCTS =================
         Route::resource('products', ProductController::class)
             ->names('warehouse.products')->except(['show']);
 
@@ -109,9 +137,7 @@ Route::middleware('auth')->group(function () {
         Route::get('products/sample', [ProductController::class, 'sample'])
             ->name('warehouse.products.sample');
 
-        Route::get(
-            'products/fetch-option/{option}',
-            [ProductController::class, 'fetchOption']
-        )->name('warehouse.products.fetch-option');
+        Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])
+            ->name('warehouse.products.fetch-option');
     });
 });

@@ -15,7 +15,7 @@
                  width="80" height="80">
 
             <div>
-                <h4 class="mb-0">{{ $user->name }}</h4>
+                <h4 class="mb-0 stats-number-red">{{ $user->name }}</h4>
                 <p class="text-muted mb-0">{{ $user->email }}</p>
             </div>
         </div>
