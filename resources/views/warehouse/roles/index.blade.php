@@ -61,7 +61,7 @@
                                             <form action="{{ route('warehouse.roles.destroy', $role->id) }}" 
                                                   method="POST" 
                                                   class="d-inline delete-form" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+                                                  >
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Role">
