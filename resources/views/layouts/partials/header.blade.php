@@ -45,7 +45,12 @@
                 {{-- USER PROFILE --}}
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
-                        <img src="{{ asset('assets/images/users/profile.jpg') }}" alt="User" height="22">
+                        {{-- UPDATED: Dynamic Avatar Image --}}
+                        <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name=User' }}" 
+                             alt="{{ auth()->user()->name ?? 'User' }}" 
+                             class="rounded-circle border border-light shadow-sm"
+                             width="32" height="32"
+                             style="object-fit: cover;">
                     </a>
 
                     <div class="dropdown-menu dropdown-menu-end profile-dropdown">
