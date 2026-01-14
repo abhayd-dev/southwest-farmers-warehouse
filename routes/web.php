@@ -10,6 +10,7 @@ use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\Warehouse\ProductCategoryController;
 use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
+use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\WarehouseController;
 
 /*
@@ -151,5 +152,8 @@ Route::middleware('auth')->group(function () {
             Route::get('stocks/adjust', 'adjust')->name('warehouse.stocks.adjust');
             Route::post('stocks/adjust', 'storeAdjustment')->name('warehouse.stocks.store-adjustment');
         });
+
+        Route::resource('roles', RolePermissionController::class)
+            ->names('warehouse.roles');
     });
 });

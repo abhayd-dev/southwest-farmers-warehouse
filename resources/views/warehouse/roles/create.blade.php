@@ -1,0 +1,36 @@
+<x-app-layout title="Create Role">
+    <div class="container-fluid">
+        <h4 class="fw-bold mb-4">Create New Role</h4>
+        <form action="{{ route('warehouse.roles.store') }}" method="POST">
+            @csrf
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <label class="form-label fw-bold">Role Name</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. Area Manager">
+                </div>
+            </div>
+
+            <div class="row">
+                @foreach($permissions as $group => $perms)
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-light fw-bold text-uppercase">{{ $group }}</div>
+                        <div class="card-body">
+                            @foreach($perms as $perm)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm_{{ $perm->id }}">
+                                <label class="form-check-label" for="perm_{{ $perm->id }}">
+                                    {{ str_replace('_', ' ', $perm->name) }}
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <button class="btn btn-success btn-lg mt-3">Save Role</button>
+        </form>
+    </div>
+</x-app-layout>

@@ -219,7 +219,7 @@
                     <div class="collapse" id="sidebarStaff">
                         <ul class="nav-second-level">
                             <li><a href="#">Warehouse Staff</a></li>
-                            <li><a href="#">Roles & Permissions</a></li>
+                            <li><a href="{{ route('warehouse.roles.index') }}">Roles & Permissions</a></li>
                         </ul>
                     </div>
                 </li>
