@@ -76,7 +76,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-center py-4">No staff members found.</td></tr>
+                            <tr><td colspan="5" class="text-center py-4">No staff members found.. </td></tr>
                         @endforelse
                     </tbody>
                 </table>
