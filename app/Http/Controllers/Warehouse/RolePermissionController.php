@@ -11,7 +11,7 @@ class RolePermissionController extends Controller
 {
     public function index()
     {
-        $roles = WareRole::withCount('permissions')->get();
+        $roles = WareRole::withCount('permissions')->paginate('10');
         return view('warehouse.roles.index', compact('roles'));
     }
 

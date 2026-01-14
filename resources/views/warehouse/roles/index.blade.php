@@ -32,6 +32,9 @@
                     </tbody>
                 </table>
             </div>
+            <div class="card-footer bg-white">
+                {{ $roles->links() }}
+            </div>
         </div>
     </div>
 </x-app-layout>
