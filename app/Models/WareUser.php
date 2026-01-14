@@ -13,7 +13,15 @@ class WareUser extends Authenticatable
     protected $table = 'ware_users';
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone', 'designation', 'is_active',
+        'name',
+        'email',
+        'password',
+        'phone',
+        'designation',
+        'emp_code',
+        'address',
+        'profile_image',
+        'is_active',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -66,5 +74,12 @@ class WareUser extends Authenticatable
     public function isSuperAdmin()
     {
         return $this->hasRole('Super Admin');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->profile_image 
+            ? asset('storage/' . $this->profile_image) 
+            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random';
     }
 }

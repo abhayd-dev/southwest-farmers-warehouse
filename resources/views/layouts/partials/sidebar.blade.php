@@ -23,6 +23,7 @@
 
             <ul id="sidebar-menu">
 
+                {{-- DASHBOARD --}}
                 <li class="menu-title">Overview</li>
                 <li>
                     <a href="{{ route('dashboard') }}"
@@ -34,7 +35,8 @@
                     </a>
                 </li>
 
-                {{-- INVENTORY & OPERATIONS (UPDATED) --}}
+                {{-- INVENTORY & OPERATIONS --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
                 <li class="menu-title mt-2">Inventory & Operations</li>
 
                 <li>
@@ -55,7 +57,6 @@
                                     Manage Warehouses
                                 </a>
                             </li>
-                            {{-- NEW LINKS ADDED HERE --}}
                             <li>
                                 <a href="{{ route('warehouse.stocks.index') }}"
                                     class="{{ request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
@@ -65,8 +66,10 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
-                {{-- STORES (Dev 2 Work - Placeholder) --}}
+                {{-- STORES (Requires 'view_stores' or 'approve_store_requests') --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
                 <li>
                     <a href="#sidebarStores" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -78,13 +81,17 @@
                     <div class="collapse" id="sidebarStores">
                         <ul class="nav-second-level">
                             <li><a href="#">All Stores List</a></li>
-                            <li><a href="#">Register New Store</a></li>
-                            <li><a href="#">Store Managers</a></li>
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_stores'))
+                                <li><a href="#">Register New Store</a></li>
+                                <li><a href="#">Store Managers</a></li>
+                            @endif
                         </ul>
                     </div>
                 </li>
+                @endif
 
-                {{-- STOCK CONTROL (Future Use) --}}
+                {{-- STOCK CONTROL --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_inventory'))
                 <li>
                     <a href="#sidebarStock" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -101,8 +108,10 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
                 {{-- PRODUCT CATALOG --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
                 <li class="menu-title mt-2">Product Catalog</li>
 
                 <li>
@@ -123,6 +132,8 @@
                                     All Products
                                 </a>
                             </li>
+                            
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
                             <li>
                                 <a href="{{ route('warehouse.products.create') }}"
                                     class="{{ request()->routeIs('warehouse.products.create') ? 'active' : '' }}">
@@ -147,10 +158,14 @@
                                     Subcategories
                                 </a>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
+                @endif
 
+                {{-- ORDER MANAGEMENT --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po') || auth()->user()->hasPermission('approve_store_requests'))
                 <li class="menu-title mt-2">Order Management</li>
 
                 <li>
@@ -169,9 +184,13 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
+                {{-- FINANCE & REPORTS --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports') || auth()->user()->hasPermission('view_analytics'))
                 <li class="menu-title mt-2">Finance & Reports</li>
 
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
                 <li>
                     <a href="#sidebarFinance" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -187,7 +206,9 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_analytics'))
                 <li>
                     <a href="#sidebarReports" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -205,24 +226,46 @@
                         </ul>
                     </div>
                 </li>
+                @endif
+                @endif
 
+                {{-- ADMINISTRATION (User Management) --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_users'))
                 <li class="menu-title mt-2">Administration</li>
 
                 <li>
-                    <a href="#sidebarStaff" data-bs-toggle="collapse">
+                    <a href="#sidebarStaff" data-bs-toggle="collapse" 
+                       class="{{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:users-group"></iconify-icon>
                         </span>
                         <span class="sidebar-text">User Management</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse" id="sidebarStaff">
+                    <div class="collapse {{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'show' : '' }}" 
+                         id="sidebarStaff">
                         <ul class="nav-second-level">
-                            <li><a href="#">Warehouse Staff</a></li>
-                            <li><a href="{{ route('warehouse.roles.index') }}">Roles & Permissions</a></li>
+                            {{-- Staff Link --}}
+                            <li>
+                                <a href="{{ route('warehouse.staff.index') }}" 
+                                   class="{{ request()->routeIs('warehouse.staff.*') ? 'active' : '' }}">
+                                   Warehouse Staff
+                                </a>
+                            </li>
+                            
+                            {{-- Roles Link (Only for Super Admin or Role Managers) --}}
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_roles'))
+                            <li>
+                                <a href="{{ route('warehouse.roles.index') }}"
+                                   class="{{ request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
+                                   Roles & Permissions
+                                </a>
+                            </li>
+                            @endif
                         </ul>
                     </div>
                 </li>
+                @endif
 
                 <li>
                     <a href="#">
