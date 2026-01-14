@@ -25,6 +25,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Sr. No.</th>
                             <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Role Name</th>
                             <th class="py-3 text-secondary small fw-bold text-uppercase">Guard</th>
                             <th class="py-3 text-center text-secondary small fw-bold text-uppercase">Permissions</th>
@@ -34,6 +35,9 @@
                     <tbody>
                         @forelse($roles as $role)
                             <tr>
+                                <td class="px-4">
+                                    {{ $loop->iteration + ($roles->currentPage() - 1) * $roles->perPage() }}
+                                </td>
                                 <td class="px-4">
                                     <div class="fw-bold text-dark">{{ $role->name }}</div>
                                 </td>
