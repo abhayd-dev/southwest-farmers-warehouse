@@ -14,7 +14,7 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('warehouse.products.store') }}" class="needs-validation" novalidate>
+        <form method="POST" action="{{ route('warehouse.products.store') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
             @csrf
 
             <div class="row">

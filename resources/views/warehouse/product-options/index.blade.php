@@ -6,7 +6,7 @@
         <div class="bg-white border-bottom shadow-sm mb-4">
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    
+
                     {{-- LEFT: BREADCRUMB & TITLE --}}
                     <div class="d-flex flex-column gap-2">
                         @include('warehouse.partials.breadcrumb', ['title' => 'Product Options'])
@@ -32,7 +32,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-package-variant text-primary fs-4"></i>
                                 </div>
                             </div>
@@ -50,13 +51,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-muted mb-1 small">Active</p>
-                                <h4 class="mb-0 fw-bold text-success">{{ $options->where('is_active', 1)->count() }}</h4>
+                                <h4 class="mb-0 fw-bold text-success">{{ $options->where('is_active', 1)->count() }}
+                                </h4>
                             </div>
                         </div>
                     </div>
@@ -68,13 +71,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-warning fs-4"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-muted mb-1 small">Inactive</p>
-                                <h4 class="mb-0 fw-bold text-warning">{{ $options->where('is_active', 0)->count() }}</h4>
+                                <h4 class="mb-0 fw-bold text-warning">{{ $options->where('is_active', 0)->count() }}
+                                </h4>
                             </div>
                         </div>
                     </div>
@@ -86,7 +91,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-view-list text-info fs-4"></i>
                                 </div>
                             </div>
@@ -108,14 +114,14 @@
                     Options List
                 </h5>
             </div>
-            
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
                                 <th class="px-4 py-3 text-muted fw-semibold small">#</th>
-                                <th class="py-3 text-muted fw-semibold small">OPTION NAME</th>
+                                <th class="py-3 text-muted fw-semibold small">ICON & OPTION NAME</th>
                                 <th class="py-3 text-muted fw-semibold small">CATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SUBCATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SKU</th>
@@ -128,16 +134,20 @@
                             @forelse($options as $option)
                                 <tr class="border-bottom">
                                     <td class="px-4 py-3 text-muted">
-                                        {{ $loop->iteration + ($options->currentPage()-1)*$options->perPage() }}
+                                        {{ $loop->iteration + ($options->currentPage() - 1) * $options->perPage() }}
                                     </td>
                                     <td class="py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-xs rounded bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2">
-                                                <i class="mdi mdi-package-variant-closed text-primary"></i>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="{{ $option->icon ? asset('storage/' . $option->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                                class="rounded bg-light border object-fit-cover shadow-sm"
+                                                width="40" height="40" alt="{{ $option->option_name }}">
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ $option->option_name }}</div>
+                                                <small class="text-muted">Unit: {{ strtoupper($option->unit) }}</small>
                                             </div>
-                                            <span class="fw-semibold">{{ $option->option_name }}</span>
                                         </div>
                                     </td>
+
                                     <td class="py-3">
                                         <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
                                             {{ $option->category->name ?? '-' }}
@@ -153,29 +163,25 @@
                                     </td>
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input status-toggle" 
-                                                   type="checkbox"
-                                                   role="switch"
-                                                   data-id="{{ $option->id }}"
-                                                   {{ $option->is_active ? 'checked' : '' }}>
+                                            <input class="form-check-input status-toggle" type="checkbox" role="switch"
+                                                data-id="{{ $option->id }}"
+                                                {{ $option->is_active ? 'checked' : '' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route('warehouse.product-options.edit', $option) }}"
-                                               class="btn btn-outline-primary"
-                                               data-bs-toggle="tooltip"
-                                               title="Edit Option">
+                                                class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                                                title="Edit Option">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
 
                                             <form method="POST"
-                                                  action="{{ route('warehouse.product-options.destroy', $option) }}"
-                                                  class="d-inline delete-form">
+                                                action="{{ route('warehouse.product-options.destroy', $option) }}"
+                                                class="d-inline delete-form">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Delete Option">
+                                                <button class="btn btn-outline-danger" data-bs-toggle="tooltip"
+                                                    title="Delete Option">
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
@@ -186,10 +192,11 @@
                                 <tr>
                                     <td colspan="7" class="text-center py-5">
                                         <div class="py-5">
-                                            <i class="mdi mdi-package-variant-closed text-muted" style="font-size: 4rem;"></i>
+                                            <i class="mdi mdi-package-variant-closed text-muted"
+                                                style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No product options found.</p>
-                                            <a href="{{ route('warehouse.product-options.create') }}" 
-                                               class="btn btn-sm btn-primary mt-3">
+                                            <a href="{{ route('warehouse.product-options.create') }}"
+                                                class="btn btn-sm btn-primary mt-3">
                                                 <i class="mdi mdi-plus"></i> Add First Option
                                             </a>
                                         </div>
@@ -201,11 +208,12 @@
                 </div>
             </div>
 
-            @if($options->hasPages())
+            @if ($options->hasPages())
                 <div class="card-footer bg-white border-top py-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="text-muted small">
-                            Showing {{ $options->firstItem() }} to {{ $options->lastItem() }} of {{ $options->total() }} entries
+                            Showing {{ $options->firstItem() }} to {{ $options->lastItem() }} of
+                            {{ $options->total() }} entries
                         </div>
                         <div>
                             {{ $options->withQueryString()->links() }}

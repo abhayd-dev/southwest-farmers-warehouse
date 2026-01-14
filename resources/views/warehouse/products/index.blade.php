@@ -115,7 +115,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="px-4 py-3 text-muted fw-semibold small">#</th>
-                                <th class="py-3 text-muted fw-semibold small">PRODUCT NAME</th>
+                                <th class="py-3 text-muted fw-semibold small">ICON & PRODUCT NAME</th>
                                 <th class="py-3 text-muted fw-semibold small">CATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SUBCATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SKU</th>
@@ -132,15 +132,13 @@
                                         {{ $loop->iteration + ($products->currentPage()-1)*$products->perPage() }}
                                     </td>
                                     <td class="py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-xs rounded bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2">
-                                                <i class="mdi mdi-cube text-primary"></i>
-                                            </div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="{{ $product->icon ? asset('storage/' . $product->icon) : 'https://placehold.co/50?text=IMG' }}"
+                                                 class="rounded bg-light border object-fit-cover shadow-sm"
+                                                 width="50" height="50" alt="{{ $product->product_name }}">
                                             <div>
-                                                <span class="fw-semibold">{{ $product->product_name }}</span>
-                                                @if($product->unit)
-                                                    <small class="text-muted d-block">Unit: {{ strtoupper($product->unit) }}</small>
-                                                @endif
+                                                <div class="fw-semibold text-dark">{{ $product->product_name }}</div>
+                                                <small class="text-muted">Option: {{ $product->productOption->option_name ?? '-' }}</small>
                                             </div>
                                         </div>
                                     </td>

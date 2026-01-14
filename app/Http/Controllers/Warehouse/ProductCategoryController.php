@@ -8,7 +8,7 @@ use App\Imports\ProductCategoryImport;
 use App\Exports\ProductCategoryExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCategoryController extends Controller
 {
@@ -38,9 +38,16 @@ class ProductCategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_categories,code',
+            'icon' => 'nullable|image|max:2048', // Validation
         ]);
 
-        ProductCategory::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('icon')) {
+            $data['icon'] = $request->file('icon')->store('categories', 'public');
+        }
+
+        ProductCategory::create($data);
 
         return redirect()->route('warehouse.categories.index')
             ->with('success', 'Category created successfully');
@@ -56,9 +63,20 @@ class ProductCategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_categories,code,' . $category->id,
+            'icon' => 'nullable|image|max:2048',
         ]);
 
-        $category->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('icon')) {
+            // Delete old icon
+            if ($category->icon) {
+                Storage::disk('public')->delete($category->icon);
+            }
+            $data['icon'] = $request->file('icon')->store('categories', 'public');
+        }
+
+        $category->update($data);
 
         return back()->with('success', 'Category updated successfully');
     }
@@ -69,6 +87,11 @@ class ProductCategoryController extends Controller
             if ($category->subcategories()->exists()) {
                 return back()->with('error', 'Cannot delete category with associated subcategories.');
             }
+            
+            if ($category->icon) {
+                Storage::disk('public')->delete($category->icon);
+            }
+
             $category->delete();
             return back()->with('success', 'Category deleted successfully');
         } catch (\Exception $e) {

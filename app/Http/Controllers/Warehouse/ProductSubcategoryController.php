@@ -9,6 +9,7 @@ use App\Imports\ProductSubcategoryImport;
 use App\Exports\ProductSubcategoryExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ProductSubcategoryController extends Controller
 {
@@ -42,9 +43,15 @@ class ProductSubcategoryController extends Controller
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_subcategories,code',
+            'icon' => 'nullable|image|max:2048',
         ]);
 
-        ProductSubcategory::create($request->all());
+        $data = $request->all();
+        if ($request->hasFile('icon')) {
+            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
+        }
+
+        ProductSubcategory::create($data);
         return redirect()->route('warehouse.subcategories.index')->with('success', 'Subcategory created successfully');
     }
 
@@ -60,28 +67,31 @@ class ProductSubcategoryController extends Controller
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_subcategories,code,' . $subcategory->id,
+            'icon' => 'nullable|image|max:2048',
         ]);
 
-        $subcategory->update($request->all());
+        $data = $request->all();
+        if ($request->hasFile('icon')) {
+            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
+            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
+        }
+
+        $subcategory->update($data);
         return back()->with('success', 'Subcategory updated successfully');
     }
 
     public function destroy(ProductSubcategory $subcategory)
     {
         try {
-            if ($subcategory->productOptions()->exists()) {
-                return back()->with('error', 'Cannot delete: Subcategory has associated Product Options.');
-            }
+            if ($subcategory->productOptions()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Product Options.');
+            if ($subcategory->products()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Products.');
 
-            if ($subcategory->products()->exists()) {
-                return back()->with('error', 'Cannot delete: Subcategory has associated Products.');
-            }
+            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
 
             $subcategory->delete();
-
             return back()->with('success', 'Subcategory deleted successfully');
         } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+            return back()->with('error', 'Delete failed');
         }
     }
     public function changeStatus(Request $request)
@@ -98,11 +108,11 @@ class ProductSubcategoryController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,csv',
-            'category_id' => 'required|exists:product_categories,id' 
+            'category_id' => 'required|exists:product_categories,id'
         ]);
 
         Excel::import(new ProductSubcategoryImport($request->category_id), $request->file);
-        
+
         return back()->with('success', 'Imported successfully');
     }
 

@@ -13,6 +13,7 @@ use App\Exports\ProductExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -61,11 +62,20 @@ class ProductController extends Controller
                 'unit' => 'required',
                 'price' => 'required|numeric',
                 'barcode' => 'nullable|string|max:255',
+                'icon' => 'nullable|image|max:2048',
             ]);
 
-            // create option if not selected
+            $data = $request->except('icon');
+
+            // Upload icon
+            if ($request->hasFile('icon')) {
+                $data['icon'] = $request->file('icon')->store('products', 'public');
+            }
+
+            // Create option if not selected
             if (!$request->product_option_id) {
                 $option = ProductOption::create([
+                    'ware_user_id' => auth()->id(),
                     'option_name' => $request->product_name,
                     'sku' => $request->sku,
                     'category_id' => $request->category_id,
@@ -77,10 +87,11 @@ class ProductController extends Controller
                     'base_price' => $request->price,
                     'mrp' => $request->price,
                 ]);
-                $request->merge(['product_option_id' => $option->id]);
+
+                $data['product_option_id'] = $option->id;
             }
 
-            $product = Product::create($request->all());
+            $product = Product::create($data);
 
             ProductStock::create([
                 'product_id' => $product->id,
@@ -93,6 +104,7 @@ class ProductController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
+
 
     public function edit(Product $product)
     {
@@ -114,24 +126,47 @@ class ProductController extends Controller
                 'unit' => 'required',
                 'price' => 'required|numeric',
                 'barcode' => 'nullable|string|max:255',
+                'icon' => 'nullable|image|max:2048',
             ]);
 
-            $product->update($request->all());
+            $data = $request->except('icon');
+
+            // Replace icon
+            if ($request->hasFile('icon')) {
+
+                // delete old icon
+                if ($product->icon && Storage::disk('public')->exists($product->icon)) {
+                    Storage::disk('public')->delete($product->icon);
+                }
+
+                $data['icon'] = $request->file('icon')->store('products', 'public');
+            }
+
+            $product->update($data);
+
             return back()->with('success', 'Product updated successfully');
         } catch (\Exception $e) {
-            return back()->with('error', 'Update failed');
+            return back()->with('error', $e->getMessage());
         }
     }
+
 
     public function destroy(Product $product)
     {
         try {
+            // Delete icon from storage
+            if ($product->icon && Storage::disk('public')->exists($product->icon)) {
+                Storage::disk('public')->delete($product->icon);
+            }
+
             $product->delete();
-            return back()->with('success', 'Product deleted');
+
+            return back()->with('success', 'Product deleted successfully');
         } catch (\Exception $e) {
             return back()->with('error', 'Delete failed');
         }
     }
+
 
     public function changeStatus(Request $request)
     {

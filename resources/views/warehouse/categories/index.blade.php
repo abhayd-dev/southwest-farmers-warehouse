@@ -47,6 +47,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="px-4 py-3 text-muted fw-semibold small">#</th>
+                                <th class="py-3 text-muted fw-semibold small">ICON</th>
                                 <th class="py-3 text-muted fw-semibold small">NAME</th>
                                 <th class="py-3 text-muted fw-semibold small">CODE</th>
                                 <th class="py-3 text-muted fw-semibold small text-center">SUBCATEGORIES</th>
@@ -58,6 +59,15 @@
                             @forelse($categories as $category)
                                 <tr class="border-bottom">
                                     <td class="px-4 py-3 text-muted">{{ $loop->iteration + ($categories->currentPage()-1)*$categories->perPage() }}</td>
+                                    <td class="py-3 fw-semibold">
+                                        <div class="d-flex align-items-center gap-2">
+                                            {{-- ICON DISPLAY --}}
+                                            <img src="{{ $category->icon ? asset('storage/'.$category->icon) : 'https://placehold.co/40?text=IMG' }}" 
+                                                 class="rounded bg-light border object-fit-cover" 
+                                                 width="40" height="40">
+                                            <span>{{ $category->name }}</span>
+                                        </div>
+                                    </td>
                                     <td class="py-3 fw-semibold">{{ $category->name }}</td>
                                     <td class="py-3"><code class="bg-light px-2 py-1 rounded">{{ $category->code }}</code></td>
                                     <td class="py-3 text-center"><span class="badge bg-info bg-opacity-10 text-info">{{ $category->subcategories_count }}</span></td>

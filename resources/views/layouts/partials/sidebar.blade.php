@@ -34,18 +34,19 @@
                     </a>
                 </li>
 
+                {{-- INVENTORY & OPERATIONS (UPDATED) --}}
                 <li class="menu-title mt-2">Inventory & Operations</li>
 
                 <li>
                     <a href="#sidebarWarehouse" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.edit') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
                         <span class="nav-icon">
                             <iconify-icon icon="tabler:building-warehouse"></iconify-icon>
                         </span>
                         <span class="sidebar-text">Warehouse</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.edit') ? 'show' : '' }}"
+                    <div class="collapse {{ request()->routeIs('warehouse.index') || request()->routeIs('warehouse.stocks.*') ? 'show' : '' }}"
                         id="sidebarWarehouse">
                         <ul class="nav-second-level">
                             <li>
@@ -54,13 +55,18 @@
                                     Manage Warehouses
                                 </a>
                             </li>
-                            <li><a href="#">Receiving Goods</a></li>
-                            <li><a href="#">Stock Audits</a></li>
-                            <li><a href="#">Loss Adjustment</a></li>
+                            {{-- NEW LINKS ADDED HERE --}}
+                            <li>
+                                <a href="{{ route('warehouse.stocks.index') }}"
+                                    class="{{ request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
+                                    Stock & Inventory
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
 
+                {{-- STORES (Dev 2 Work - Placeholder) --}}
                 <li>
                     <a href="#sidebarStores" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -78,6 +84,7 @@
                     </div>
                 </li>
 
+                {{-- STOCK CONTROL (Future Use) --}}
                 <li>
                     <a href="#sidebarStock" data-bs-toggle="collapse">
                         <span class="nav-icon">
@@ -95,6 +102,7 @@
                     </div>
                 </li>
 
+                {{-- PRODUCT CATALOG --}}
                 <li class="menu-title mt-2">Product Catalog</li>
 
                 <li>
@@ -111,7 +119,7 @@
                         <ul class="nav-second-level">
                             <li>
                                 <a href="{{ route('warehouse.products.index') }}"
-                                    class="{{ request()->routeIs('warehouse.products.*') ? 'active' : '' }}">
+                                    class="{{ request()->routeIs('warehouse.products.index') ? 'active' : '' }}">
                                     All Products
                                 </a>
                             </li>

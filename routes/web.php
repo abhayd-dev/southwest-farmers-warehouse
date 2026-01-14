@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\Warehouse\ProductCategoryController;
+use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\WarehouseController;
 
@@ -139,5 +140,16 @@ Route::middleware('auth')->group(function () {
 
         Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])
             ->name('warehouse.products.fetch-option');
+
+        // Stock Management Routes
+        Route::controller(ProductStockController::class)->group(function () {
+            Route::get('stocks', 'index')->name('warehouse.stocks.index');
+            Route::get('stocks/create', 'create')->name('warehouse.stocks.create');
+            Route::post('stocks/store', 'store')->name('warehouse.stocks.store');
+            Route::get('stocks/product-details/{product}', 'getProductDetails')->name('warehouse.stocks.product-details');
+            Route::get('stocks/{product}/history', 'history')->name('warehouse.stocks.history');
+            Route::get('stocks/adjust', 'adjust')->name('warehouse.stocks.adjust');
+            Route::post('stocks/adjust', 'storeAdjustment')->name('warehouse.stocks.store-adjustment');
+        });
     });
 });

@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('warehouse.product-options.update', $productOption) }}"
+        <form method="POST" action="{{ route('warehouse.product-options.update', $productOption) }}" enctype="multipart/form-data"
             class="needs-validation" novalidate>
             @csrf
             @method('PUT')
@@ -31,6 +31,27 @@
                             </h5>
                         </div>
                         <div class="card-body p-4">
+                                                        <div class="mb-4 text-center">
+                                <label for="iconInput" class="position-relative d-inline-block cursor-pointer"
+                                    title="Upload Icon">
+                                    {{-- Preview Image --}}
+                                    <img id="iconPreview"
+                                        src="{{ isset($productOption) && $productOption->icon ? asset('storage/' . $productOption->icon) : 'https://placehold.co/120?text=Option+Img' }}"
+                                        class="rounded border shadow-sm object-fit-cover" width="120" height="120"
+                                        alt="Icon Preview">
+
+                                    {{-- Camera Icon Overlay --}}
+                                    <div
+                                        class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border">
+                                        <i class="mdi mdi-camera text-primary"></i>
+                                    </div>
+
+                                    {{-- Hidden File Input --}}
+                                    <input type="file" name="icon" id="iconInput" class="d-none" accept="image/*"
+                                        onchange="previewImage(event)">
+                                </label>
+                                <div class="small text-muted mt-2">Click image to upload</div>
+                            </div>
                             <div class="row g-4">
 
                                 {{-- CATEGORY --}}

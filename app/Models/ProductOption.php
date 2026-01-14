@@ -18,6 +18,7 @@ class ProductOption extends Model
         'base_price',
         'mrp',
         'description',
+        'icon',
         'is_active',
     ];
 

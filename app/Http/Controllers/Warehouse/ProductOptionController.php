@@ -79,20 +79,18 @@ class ProductOptionController extends Controller
                 'category_id'   => 'required|exists:product_categories,id',
                 'subcategory_id' => 'required|exists:product_subcategories,id',
                 'unit'          => 'required',
+                'icon'          => 'nullable|image|max:2048',
             ]);
 
-            ProductOption::create([
-                'option_name'   => $request->option_name,
-                'sku'           => $request->sku,
-                'category_id'   => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'unit'          => $request->unit,
-                'tax_percent'   => $request->tax_percent,
-                'cost_price'    => $request->cost_price,
-                'base_price'    => $request->base_price,
-                'mrp'           => $request->mrp,
-                'is_active'     => 1,
-            ]);
+            $data = $request->except('icon');
+
+            if ($request->hasFile('icon')) {
+                $data['icon'] = $request->file('icon')->store('product-options', 'public');
+            }
+
+            $data['is_active'] = 1;
+
+            ProductOption::create($data);
 
             return redirect()
                 ->route('warehouse.product-options.index')
@@ -101,6 +99,7 @@ class ProductOptionController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
+
 
 
     /**
@@ -127,25 +126,38 @@ class ProductOptionController extends Controller
     /**
      * UPDATE
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, ProductOption $productOption)
     {
         try {
             $request->validate([
-                'category_id' => 'required',
-                'subcategory_id' => 'required',
-                'product_name' => 'required',
-                'unit' => 'required',
-                'price' => 'required|numeric',
-                'sku' => 'nullable|string|max:255|unique:products,sku,' . $product->id,
-                'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $product->id,
+                'option_name'   => 'required|string|max:255',
+                'sku'           => 'required|string|max:100|unique:product_options,sku,' . $productOption->id,
+                'category_id'   => 'required|exists:product_categories,id',
+                'subcategory_id' => 'required|exists:product_subcategories,id',
+                'unit'          => 'required',
+                'icon'          => 'nullable|image|max:2048',
             ]);
 
-            $product->update($request->all());
-            return back()->with('success', 'Product updated successfully');
+            $data = $request->except('icon');
+
+            if ($request->hasFile('icon')) {
+
+                // delete old icon
+                if ($productOption->icon && \Storage::disk('public')->exists($productOption->icon)) {
+                    \Storage::disk('public')->delete($productOption->icon);
+                }
+
+                $data['icon'] = $request->file('icon')->store('product-options', 'public');
+            }
+
+            $productOption->update($data);
+
+            return back()->with('success', 'Product option updated successfully');
         } catch (\Exception $e) {
-            return back()->with('error', 'Update failed');
+            return back()->with('error', $e->getMessage());
         }
     }
+
 
 
     /**
@@ -154,6 +166,10 @@ class ProductOptionController extends Controller
     public function destroy(ProductOption $productOption)
     {
         try {
+            if ($productOption->icon && \Storage::disk('public')->exists($productOption->icon)) {
+                \Storage::disk('public')->delete($productOption->icon);
+            }
+
             $productOption->delete();
 
             return back()->with('success', 'Product option deleted successfully.');
@@ -162,6 +178,7 @@ class ProductOptionController extends Controller
             return back()->with('error', 'Failed to delete product option.');
         }
     }
+
 
     /**
      * STATUS TOGGLE (AJAX)

@@ -10,6 +10,7 @@ class ProductSubcategory extends Model
         'category_id',
         'name',
         'code',
+        'icon',
         'is_active',
     ];
 

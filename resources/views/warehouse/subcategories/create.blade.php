@@ -12,9 +12,21 @@
         </div>
         <div class="row">
             <div class="col-lg-8">
-                <form method="POST" action="{{ route('warehouse.subcategories.store') }}" class="card border-0 shadow-sm needs-validation" novalidate>
+                <form method="POST" action="{{ route('warehouse.subcategories.store') }}" enctype="multipart/form-data" class="card border-0 shadow-sm needs-validation" novalidate>
                     @csrf
                     <div class="card-body p-4">
+                        {{-- Icon --}}
+                        <div class="mb-4 text-center">
+                            <label for="iconInput" class="position-relative d-inline-block cursor-pointer">
+                                <img id="iconPreview" src="https://placehold.co/100?text=Upload+Icon" 
+                                     class="rounded-circle border shadow-sm object-fit-cover" width="100" height="100">
+                                <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border">
+                                    <i class="mdi mdi-camera text-primary"></i>
+                                </div>
+                                <input type="file" name="icon" id="iconInput" class="d-none" accept="image/*" onchange="previewImage(event)">
+                            </label>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Parent Category <span class="text-danger">*</span></label>
                             <select name="category_id" class="form-select" required>
@@ -43,10 +55,19 @@
                 <div class="card border-0 shadow-sm bg-info text-white">
                     <div class="card-body p-4">
                         <h6 class="fw-bold"><i class="mdi mdi-information-outline"></i> Hierarchy</h6>
-                        <p class="small mb-0">Subcategories organize products within a main Category. Ensure you select the correct Parent.</p>
+                        <p class="small mb-0">Subcategories organize products within a main Category.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    @push('scripts')
+    <script>
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){ document.getElementById('iconPreview').src = reader.result; };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+    @endpush
 </x-app-layout>
