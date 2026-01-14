@@ -1,87 +1,89 @@
-<x-app-layout title="Warehouse Staff">
+<div class="topbar-custom">
     <div class="container-fluid">
+        <div class="d-flex justify-content-between">
 
-        {{-- PAGE HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
-            <div>
-                <h4 class="fw-bold mb-0 text-dark">
-                    <i class="mdi mdi-account-group text-primary"></i> Staff Management
-                </h4>
-                <small class="text-muted">Manage warehouse employees and roles</small>
-            </div>
-            <div>
-                <a href="{{ route('warehouse.staff.create') }}" class="btn btn-primary">
-                    <i class="mdi mdi-account-plus me-1"></i> Add New Staff
-                </a>
-            </div>
-        </div>
+            {{-- LEFT --}}
+            <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
+                <li>
+                    <button type="button" class="button-toggle-menu nav-link">
+                        <iconify-icon icon="tabler:align-left"
+                            class="fs-20 align-middle text-dark topbar-button"></iconify-icon>
+                    </button>
+                </li>
+            </ul>
 
-        {{-- STAFF TABLE --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-light py-3">
-                <h6 class="mb-0 fw-bold text-muted"><i class="mdi mdi-badge-account-horizontal"></i> Active Employees</h6>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="px-4 py-3">Employee</th>
-                            <th class="py-3">Contact</th>
-                            <th class="py-3">Role & Designation</th>
-                            <th class="py-3 text-center">Status</th>
-                            <th class="py-3 text-end px-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($staff as $user)
-                            <tr>
-                                <td class="px-4">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <img src="{{ $user->avatar_url }}" class="rounded-circle border" width="45" height="45" style="object-fit: cover;">
-                                        <div>
-                                            <div class="fw-bold text-dark">{{ $user->name }}</div>
-                                            <div class="small text-muted">ID: {{ $user->emp_code ?? 'N/A' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="small"><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}</div>
-                                    <div class="small text-muted"><i class="mdi mdi-phone-outline me-1"></i> {{ $user->phone ?? '-' }}</div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary mb-1">
-                                        {{ $user->roles->first()->name ?? 'No Role' }}
-                                    </span>
-                                    <div class="small text-muted">{{ $user->designation ?? 'Staff' }}</div>
-                                </td>
-                                <td class="text-center">
-                                    @if($user->is_active)
-                                        <span class="badge bg-success-subtle text-success"><i class="mdi mdi-check-circle-outline"></i> Active</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger">Inactive</span>
-                                    @endif
-                                </td>
-                                <td class="text-end px-4">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('warehouse.staff.edit', $user->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
-                                            <i class="mdi mdi-pencil"></i>
-                                        </a>
-                                        @if($user->id !== auth()->id())
-                                            <form action="{{ route('warehouse.staff.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this user?');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="5" class="text-center py-4">No staff members found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer bg-white border-top">{{ $staff->links() }}</div>
+            {{-- RIGHT --}}
+            <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
+
+                {{-- NOTIFICATIONS --}}
+                <li class="dropdown notification-list topbar-dropdown">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
+                        <iconify-icon icon="tabler:bell"
+                            class="fs-20 text-dark align-middle topbar-button"></iconify-icon>
+                        <span class="badge bg-danger rounded-circle noti-icon-badge">5</span>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end dropdown-xl">
+                        <div class="dropdown-item noti-title">
+                            <h5 class="m-0 fs-16">
+                                Notification
+                                <span class="float-end">
+                                    <iconify-icon icon="tabler:x"
+                                        class="fs-18 text-dark align-middle"></iconify-icon>
+                                </span>
+                            </h5>
+                        </div>
+
+                        <div class="noti-scroll" data-simplebar></div>
+
+                        <a href="#" class="dropdown-item text-center text-dark notify-item notify-all bg-light">
+                            View all
+                        </a>
+                    </div>
+                </li>
+
+                {{-- USER PROFILE --}}
+                <li class="dropdown notification-list topbar-dropdown">
+                    <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
+                        {{-- UPDATED: Dynamic Avatar Image --}}
+                        <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name=User' }}" 
+                             alt="{{ auth()->user()->name ?? 'User' }}" 
+                             class="rounded-circle border border-light shadow-sm"
+                             width="32" height="32"
+                             style="object-fit: cover;">
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-end profile-dropdown">
+                        <div class="dropdown-header noti-title">
+                            <h6 class="text-overflow m-0">
+                                Welcome {{ auth()->user()->name ?? 'Admin' }}!
+                            </h6>
+                        </div>
+
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item notify-item">
+                            <iconify-icon icon="tabler:user-square-rounded"
+                                class="fs-18 align-middle"></iconify-icon>
+                            <span>My Account</span>
+                        </a>
+
+                        <div class="dropdown-divider"></div>
+
+                        {{-- LOGOUT --}}
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                            @csrf
+
+                            <button type="submit" class="dropdown-item notify-item text-danger">
+                                <iconify-icon icon="tabler:logout"
+                                    class="fs-18 align-middle"></iconify-icon>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+
+                    </div>
+                </li>
+
+            </ul>
+
         </div>
     </div>
-</x-app-layout>
+</div>
