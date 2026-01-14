@@ -67,7 +67,7 @@
                                             <i class="mdi mdi-pencil"></i>
                                         </a>
                                         @if($user->id !== auth()->id())
-                                            <form action="{{ route('warehouse.staff.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this user?');">
+                                            <form action="{{ route('warehouse.staff.destroy', $user->id) }}" method="POST" class="d-inline delete-form" title="Delete Staff">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
                                             </form>
