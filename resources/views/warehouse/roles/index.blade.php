@@ -1,39 +1,88 @@
 <x-app-layout title="Roles & Permissions">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between mb-4">
-            <h4 class="fw-bold">Manage Roles</h4>
-            <a href="{{ route('warehouse.roles.create') }}" class="btn btn-primary">Create New Role</a>
+
+        {{-- PAGE HEADER --}}
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark">
+                    <i class="mdi mdi-shield-account text-primary"></i> Roles & Permissions
+                </h4>
+                <small class="text-muted">Manage system access and user capabilities</small>
+            </div>
+            <div>
+                <a href="{{ route('warehouse.roles.create') }}" class="btn btn-primary">
+                    <i class="mdi mdi-plus-circle me-1"></i> Create New Role
+                </a>
+            </div>
         </div>
 
-        <div class="card shadow-sm border-0">
+        {{-- ROLES LIST CARD --}}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light py-3">
+                <h6 class="mb-0 fw-bold text-muted"><i class="mdi mdi-format-list-bulleted"></i> Available Roles</h6>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="px-4">Role Name</th>
-                            <th>Permissions Count</th>
-                            <th class="text-end px-4">Actions</th>
+                            <th class="px-4 py-3 text-secondary small fw-bold text-uppercase">Role Name</th>
+                            <th class="py-3 text-secondary small fw-bold text-uppercase">Guard</th>
+                            <th class="py-3 text-center text-secondary small fw-bold text-uppercase">Permissions</th>
+                            <th class="py-3 text-end px-4 text-secondary small fw-bold text-uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($roles as $role)
-                        <tr>
-                            <td class="px-4 fw-bold">{{ $role->name }}</td>
-                            <td><span class="badge bg-info">{{ $role->permissions_count }}</span></td>
-                            <td class="text-end px-4">
-                                <a href="{{ route('warehouse.roles.edit', $role->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form action="{{ route('warehouse.roles.destroy', $role->id) }}" method="POST" class="d-inline">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete Role?')">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
+                        @forelse($roles as $role)
+                            <tr>
+                                <td class="px-4">
+                                    <div class="fw-bold text-dark">{{ $role->name }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border">
+                                        {{ $role->guard_name }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
+                                        {{ $role->permissions_count }} Permissions
+                                    </span>
+                                </td>
+                                <td class="text-end px-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        {{-- Edit Button --}}
+                                        <a href="{{ route('warehouse.roles.edit', $role->id) }}" 
+                                           class="btn btn-sm btn-outline-warning" 
+                                           title="Edit Role">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
+
+                                        {{-- Delete Button (Form) --}}
+                                        @if($role->name !== 'Super Admin')
+                                            <form action="{{ route('warehouse.roles.destroy', $role->id) }}" 
+                                                  method="POST" 
+                                                  class="d-inline delete-form" 
+                                                  onsubmit="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Role">
+                                                    <i class="mdi mdi-delete"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button class="btn btn-sm btn-outline-secondary" disabled title="System Role"><i class="mdi mdi-lock"></i></button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted">No roles found.</div>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
-            </div>
-            <div class="card-footer bg-white">
-                {{ $roles->links() }}
             </div>
         </div>
     </div>
