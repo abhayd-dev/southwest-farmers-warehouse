@@ -141,6 +141,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.status-toggle').forEach(function(toggle) {
                 toggle.addEventListener('change', function(e) {
+                    e.preventDefault();
+                    
                     const id = this.dataset.id;
                     const newStatus = this.checked ? 1 : 0;
                     const originalState = !this.checked; // To revert if failed
