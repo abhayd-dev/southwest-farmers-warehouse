@@ -1,17 +1,51 @@
 <x-app-layout title="Warehouse Staff">
     <div class="container-fluid">
 
-        {{-- PAGE HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        {{-- PAGE HEADER & SEARCH BAR --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
+            
+            {{-- Title --}}
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-account-group text-primary"></i> Staff Management
                 </h4>
                 <small class="text-muted">Manage warehouse employees and roles</small>
             </div>
-            <div>
-                <a href="{{ route('warehouse.staff.create') }}" class="btn btn-primary">
-                    <i class="mdi mdi-account-plus me-1"></i> Add New Staff
+
+            {{-- Actions: Search + Add --}}
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                
+                {{-- Search Form --}}
+                <form method="GET" action="{{ route('warehouse.staff.index') }}" class="d-flex">
+                    <div class="input-group">
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               class="form-control" 
+                               placeholder="Search Name, Email, Code..." 
+                               style="max-width: 200px;">
+                        
+                        <select name="role_id" class="form-select" style="max-width: 150px;">
+                            <option value="">All Roles</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        
+                        <button class="btn btn-primary" type="submit">
+                            <i class="mdi mdi-magnify"></i>
+                        </button>
+                        
+                        @if(request('search') || request('role_id'))
+                            <a href="{{ route('warehouse.staff.index') }}" class="btn btn-outline-secondary" title="Clear">
+                                <i class="mdi mdi-close"></i>
+                            </a>
+                        @endif
+                    </div>
+                </form>
+
+                <a href="{{ route('warehouse.staff.create') }}" class="btn btn-success text-nowrap">
+                    <i class="mdi mdi-account-plus me-1"></i> Add Staff
                 </a>
             </div>
         </div>
@@ -86,13 +120,15 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">No staff members found.. </td>
+                                <td colspan="5" class="text-center py-4">No staff members found matching your search.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-white border-top">{{ $staff->links() }}</div>
+            <div class="card-footer bg-white border-top">
+                {{ $staff->withQueryString()->links() }}
+            </div>
         </div>
     </div>
 </x-app-layout>

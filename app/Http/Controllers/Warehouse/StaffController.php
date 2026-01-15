@@ -12,11 +12,34 @@ use Illuminate\Support\Facades\DB;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch users except current logged in user (optional)
-        $staff = WareUser::with('roles')->latest()->paginate(10);
-        return view('warehouse.staff.index', compact('staff'));
+        $query = WareUser::with('roles');
+
+        // Global Search
+        $query->when($request->search, function ($q) use ($request) {
+            $s = $request->search;
+            $q->where(function ($sub) use ($s) {
+                $sub->where('name', 'ilike', "%$s%")
+                    ->orWhere('email', 'ilike', "%$s%")
+                    ->orWhere('emp_code', 'ilike', "%$s%")
+                    ->orWhere('phone', 'ilike', "%$s%");
+            });
+        });
+
+        // Filter by Role
+        $query->when($request->role_id, function ($q) use ($request) {
+            $q->whereHas('roles', function ($r) use ($request) {
+                $r->where('id', $request->role_id);
+            });
+        });
+
+        $staff = $query->latest()->paginate(10);
+        
+        // Get roles for filter dropdown
+        $roles = WareRole::where('guard_name', 'web')->get();
+
+        return view('warehouse.staff.index', compact('staff', 'roles'));
     }
 
     public function create()

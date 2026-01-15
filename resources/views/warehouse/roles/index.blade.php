@@ -1,16 +1,37 @@
 <x-app-layout title="Roles & Permissions">
     <div class="container-fluid">
 
-        {{-- PAGE HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        {{-- PAGE HEADER & SEARCH --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-shield-account text-primary"></i> Roles & Permissions
                 </h4>
                 <small class="text-muted">Manage system access and user capabilities</small>
             </div>
-            <div>
-                <a href="{{ route('warehouse.roles.create') }}" class="btn btn-primary">
+            
+            <div class="d-flex align-items-center gap-2">
+                {{-- Search Form --}}
+                <form method="GET" action="{{ route('warehouse.roles.index') }}" class="d-flex">
+                    <div class="input-group">
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               class="form-control" 
+                               placeholder="Search Role Name..." 
+                               style="max-width: 250px;">
+                        
+                        <button class="btn btn-primary" type="submit">
+                            <i class="mdi mdi-magnify"></i>
+                        </button>
+
+                        @if(request('search'))
+                            <a href="{{ route('warehouse.roles.index') }}" class="btn btn-outline-secondary" title="Clear">
+                                <i class="mdi mdi-close"></i>
+                            </a>
+                        @endif
+                    </div>
+                </form>
+
+                <a href="{{ route('warehouse.roles.create') }}" class="btn btn-success text-nowrap">
                     <i class="mdi mdi-plus-circle me-1"></i> Create New Role
                 </a>
             </div>
@@ -80,8 +101,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-5">
-                                    <div class="text-muted">No roles found.</div>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="text-muted">No roles found matching your search.</div>
                                 </td>
                             </tr>
                         @endforelse
@@ -89,7 +110,7 @@
                 </table>
             </div>
             <div class="card-footer bg-white">
-                {{ $roles->links() }}
+                {{ $roles->withQueryString()->links() }}
             </div>
         </div>
     </div>

@@ -9,9 +9,16 @@ use Illuminate\Http\Request;
 
 class RolePermissionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $roles = WareRole::withCount('permissions')->paginate('10');
+        $query = WareRole::withCount('permissions');
+
+        // Search by Role Name
+        $query->when($request->search, function($q) use ($request) {
+            $q->where('name', 'ilike', "%{$request->search}%");
+        });
+
+        $roles = $query->paginate(10);
         return view('warehouse.roles.index', compact('roles'));
     }
 
@@ -66,4 +73,4 @@ class RolePermissionController extends Controller
         $role->delete();
         return back()->with('success', 'Role Deleted');
     }
-} 
+}
