@@ -38,9 +38,8 @@
                             <tr>
                                 <td class="px-4">
                                     <div class="d-flex align-items-center gap-3">
-                                        <img src="{{ !empty($user->avatar_url) ? $user->avatar_url : asset('assets/images/default-avatar.png') }}"
-                                            class="rounded-circle border" width="45" height="45"
-                                            style="object-fit: cover;">
+                                        <img src="{{ Auth::user()->image ? asset(Auth::user()->image) : asset('assets/images/default-avatar.png') }}"
+                                            alt="User Avatar" class="rounded-circle" width="45" height="45">
                                         <div>
                                             <div class="fw-bold text-dark">{{ $user->name }}</div>
                                             <div class="small text-muted">ID: {{ $user->emp_code ?? 'N/A' }}</div>

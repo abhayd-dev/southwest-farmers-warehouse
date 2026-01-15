@@ -78,8 +78,10 @@ class WareUser extends Authenticatable
 
     public function getAvatarUrlAttribute()
     {
-        return $this->profile_image 
-            ? asset('storage/' . $this->profile_image) 
-            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random';
+        if ($this->image && file_exists(public_path($this->image))) {
+            return asset($this->image);
+        }
+
+        return asset('assets/images/default-avatar.png');
     }
 }
