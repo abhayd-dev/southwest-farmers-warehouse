@@ -28,8 +28,7 @@
                             <h5 class="m-0 fs-16">
                                 Notification
                                 <span class="float-end">
-                                    <iconify-icon icon="tabler:x"
-                                        class="fs-18 text-dark align-middle"></iconify-icon>
+                                    <iconify-icon icon="tabler:x" class="fs-18 text-dark align-middle"></iconify-icon>
                                 </span>
                             </h5>
                         </div>
@@ -46,11 +45,15 @@
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
                         {{-- UPDATED: Dynamic Avatar Image --}}
-                        <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name=User' }}" 
-                             alt="{{ auth()->user()->name ?? 'User' }}" 
-                             class="rounded-circle border border-light shadow-sm"
-                             width="32" height="32"
-                             style="object-fit: cover;">
+                        @if (auth()->user() && auth()->user()->avatar_url)
+                            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name ?? 'User' }}"
+                                class="rounded-circle border border-light shadow-sm" width="32" height="32"
+                                style="object-fit: cover;">
+                        @else
+                            <img src="{{ asset('images/default-avatar.png') }}" alt="Default Avatar"
+                                class="rounded-circle border border-light shadow-sm" width="32" height="32"
+                                style="object-fit: cover;">
+                        @endif
                     </a>
 
                     <div class="dropdown-menu dropdown-menu-end profile-dropdown">
@@ -61,8 +64,7 @@
                         </div>
 
                         <a href="{{ route('profile.edit') }}" class="dropdown-item notify-item">
-                            <iconify-icon icon="tabler:user-square-rounded"
-                                class="fs-18 align-middle"></iconify-icon>
+                            <iconify-icon icon="tabler:user-square-rounded" class="fs-18 align-middle"></iconify-icon>
                             <span>My Account</span>
                         </a>
 
@@ -73,8 +75,7 @@
                             @csrf
 
                             <button type="submit" class="dropdown-item notify-item text-danger">
-                                <iconify-icon icon="tabler:logout"
-                                    class="fs-18 align-middle"></iconify-icon>
+                                <iconify-icon icon="tabler:logout" class="fs-18 align-middle"></iconify-icon>
                                 <span>Logout</span>
                             </button>
                         </form>

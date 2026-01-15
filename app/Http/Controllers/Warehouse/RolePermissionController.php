@@ -66,4 +66,4 @@ class RolePermissionController extends Controller
         $role->delete();
         return back()->with('success', 'Role Deleted');
     }
-}
+} 
