@@ -1,7 +1,7 @@
 <x-app-layout title="Roles & Permissions">
     <div class="container-fluid">
 
-        {{-- PAGE HEADER & SEARCH --}}
+        {{-- PAGE HEADER--}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
