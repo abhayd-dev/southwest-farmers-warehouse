@@ -157,6 +157,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', RolePermissionController::class)
             ->names('warehouse.roles');
 
+        Route::post('staff/status', [StaffController::class, 'changeStatus'])
+            ->name('warehouse.staff.status');
+
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff');
     });

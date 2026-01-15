@@ -42,6 +42,22 @@ class StaffController extends Controller
         return view('warehouse.staff.index', compact('staff', 'roles'));
     }
 
+    public function changeStatus(Request $request)
+    {
+        try {
+            $user = WareUser::findOrFail($request->id);
+            
+            if ($user->id === auth()->id()) {
+                return response()->json(['message' => 'You cannot change your own status.'], 403);
+            }
+
+            $user->update(['is_active' => $request->status]);
+
+            return response()->json(['message' => 'Status updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating status'], 500);
+        }
+    }
     public function create()
     {
         $roles = WareRole::where('guard_name', 'web')->get();

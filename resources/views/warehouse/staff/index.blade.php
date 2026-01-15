@@ -94,12 +94,15 @@
                                     <div class="small text-muted">{{ $user->designation ?? 'Staff' }}</div>
                                 </td>
                                 <td class="text-center">
-                                    @if ($user->is_active)
-                                        <span class="badge bg-success-subtle text-success"><i
-                                                class="mdi mdi-check-circle-outline"></i> Active</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger">Inactive</span>
-                                    @endif
+                                    {{-- STATUS TOGGLE SWITCH --}}
+                                    <div class="form-check form-switch d-inline-block">
+                                        <input class="form-check-input status-toggle" 
+                                               type="checkbox" 
+                                               role="switch"
+                                               data-id="{{ $user->id }}"
+                                               {{ $user->is_active ? 'checked' : '' }}
+                                               {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                                    </div>
                                 </td>
                                 <td class="text-end px-4">
                                     <div class="d-flex justify-content-end gap-2">
@@ -131,4 +134,75 @@
             </div>
         </div>
     </div>
+
+    {{-- SCRIPTS FOR STATUS TOGGLE --}}
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.status-toggle').forEach(function(toggle) {
+                toggle.addEventListener('change', function(e) {
+                    const id = this.dataset.id;
+                    const newStatus = this.checked ? 1 : 0;
+                    const originalState = !this.checked; // To revert if failed
+
+                    // Confirmation Dialog
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "Do you want to change this user's status?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, change it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // API Request
+                            fetch("{{ route('warehouse.staff.status') }}", {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id: id,
+                                    status: newStatus
+                                })
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    if(response.status === 403) throw new Error('Action not allowed');
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3000
+                                }).fire({
+                                    icon: 'success',
+                                    title: data.message
+                                });
+                            })
+                            .catch(error => {
+                                // Revert toggle on error
+                                toggle.checked = originalState;
+                                Swal.fire(
+                                    'Error!',
+                                    error.message || 'Failed to update status.',
+                                    'error'
+                                );
+                            });
+                        } else {
+                            // Revert toggle if cancelled
+                            toggle.checked = originalState;
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>
