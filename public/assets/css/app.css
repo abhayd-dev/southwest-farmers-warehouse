@@ -18606,7 +18606,7 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #eeba0b;
+  background: #fff !important;
 }
 
 .nav-second-level li a {
