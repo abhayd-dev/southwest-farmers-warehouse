@@ -100,7 +100,7 @@ class StaffController extends Controller
                 $data['password'] = Hash::make($request->password);
             }
 
-            // Handle Image Upload
+            // Handle Image
             if ($request->hasFile('profile_image')) {
                 if ($user->profile_image) {
                     Storage::disk('public')->delete($user->profile_image);
