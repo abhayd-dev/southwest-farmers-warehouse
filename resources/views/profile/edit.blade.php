@@ -11,7 +11,7 @@
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body d-flex align-items-center">
             {{-- UPDATED: Real Image Logic --}}
-            <img src="{{ $user->avatar_url }}"
+            <img src="{{ Auth::user()->profile_image ? asset(Auth::user()->profile_image) : asset('assets/images/default-avatar.png') }}"
                  alt="{{ $user->name }}"
                  class="rounded-circle me-3 border shadow-sm"
                  width="80" height="80"

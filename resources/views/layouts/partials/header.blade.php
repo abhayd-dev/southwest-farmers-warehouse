@@ -45,7 +45,7 @@
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#">
                         {{-- UPDATED: Dynamic Avatar Image --}}
-                        <img src="{{ Auth::user()->image ? asset(Auth::user()->image) : asset('assets/images/default-avatar.png') }}"
+                        <img src="{{ Auth::user()->profile_image ? asset(Auth::user()->profile_image) : asset('assets/images/default-avatar.png') }}"
                             alt="User Avatar" class="rounded-circle" width="45" height="45">
                     </a>
 
