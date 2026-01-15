@@ -102,7 +102,6 @@ class StaffController extends Controller
 
             // Handle Image Upload
             if ($request->hasFile('profile_image')) {
-                // Delete old image if exists
                 if ($user->profile_image) {
                     Storage::disk('public')->delete($user->profile_image);
                 }
