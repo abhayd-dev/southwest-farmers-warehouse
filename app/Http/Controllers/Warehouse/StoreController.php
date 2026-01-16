@@ -34,24 +34,24 @@ class StoreController extends Controller
         $request->validate([
             // Store Info
             'store_name' => 'required|string|max:255',
-            'store_email'=> 'required|email|unique:store_details,email',
-            'store_phone'=> 'required|string|max:15',
+            'store_email' => 'required|email|unique:store_details,email',
+            'store_phone' => 'required|string|max:15',
             'city'       => 'required|string',
             'state'      => 'required|string',
             'pincode'    => 'required|string',
             'address'    => 'required|string',
-            
+
             // Manager Info
             'manager_name' => 'required|string|max:255',
-            'manager_email'=> 'required|email|unique:store_users,email',
-            'manager_phone'=> 'nullable|string|max:15',
+            'manager_email' => 'required|email|unique:store_users,email',
+            'manager_phone' => 'nullable|string|max:15',
             'password'     => 'required|min:8|confirmed',
         ]);
 
         try {
             $this->storeService->createStore($request->all());
             return redirect()->route('warehouse.stores.index')
-                             ->with('success', 'Store registered successfully with Manager account.');
+                ->with('success', 'Store registered successfully with Manager account.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error creating store: ' . $e->getMessage());
         }
@@ -61,7 +61,7 @@ class StoreController extends Controller
     {
         $store = StoreDetail::with('manager')->findOrFail($id);
         $analytics = $this->storeService->getStoreAnalytics($id);
-        
+
         return view('warehouse.stores.show', compact('store', 'analytics'));
     }
 
@@ -74,11 +74,11 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $store = StoreDetail::findOrFail($id);
-        
+
         $request->validate([
             'store_name' => 'required|string|max:255',
-            'store_email'=> 'required|email|unique:store_details,email,'.$id,
-            'store_phone'=> 'required|string|max:15',
+            'store_email' => 'required|email|unique:store_details,email,' . $id,
+            'store_phone' => 'required|string|max:15',
             'city'       => 'required|string',
             'address'    => 'required|string',
         ]);
@@ -99,6 +99,38 @@ class StoreController extends Controller
             return redirect()->route('warehouse.stores.index')->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Cannot delete store.');
+        }
+    }
+
+    public function updateStatus(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:store_details,id',
+                'status' => 'required|boolean'
+            ]);
+
+            $store = StoreDetail::findOrFail($request->id);
+            $store->is_active = $request->status;
+            $store->save();
+
+            if ($store->store_user_id) {
+                $manager = \App\Models\StoreUser::find($store->store_user_id);
+                if ($manager) {
+                    $manager->is_active = $request->status;
+                    $manager->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Store status updated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating status.'
+            ], 500);
         }
     }
 }
