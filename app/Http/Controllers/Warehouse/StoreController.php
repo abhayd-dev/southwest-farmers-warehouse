@@ -14,13 +14,36 @@ class StoreController extends Controller
     public function __construct(StoreService $storeService)
     {
         $this->storeService = $storeService;
-        // Permissions can be added here
-        // $this->middleware('permission:manage_stores')->only(['create', 'store', 'edit', 'update']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $stores = StoreDetail::with('manager')->latest()->paginate(10);
+        $query = StoreDetail::with('manager');
+
+        // 1. Search Filter (Name or Code)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('store_name', 'like', "%$search%")
+                  ->orWhere('store_code', 'like', "%$search%");
+            });
+        }
+
+        // 2. City Filter
+        if ($request->filled('city')) {
+            $query->where('city', $request->city);
+        }
+
+        // 3. Status Filter
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status);
+        }
+
+        $stores = $query->latest()->paginate(10);
+        
+        // Helper to keep filters active when changing pages
+        $stores->appends($request->all());
+
         return view('warehouse.stores.index', compact('stores'));
     }
 
@@ -32,7 +55,6 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // Store Info
             'store_name' => 'required|string|max:255',
             'store_email' => 'required|email|unique:store_details,email',
             'store_phone' => 'required|string|max:15',
@@ -40,8 +62,6 @@ class StoreController extends Controller
             'state'      => 'required|string',
             'pincode'    => 'required|string',
             'address'    => 'required|string',
-
-            // Manager Info
             'manager_name' => 'required|string|max:255',
             'manager_email' => 'required|email|unique:store_users,email',
             'manager_phone' => 'nullable|string|max:15',
@@ -61,7 +81,6 @@ class StoreController extends Controller
     {
         $store = StoreDetail::with('manager')->findOrFail($id);
         $analytics = $this->storeService->getStoreAnalytics($id);
-
         return view('warehouse.stores.show', compact('store', 'analytics'));
     }
 
@@ -74,7 +93,6 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $store = StoreDetail::findOrFail($id);
-
         $request->validate([
             'store_name' => 'required|string|max:255',
             'store_email' => 'required|email|unique:store_details,email,' . $id,
@@ -122,15 +140,9 @@ class StoreController extends Controller
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Store status updated successfully.'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Store status updated successfully.']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating status.'
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error updating status.'], 500);
         }
     }
 }

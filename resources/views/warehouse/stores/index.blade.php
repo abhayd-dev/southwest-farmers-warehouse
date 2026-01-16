@@ -14,19 +14,31 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3">
-                <form action="" method="GET" class="row g-3">
+                <form action="{{ route('warehouse.stores.index') }}" method="GET" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Search by name or code...">
+                        <input type="text" name="search" class="form-control" placeholder="Search by name or code..." value="{{ request('search') }}">
                     </div>
+
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select name="city" class="form-select">
                             <option value="">All Cities</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Delhi">Delhi</option>
+                            <option value="Lucknow" {{ request('city') == 'Lucknow' ? 'selected' : '' }}>Lucknow</option>
+                            <option value="Delhi" {{ request('city') == 'Delhi' ? 'selected' : '' }}>Delhi</option>
+                            </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
+
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-secondary w-100">Filter</button>
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="mdi mdi-filter me-1"></i> Filter
+                        </button>
                     </div>
                 </form>
             </div>
@@ -114,7 +126,7 @@
                             <tr>
                                 <td colspan="5" class="text-center py-5">
                                     <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data" height="100" class="mb-3 opacity-50">
-                                    <p class="text-muted">No stores found. Register your first store!</p>
+                                    <p class="text-muted">No stores found matching your criteria.</p>
                                 </td>
                             </tr>
                             @endforelse

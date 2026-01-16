@@ -7,7 +7,6 @@ use App\Models\StoreUser;
 use App\Models\StoreStock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class StoreService
 {
@@ -45,14 +44,10 @@ class StoreService
                 'phone'       => $data['manager_phone'] ?? null,
                 'designation' => 'Store Manager',
                 'is_active'   => true,
-                // 'store_id' => $store->id  <-- If you add store_id column to store_users later
             ]);
 
             // 4. Link Manager to Store
             $store->update(['store_user_id' => $manager->id]);
-
-            // 5. Assign Role (Optional - assuming Permission Seeder exists)
-            // $manager->assignRole('Super Admin'); 
 
             return $store;
         });
@@ -81,7 +76,7 @@ class StoreService
     }
 
     /**
-     * Generate Unique Store Code (e.g., SWF-DEL-005)
+     * Generate Unique Store Code
      */
     private function generateStoreCode($city)
     {
@@ -104,11 +99,12 @@ class StoreService
     public function getStoreAnalytics($storeId)
     {
         return [
-            'staff_count'     => 0, // Placeholder until relation is fixed
+            'staff_count'     => 0, 
             'inventory_items' => StoreStock::where('store_id', $storeId)->count(),
-            'inventory_value' => StoreStock::where('store_id', $storeId)->sum(DB::raw('price * quantity')),
+            // FIXED: Used 'selling_price' instead of 'price'
+            'inventory_value' => StoreStock::where('store_id', $storeId)->sum(DB::raw('selling_price * quantity')),
             'low_stock_count' => StoreStock::where('store_id', $storeId)->where('quantity', '<', 10)->count(),
-            'revenue_mtd'     => 0, // Future: Order Table
+            'revenue_mtd'     => 0, 
         ];
     }
 }

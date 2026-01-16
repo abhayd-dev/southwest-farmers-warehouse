@@ -15,7 +15,7 @@ class StoreStock extends Model
         'store_id',
         'product_id',
         'quantity',
-        'price', // Store's specific selling price
+        'selling_price',
         'alert_level' // If you added this in a later migration, keep it. If not, remove.
     ];
 
