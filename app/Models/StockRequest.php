@@ -13,20 +13,16 @@ class StockRequest extends Model
         'store_id',
         'product_id',
         'requested_quantity',
-        'fulfilled_quantity', // New: Track partial shipments
-        'status', // pending, approved, partial, completed, rejected
+        'fulfilled_quantity',
+        'status',
         'admin_note'
     ];
 
-    // Status Constants for clean code
     const STATUS_PENDING = 'pending';
-    const STATUS_APPROVED = 'approved'; 
-    const STATUS_PARTIAL = 'partial';   // Sent some, waiting for more
-    const STATUS_DISPATCHED = 'dispatched'; // In Transit (Raaste mein)
-    const STATUS_COMPLETED = 'completed'; // Store received full stock
+    const STATUS_PARTIAL = 'partial';
+    const STATUS_DISPATCHED = 'dispatched';
+    const STATUS_COMPLETED = 'completed';
     const STATUS_REJECTED = 'rejected';
-
-
 
     public function store()
     {
@@ -44,23 +40,26 @@ class StockRequest extends Model
                     ->where('store_id', $this->store_id);
     }
 
-
     public function getPendingQuantityAttribute()
     {
         return max(0, $this->requested_quantity - $this->fulfilled_quantity);
     }
 
-    public function isLowStockInStore()
+    public function isLowStock()
     {
         if (!$this->storeStock) {
             return true;
         }
-        return $this->storeStock->quantity < 10; 
+        return $this->storeStock->quantity < 10;
     }
 
     public function scopeOpen($query)
     {
-        return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_PARTIAL, self::STATUS_APPROVED]);
+        return $query->whereIn('status', [
+            self::STATUS_PENDING, 
+            self::STATUS_PARTIAL, 
+            self::STATUS_APPROVED
+        ]);
     }
 
     public function scopeUrgent($query)
