@@ -1,4 +1,4 @@
-<x-app-layout title="All Stores">
+<x-app-layout>
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
             <div>
@@ -7,7 +7,7 @@
                 </h4>
                 <p class="text-muted mb-0 small mt-1">Manage physical store locations and managers</p>
             </div>
-            <a href="{{ route('warehouse.stores.create') }}" class="btn btn-primary">
+            <a href="{{ route('warehouse.stores.create') }}" class="btn btn-primary shadow-sm">
                 <i class="mdi mdi-plus me-1"></i> Register New Store
             </a>
         </div>
@@ -16,17 +16,20 @@
             <div class="card-body p-3">
                 <form action="" method="GET" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Search by name or code...">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="mdi mdi-magnify"></i></span>
+                            <input type="text" class="form-control border-start-0" placeholder="Search by name, code or city...">
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <select class="form-select">
-                            <option value="">All Cities</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Delhi">Delhi</option>
+                            <option value="">All Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-secondary w-100">Filter</button>
+                        <button type="button" class="btn btn-dark w-100">Filter</button>
                     </div>
                 </form>
             </div>
@@ -41,8 +44,7 @@
                                 <th class="ps-4">Store Details</th>
                                 <th>Location</th>
                                 <th>Manager</th>
-                                <th>Status</th>
-                                <th class="text-end pe-4">Actions</th>
+                                <th>Status</th> <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,14 +63,14 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <span class="fw-medium">{{ $store->city }}</span>
-                                        <small class="text-muted">{{ Str::limit($store->address, 30) }}</small>
+                                        <span class="fw-medium text-dark">{{ $store->city }}</span>
+                                        <small class="text-muted">{{ Str::limit($store->address, 25) }}</small>
                                     </div>
                                 </td>
                                 <td>
                                     @if($store->manager)
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar-xs bg-info text-white rounded-circle me-2 d-flex justify-content-center align-items-center" style="width:30px;height:30px;">
+                                            <div class="avatar-xs bg-info text-white rounded-circle me-2 d-flex justify-content-center align-items-center" style="width:30px;height:30px;font-size:12px;">
                                                 {{ substr($store->manager->name, 0, 1) }}
                                             </div>
                                             <div>
@@ -81,21 +83,25 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($store->is_active)
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Active</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Inactive</span>
-                                    @endif
+                                    <div class="form-check form-switch form-switch-md">
+                                        <input class="form-check-input status-toggle" 
+                                               type="checkbox" 
+                                               role="switch" 
+                                               id="status_{{ $store->id }}" 
+                                               data-id="{{ $store->id }}"
+                                               {{ $store->is_active ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="status_{{ $store->id }}"></label>
+                                    </div>
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="btn-group">
-                                        <a href="{{ route('warehouse.stores.show', $store->id) }}" class="btn btn-sm btn-outline-secondary" title="Dashboard">
+                                        <a href="{{ route('warehouse.stores.show', $store->id) }}" class="btn btn-sm btn-outline-secondary" title="View Dashboard">
                                             <i class="mdi mdi-chart-bar"></i>
                                         </a>
-                                        <a href="{{ route('warehouse.stores.edit', $store->id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <a href="{{ route('warehouse.stores.edit', $store->id) }}" class="btn btn-sm btn-outline-primary" title="Edit Details">
                                             <i class="mdi mdi-pencil"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete({{ $store->id }})">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Store" onclick="confirmDelete({{ $store->id }})">
                                             <i class="mdi mdi-trash-can"></i>
                                         </button>
                                     </div>
@@ -107,8 +113,10 @@
                             @empty
                             <tr>
                                 <td colspan="5" class="text-center py-5">
-                                    <img src="{{ asset('assets/images/no-data.svg') }}" alt="No Data" height="100" class="mb-3 opacity-50">
-                                    <p class="text-muted">No stores found. Register your first store!</p>
+                                    <div class="text-muted">
+                                        <i class="mdi mdi-store-remove fs-1 opacity-25"></i>
+                                        <p class="mt-2">No stores found. Click "Register New Store" to add one.</p>
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse
@@ -126,11 +134,76 @@
 
     @push('scripts')
     <script>
-        function confirmDelete(id) {
-            if(confirm('Are you sure you want to delete this store? This action cannot be undone.')) {
-                document.getElementById('delete-form-'+id).submit();
-            }
-        }
+        $(document).ready(function() {
+            
+            // Status Toggle with SweetAlert
+            $('.status-toggle').on('change', function(e) {
+                let checkbox = $(this);
+                let isChecked = checkbox.is(':checked');
+                let storeId = checkbox.data('id');
+                let newStatus = isChecked ? 1 : 0;
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: isChecked ? "Do you want to Activate this store?" : "Do you want to Deactivate this store?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, change it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // AJAX Request
+                        $.ajax({
+                            url: "{{ route('warehouse.stores.update-status') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                id: storeId,
+                                status: newStatus
+                            },
+                            success: function(response) {
+                                if(response.success) {
+                                    Swal.fire(
+                                        'Updated!',
+                                        response.message,
+                                        'success'
+                                    );
+                                    
+                                } else {
+                                    Swal.fire('Error!', 'Something went wrong.', 'error');
+                                    checkbox.prop('checked', !isChecked); // Revert
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error!', 'Server Error. Please try again.', 'error');
+                                checkbox.prop('checked', !isChecked); // Revert
+                            }
+                        });
+                    } else {
+                        checkbox.prop('checked', !isChecked);
+                    }
+                });
+            });
+
+            // Delete Confirmation
+            window.confirmDelete = function(id) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this! All store data will be deleted.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('delete-form-'+id).submit();
+                    }
+                });
+            };
+        });
     </script>
     @endpush
 </x-app-layout>

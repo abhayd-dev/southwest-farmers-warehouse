@@ -164,6 +164,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff');
 
+        Route::post('stores/update-status', [StoreController::class, 'updateStatus'])
+            ->name('warehouse.stores.update-status');
+
         Route::resource('stores', StoreController::class)
             ->names('warehouse.stores');
     });
