@@ -25,4 +25,20 @@ class Warehouse extends Model
         'longitude',
         'is_active',
     ];
+
+    /**
+     * Get all stores associated with this warehouse.
+     */
+    public function stores()
+    {
+        return $this->hasMany(StoreDetail::class, 'warehouse_id');
+    }
+
+    /**
+     * Get the staff/users working in this warehouse.
+     */
+    public function users()
+    {
+        return $this->hasMany(WareUser::class, 'warehouse_id');
+    }
 }

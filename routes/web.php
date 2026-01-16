@@ -12,6 +12,7 @@ use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\Warehouse\StaffController;
+use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\WarehouseController;
 
 /*
@@ -162,5 +163,8 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff');
+
+        Route::resource('stores', StoreController::class)
+            ->names('warehouse.stores');
     });
 });
