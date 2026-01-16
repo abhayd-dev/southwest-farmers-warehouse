@@ -74,7 +74,7 @@
                 <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
                     <div class="card-body">
                         <h6 class="text-muted text-uppercase mb-2 fw-bold">Inventory Value</h6>
-                        <h3 class="mb-0 fw-bold">₹{{ number_format($analytics['inventory_value']) }}</h3>
+                        <h3 class="mb-0 fw-bold">${{ number_format($analytics['inventory_value']) }}</h3>
                         <small class="text-success"><i class="mdi mdi-trending-up me-1"></i>+12.5% from last week</small>
                     </div>
                 </div>
@@ -137,11 +137,11 @@
                             <line x1="50" y1="60" x2="750" y2="60" stroke="#f0f0f0" stroke-width="1"/>
                             
                             <!-- Y-axis labels -->
-                            <text x="35" y="265" font-size="12" fill="#6c757d" text-anchor="end">₹0</text>
-                            <text x="35" y="215" font-size="12" fill="#6c757d" text-anchor="end">₹25K</text>
-                            <text x="35" y="165" font-size="12" fill="#6c757d" text-anchor="end">₹50K</text>
-                            <text x="35" y="115" font-size="12" fill="#6c757d" text-anchor="end">₹75K</text>
-                            <text x="35" y="65" font-size="12" fill="#6c757d" text-anchor="end">₹100K</text>
+                            <text x="35" y="265" font-size="12" fill="#6c757d" text-anchor="end">$0</text>
+                            <text x="35" y="215" font-size="12" fill="#6c757d" text-anchor="end">$25K</text>
+                            <text x="35" y="165" font-size="12" fill="#6c757d" text-anchor="end">$50K</text>
+                            <text x="35" y="115" font-size="12" fill="#6c757d" text-anchor="end">$75K</text>
+                            <text x="35" y="65" font-size="12" fill="#6c757d" text-anchor="end">$100K</text>
                             
                             <!-- Bar Chart Data (Static) -->
                             <!-- Monday -->
@@ -194,7 +194,7 @@
                         <div class="row g-3 mt-3 pt-3 border-top">
                             <div class="col-md-4">
                                 <small class="text-muted d-block mb-1">Avg Daily Sales</small>
-                                <h6 class="mb-0 fw-bold">₹45,250</h6>
+                                <h6 class="mb-0 fw-bold">$45,250</h6>
                             </div>
                             <div class="col-md-4">
                                 <small class="text-muted d-block mb-1">Peak Day</small>
@@ -202,7 +202,7 @@
                             </div>
                             <div class="col-md-4">
                                 <small class="text-muted d-block mb-1">Total Weekly</small>
-                                <h6 class="mb-0 fw-bold">₹316,750</h6>
+                                <h6 class="mb-0 fw-bold">$316,750</h6>
                             </div>
                         </div>
                     </div>
@@ -247,22 +247,22 @@
                                     <div class="d-flex align-items-center">
                                         <span class="badge rounded-circle me-2" style="background-color: #0d6efd; width: 12px; height: 12px;"></span>
                                         <span class="text-muted flex-grow-1">Electronics</span>
-                                        <strong>35% (₹2,45,000)</strong>
+                                        <strong>35% ($2,45,000)</strong>
                                     </div>
                                     <div class="d-flex align-items-center">
                                         <span class="badge rounded-circle me-2" style="background-color: #0dcaf0; width: 12px; height: 12px;"></span>
                                         <span class="text-muted flex-grow-1">Clothing</span>
-                                        <strong>25% (₹1,75,000)</strong>
+                                        <strong>25% ($1,75,000)</strong>
                                     </div>
                                     <div class="d-flex align-items-center">
                                         <span class="badge rounded-circle me-2" style="background-color: #198754; width: 12px; height: 12px;"></span>
                                         <span class="text-muted flex-grow-1">Food & Beverage</span>
-                                        <strong>20% (₹1,40,000)</strong>
+                                        <strong>20% ($1,40,000)</strong>
                                     </div>
                                     <div class="d-flex align-items-center">
                                         <span class="badge rounded-circle me-2" style="background-color: #ffc107; width: 12px; height: 12px;"></span>
                                         <span class="text-muted flex-grow-1">Others</span>
-                                        <strong>20% (₹1,40,000)</strong>
+                                        <strong>20% ($1,40,000)</strong>
                                     </div>
                                 </div>
                             </div>

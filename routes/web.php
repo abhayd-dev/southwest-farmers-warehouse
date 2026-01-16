@@ -12,6 +12,7 @@ use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\Warehouse\StaffController;
+use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\WarehouseController;
 
@@ -169,5 +170,11 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('stores', StoreController::class)
             ->names('warehouse.stores');
+
+        Route::controller(StockRequestController::class)->group(function () {
+            Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');
+            Route::get('stock-requests/{id}', 'show')->name('warehouse.stock-requests.show');
+            Route::post('stock-requests/{id}', 'update')->name('warehouse.stock-requests.update');
+        });
     });
 });
