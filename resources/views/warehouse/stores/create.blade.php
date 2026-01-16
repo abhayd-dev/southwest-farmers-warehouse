@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout  title="Add Store">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 bg-success text-white p-3 rounded shadow-sm">
             <h4 class="mb-0 fw-bold"><i class="mdi mdi-plus-box me-2"></i> Register New Store</h4>

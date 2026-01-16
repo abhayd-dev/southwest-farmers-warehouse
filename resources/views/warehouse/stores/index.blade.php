@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="All Stores">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
             <div>

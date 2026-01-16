@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Edit Store">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 bg-info text-white p-3 rounded shadow-sm">
             <h4 class="mb-0 fw-bold"><i class="mdi mdi-pencil-box me-2"></i> Edit Store Details</h4>
