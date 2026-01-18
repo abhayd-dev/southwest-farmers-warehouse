@@ -83,7 +83,6 @@ class StoreController extends Controller
     public function show($id)
     {
         $store = StoreDetail::with('manager')->findOrFail($id);
-
         $stats = $this->storeService->getStoreStats($id);
 
         $staffMembers = StoreUser::with('role')
@@ -92,21 +91,16 @@ class StoreController extends Controller
             ->get();
 
         $roles = StoreRole::where('guard_name', 'store_user')->get();
-
         $categories = ProductCategory::select('id', 'name')->get();
 
+        // FIX: Select 'product_name'
         $products = Product::select('id', 'product_name', 'store_id')
             ->whereNull('store_id')
             ->orWhere('store_id', $id)
             ->get();
 
         return view('warehouse.stores.show', compact(
-            'store',
-            'stats',
-            'staffMembers',
-            'roles',
-            'categories',
-            'products'
+            'store', 'stats', 'staffMembers', 'roles', 'categories', 'products'
         ));
     }
 
@@ -134,7 +128,6 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $store = StoreDetail::findOrFail($id);
-
         $request->validate([
             'store_name'  => 'required|string|max:255',
             'store_email' => 'required|email|unique:store_details,email,' . $id,
@@ -158,8 +151,7 @@ class StoreController extends Controller
     {
         try {
             StoreDetail::findOrFail($id)->delete();
-            return redirect()->route('warehouse.stores.index')
-                ->with('success', 'Store deleted successfully.');
+            return redirect()->route('warehouse.stores.index')->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Cannot delete store.');
         }
@@ -167,11 +159,7 @@ class StoreController extends Controller
 
     public function updateStatus(Request $request)
     {
-        $request->validate([
-            'id'     => 'required|exists:store_details,id',
-            'status' => 'required|boolean',
-        ]);
-
+        $request->validate(['id' => 'required|exists:store_details,id', 'status' => 'required|boolean']);
         try {
             $store = StoreDetail::findOrFail($request->id);
             $store->is_active = $request->status;
@@ -184,16 +172,9 @@ class StoreController extends Controller
                     $manager->save();
                 }
             }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Store status updated successfully.',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Status updated.']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating status.',
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error.'], 500);
         }
     }
 
@@ -209,7 +190,7 @@ class StoreController extends Controller
 
         try {
             $this->storeService->createStoreStaff($storeId, $request->all());
-            return back()->with('success', 'Staff member added successfully.');
+            return back()->with('success', 'Staff added successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

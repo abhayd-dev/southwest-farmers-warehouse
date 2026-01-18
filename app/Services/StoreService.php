@@ -7,7 +7,6 @@ use App\Models\StoreUser;
 use App\Models\StoreStock;
 use App\Models\StoreRole;
 use App\Models\StockTransaction;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
@@ -34,9 +33,7 @@ class StoreService
                 'is_active'    => true,
             ]);
 
-            $managerRole = StoreRole::where('name', 'Super Admin')
-                ->orWhere('name', 'Manager')
-                ->first();
+            $managerRole = StoreRole::where('name', 'Super Admin')->orWhere('name', 'Manager')->first();
 
             $manager = StoreUser::create([
                 'store_id'      => $store->id,
@@ -78,23 +75,25 @@ class StoreService
     public function deleteStoreStaff($staffId)
     {
         $user = StoreUser::findOrFail($staffId);
-
         if ($user->isStoreAdmin()) {
-            throw new \Exception('Cannot delete Manager.');
+            throw new \Exception('Cannot delete the Main Store Manager.');
         }
-
         $user->delete();
     }
 
+    /**
+     * Advanced Analytics Logic
+     */
     public function getAnalyticsData($storeId, array $filters)
     {
+        // Base Query joining products to access product details
         $query = StockTransaction::join('products', 'stock_transactions.product_id', '=', 'products.id')
             ->where('stock_transactions.store_id', $storeId)
             ->where('stock_transactions.type', 'sale_out');
 
+        // 1. Date Filter
         if (!empty($filters['date_range'])) {
             $dates = explode(' to ', $filters['date_range']);
-
             if (count($dates) === 2) {
                 $query->whereBetween('stock_transactions.created_at', [
                     Carbon::parse($dates[0])->startOfDay(),
@@ -103,6 +102,7 @@ class StoreService
             }
         }
 
+        // 2. Product Type Filter
         if (!empty($filters['product_type'])) {
             if ($filters['product_type'] === 'warehouse') {
                 $query->whereNull('products.store_id');
@@ -111,18 +111,22 @@ class StoreService
             }
         }
 
+        // 3. Category Filter
         if (!empty($filters['category_id'])) {
             $query->where('products.category_id', $filters['category_id']);
         }
 
+        // 4. Subcategory Filter
         if (!empty($filters['subcategory_id'])) {
             $query->where('products.subcategory_id', $filters['subcategory_id']);
         }
 
+        // 5. Product Filter
         if (!empty($filters['product_id'])) {
             $query->where('products.id', $filters['product_id']);
         }
 
+        // --- A. Sales Trend ---
         $trendQuery = clone $query;
         $trendData = $trendQuery
             ->select(
@@ -133,10 +137,12 @@ class StoreService
             ->orderBy('date')
             ->get();
 
+        // --- B. Product Performance ---
+        // FIX: Used 'product_name' instead of 'name'
         $productQuery = clone $query;
         $productData = $productQuery
             ->select(
-                'products.product_name as name',
+                'products.product_name as name', 
                 DB::raw('SUM(ABS(stock_transactions.quantity_change)) as total_qty')
             )
             ->groupBy('products.product_name')
@@ -144,6 +150,8 @@ class StoreService
             ->limit(10)
             ->get();
 
+        // --- C. Category Distribution ---
+        // Ensure we join categories to get the name
         $catQuery = clone $query;
         $catData = $catQuery
             ->join('product_categories', 'products.category_id', '=', 'product_categories.id')
@@ -152,10 +160,11 @@ class StoreService
                 DB::raw('SUM(ABS(stock_transactions.quantity_change)) as total_qty')
             )
             ->groupBy('product_categories.name')
+            ->orderByDesc('total_qty')
             ->get();
 
         $totalSales = $trendData->sum('total_qty');
-        $totalRevenue = 0;
+        $totalRevenue = 0; // Placeholder if revenue tracking is added
 
         return [
             'sales_trend' => [
@@ -180,13 +189,10 @@ class StoreService
     public function getStoreStats($storeId)
     {
         return [
-            'inventory_value' => StoreStock::where('store_id', $storeId)
-                ->sum(DB::raw('selling_price * quantity')),
+            'inventory_value' => StoreStock::where('store_id', $storeId)->sum(DB::raw('selling_price * quantity')),
             'inventory_items' => StoreStock::where('store_id', $storeId)->count(),
-            'low_stock_count' => StoreStock::where('store_id', $storeId)
-                ->where('quantity', '<', 10)
-                ->count(),
-            'staff_count' => StoreUser::where('store_id', $storeId)->count(),
+            'low_stock_count' => StoreStock::where('store_id', $storeId)->where('quantity', '<', 10)->count(),
+            'staff_count'     => StoreUser::where('store_id', $storeId)->count(),
         ];
     }
 }
