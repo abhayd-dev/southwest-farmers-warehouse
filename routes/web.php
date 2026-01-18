@@ -21,6 +21,14 @@ use App\Http\Controllers\WarehouseController;
 | Warehouse Authentication
 |--------------------------------------------------------------------------
 */
+Route::get('/cc', function () {
+
+    Artisan::call('optimize:clear');
+
+
+    echo "Cache cleared..";
+});
+
 
 Route::middleware('guest')->group(function () {
 
@@ -170,6 +178,11 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('stores', StoreController::class)
             ->names('warehouse.stores');
+        Route::post('stores/{id}/staff', [StoreController::class, 'storeStaff'])
+            ->name('warehouse.stores.staff.store');
+
+        Route::delete('stores/staff/{id}', [StoreController::class, 'destroyStaff'])
+            ->name('warehouse.stores.staff.destroy');
 
         Route::controller(StockRequestController::class)->group(function () {
             Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');

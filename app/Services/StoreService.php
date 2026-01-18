@@ -10,18 +10,13 @@ use Illuminate\Support\Facades\Hash;
 
 class StoreService
 {
-    /**
-     * Create a new Store and its Super Admin Manager in a single transaction.
-     */
     public function createStore(array $data)
     {
         return DB::transaction(function () use ($data) {
-            // 1. Generate Store Code (SWF-LKO-001)
             $storeCode = $this->generateStoreCode($data['city']);
 
-            // 2. Create Store Entry
             $store = StoreDetail::create([
-                'warehouse_id' => 1, // Defaulting to 1 for now
+                'warehouse_id' => 1,
                 'store_name' => $data['store_name'],
                 'store_code' => $storeCode,
                 'email'      => $data['store_email'],
@@ -36,8 +31,8 @@ class StoreService
                 'is_active'  => true,
             ]);
 
-            // 3. Create Store Manager (Super Admin)
             $manager = StoreUser::create([
+                'store_id'    => $store->id, 
                 'name'        => $data['manager_name'],
                 'email'       => $data['manager_email'],
                 'password'    => Hash::make($data['password']),
@@ -46,16 +41,14 @@ class StoreService
                 'is_active'   => true,
             ]);
 
-            // 4. Link Manager to Store
+            $this->assignRoleToUser($manager->id, 'Super Admin');
+
             $store->update(['store_user_id' => $manager->id]);
 
             return $store;
         });
     }
 
-    /**
-     * Update Store Details
-     */
     public function updateStore(StoreDetail $store, array $data)
     {
         return DB::transaction(function () use ($store, $data) {
@@ -75,9 +68,47 @@ class StoreService
         });
     }
 
-    /**
-     * Generate Unique Store Code
-     */
+    public function createStoreStaff($storeId, array $data)
+    {
+        return DB::transaction(function () use ($storeId, $data) {
+            $user = StoreUser::create([
+                'store_id'    => $storeId,
+                'name'        => $data['name'],
+                'email'       => $data['email'],
+                'phone'       => $data['phone'] ?? null,
+                'password'    => Hash::make($data['password']),
+                'designation' => $data['role_name'], 
+                'is_active'   => true,
+            ]);
+
+            $this->assignRoleToUser($user->id, $data['role_name']);
+
+            return $user;
+        });
+    }
+
+    public function deleteStoreStaff($staffId)
+    {
+        $user = StoreUser::findOrFail($staffId);
+        if ($user->isStoreAdmin()) {
+            throw new \Exception("Cannot delete the Main Store Manager. Reassign manager first.");
+        }
+        $user->delete();
+    }
+
+    private function assignRoleToUser($userId, $roleName)
+    {
+        $role = DB::table('store_roles')->where('name', $roleName)->first();
+        
+        if ($role) {
+            DB::table('store_model_has_roles')->insert([
+                'role_id' => $role->id,
+                'model_type' => \App\Models\StoreUser::class,
+                'model_id' => $userId
+            ]);
+        }
+    }
+
     private function generateStoreCode($city)
     {
         $prefix = 'SWF-' . strtoupper(substr($city, 0, 3));
@@ -93,15 +124,11 @@ class StoreService
         return $prefix . '-' . str_pad($number, 3, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Get Real-time Analytics for Dashboard
-     */
     public function getStoreAnalytics($storeId)
     {
         return [
-            'staff_count'     => 0, 
+            'staff_count'     => StoreUser::where('store_id', $storeId)->count(),
             'inventory_items' => StoreStock::where('store_id', $storeId)->count(),
-            // FIXED: Used 'selling_price' instead of 'price'
             'inventory_value' => StoreStock::where('store_id', $storeId)->sum(DB::raw('selling_price * quantity')),
             'low_stock_count' => StoreStock::where('store_id', $storeId)->where('quantity', '<', 10)->count(),
             'revenue_mtd'     => 0, 

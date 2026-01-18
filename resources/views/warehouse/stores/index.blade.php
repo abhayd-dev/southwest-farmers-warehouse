@@ -22,9 +22,10 @@
                     <div class="col-md-3">
                         <select name="city" class="form-select">
                             <option value="">All Cities</option>
-                            <option value="Lucknow" {{ request('city') == 'Lucknow' ? 'selected' : '' }}>Lucknow</option>
-                            <option value="Delhi" {{ request('city') == 'Delhi' ? 'selected' : '' }}>Delhi</option>
-                            </select>
+                            @foreach($cities as $city)
+                                <option value="{{ $city }}" {{ request('city') == $city ? 'selected' : '' }}>{{ $city }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="col-md-3">
@@ -147,7 +148,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             
-            // Delete Confirmation
             window.confirmDelete = function(id) {
                 Swal.fire({
                     title: 'Delete Store?',
@@ -164,7 +164,6 @@
                 });
             };
 
-            // Status Toggle Logic
             const toggles = document.querySelectorAll('.status-toggle');
             toggles.forEach(toggle => {
                 toggle.addEventListener('change', function() {
@@ -172,7 +171,6 @@
                     const isChecked = this.checked;
                     const newStatus = isChecked ? 1 : 0;
                     
-                    // Revert visual state immediately (wait for confirmation)
                     this.checked = !isChecked; 
 
                     Swal.fire({
@@ -185,11 +183,9 @@
                         confirmButtonText: 'Yes, change it!'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Optimistically update UI
                             this.checked = isChecked;
                             updateStatusLabel(this, isChecked);
 
-                            // Send AJAX Request
                             fetch("{{ route('warehouse.stores.update-status') }}", {
                                 method: "POST",
                                 headers: {
@@ -212,7 +208,6 @@
                                         showConfirmButton: false
                                     });
                                 } else {
-                                    // Revert if server fails
                                     this.checked = !isChecked;
                                     updateStatusLabel(this, !isChecked);
                                     Swal.fire('Error!', 'Something went wrong.', 'error');

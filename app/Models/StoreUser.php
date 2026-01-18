@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class StoreUser extends Authenticatable
 {
@@ -15,12 +15,13 @@ class StoreUser extends Authenticatable
     protected $table = 'store_users';
 
     protected $fillable = [
+        'store_id', 
         'name',
         'email',
         'password',
         'phone',
         'designation',
-        'parent_id',       // For hierarchy (e.g., Staff reports to Manager)
+        'parent_id',
         'profile_image',
         'is_active',
     ];
@@ -36,41 +37,47 @@ class StoreUser extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-
-    /**
-     * The store managed by this user (if they are a Manager).
-     */
     public function managedStore()
     {
         return $this->hasOne(StoreDetail::class, 'store_user_id');
     }
 
-    /**
-     * Self-referencing relationship for hierarchy (Parent User).
-     */
+    public function store()
+    {
+        return $this->belongsTo(StoreDetail::class, 'store_id');
+    }
+
     public function parent()
     {
         return $this->belongsTo(StoreUser::class, 'parent_id');
     }
 
-    /**
-     * Self-referencing relationship for hierarchy (Subordinate Staff).
-     */
     public function subordinates()
     {
         return $this->hasMany(StoreUser::class, 'parent_id');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper Methods
-    |--------------------------------------------------------------------------
-    */
+    public function roles()
+    {
+        return $this->belongsToMany(
+            WareRole::class, 
+            'store_model_has_roles', 
+            'model_id', 
+            'role_id'
+        )->wherePivot('model_type', self::class);
+    }
 
-    /**
-     * Check if the user is a Super Admin for the Store.
-     * (Logic: If they are assigned as the 'store_user_id' in store_details)
-     */
+    public function getRoleNameAttribute()
+    {
+        $role = DB::table('store_model_has_roles')
+            ->join('store_roles', 'store_model_has_roles.role_id', '=', 'store_roles.id')
+            ->where('store_model_has_roles.model_id', $this->id)
+            ->where('store_model_has_roles.model_type', self::class)
+            ->value('store_roles.name');
+
+        return $role ?? 'No Role';
+    }
+
     public function isStoreAdmin()
     {
         return $this->managedStore()->exists();

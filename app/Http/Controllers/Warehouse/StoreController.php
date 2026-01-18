@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\StoreDetail;
+use App\Models\StoreUser;
 use App\Services\StoreService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -20,7 +22,6 @@ class StoreController extends Controller
     {
         $query = StoreDetail::with('manager');
 
-        // 1. Search Filter (Name or Code)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -29,22 +30,20 @@ class StoreController extends Controller
             });
         }
 
-        // 2. City Filter
         if ($request->filled('city')) {
             $query->where('city', $request->city);
         }
 
-        // 3. Status Filter
         if ($request->filled('status')) {
             $query->where('is_active', $request->status);
         }
 
         $stores = $query->latest()->paginate(10);
-        
-        // Helper to keep filters active when changing pages
         $stores->appends($request->all());
 
-        return view('warehouse.stores.index', compact('stores'));
+        $cities = StoreDetail::select('city')->distinct()->orderBy('city')->pluck('city');
+
+        return view('warehouse.stores.index', compact('stores', 'cities'));
     }
 
     public function create()
@@ -81,7 +80,11 @@ class StoreController extends Controller
     {
         $store = StoreDetail::with('manager')->findOrFail($id);
         $analytics = $this->storeService->getStoreAnalytics($id);
-        return view('warehouse.stores.show', compact('store', 'analytics'));
+        
+        $staffMembers = StoreUser::where('store_id', $id)->latest()->get();
+        $roles = DB::table('store_roles')->where('guard_name', 'store_web')->pluck('name');
+
+        return view('warehouse.stores.show', compact('store', 'analytics', 'staffMembers', 'roles'));
     }
 
     public function edit($id)
@@ -133,7 +136,7 @@ class StoreController extends Controller
             $store->save();
 
             if ($store->store_user_id) {
-                $manager = \App\Models\StoreUser::find($store->store_user_id);
+                $manager = StoreUser::find($store->store_user_id);
                 if ($manager) {
                     $manager->is_active = $request->status;
                     $manager->save();
@@ -143,6 +146,34 @@ class StoreController extends Controller
             return response()->json(['success' => true, 'message' => 'Store status updated successfully.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error updating status.'], 500);
+        }
+    }
+
+    public function storeStaff(Request $request, $storeId)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:store_users,email',
+            'phone' => 'nullable|string|max:15',
+            'password' => 'required|min:8',
+            'role_name' => 'required|exists:store_roles,name'
+        ]);
+
+        try {
+            $this->storeService->createStoreStaff($storeId, $request->all());
+            return back()->with('success', 'Staff member added successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error adding staff: ' . $e->getMessage());
+        }
+    }
+
+    public function destroyStaff($id)
+    {
+        try {
+            $this->storeService->deleteStoreStaff($id);
+            return back()->with('success', 'Staff removed successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 }
