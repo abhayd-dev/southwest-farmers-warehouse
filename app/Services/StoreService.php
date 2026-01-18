@@ -136,10 +136,10 @@ class StoreService
         $productQuery = clone $query;
         $productData = $productQuery
             ->select(
-                'products.name',
+                'products.product_name as name',
                 DB::raw('SUM(ABS(stock_transactions.quantity_change)) as total_qty')
             )
-            ->groupBy('products.name')
+            ->groupBy('products.product_name')
             ->orderByDesc('total_qty')
             ->limit(10)
             ->get();
