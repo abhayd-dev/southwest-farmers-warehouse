@@ -10,57 +10,63 @@ class StoreRolePermissionSeeder extends Seeder
 {
     public function run()
     {
-        $guard = 'store_web';
+        $guard = 'store_user'; // Ensure this matches your auth guard
         $now = Carbon::now();
-
-        // 1. Clear Old Data (Optional - Safety Check)
-        // DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        // DB::table('store_role_has_permissions')->truncate();
-        // DB::table('store_roles')->truncate();
-        // DB::table('store_permissions')->truncate();
-        // DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         /*
         |--------------------------------------------------------------------------
-        | 2. Insert Permissions
+        | 1. Define Permissions with Groups
         |--------------------------------------------------------------------------
         */
-        $permissionsList = [
-            // Store Operations (PO)
-            'create_po', 'view_po', 'edit_po_generated', 'view_po_logs', 'modify_po', 'view_po_alerts',
-            
-            // Escalations
-            'view_escalations',
-
-            // Inventory & Merchandising
-            'update_pricing', 'check_stock_levels', 'manage_signage', 'manage_displays', 'manage_promotions',
-
-            // Staff Operations
-            'clock_in_out', 'manage_breaks', 'view_attendance', 'manage_staff'
+        $permissionsByGroup = [
+            'Store Operations' => [
+                'create_po', 'view_po', 'edit_po_generated', 'view_po_logs', 'modify_po', 'view_po_alerts'
+            ],
+            'Escalations' => [
+                'view_escalations'
+            ],
+            'Inventory & Merchandising' => [
+                'update_pricing', 'check_stock_levels', 'manage_signage', 'manage_displays', 'manage_promotions'
+            ],
+            'Staff Operations' => [
+                'clock_in_out', 'manage_breaks', 'view_attendance', 'manage_staff'
+            ]
         ];
 
-        $permMap = []; // To store ID mapping for later use
+        $permMap = []; // To store ID mapping for role assignment
 
-        foreach ($permissionsList as $perm) {
-            // Check if exists to avoid duplicates
-            $exists = DB::table('store_permissions')->where('name', $perm)->where('guard_name', $guard)->first();
-            
-            if (!$exists) {
-                $id = DB::table('store_permissions')->insertGetId([
-                    'name' => $perm,
-                    'guard_name' => $guard,
-                    'created_at' => $now,
-                    'updated_at' => $now
-                ]);
-                $permMap[$perm] = $id;
-            } else {
-                $permMap[$perm] = $exists->id;
+        foreach ($permissionsByGroup as $group => $permissions) {
+            foreach ($permissions as $perm) {
+                // Check if exists
+                $existingPerm = DB::table('store_permissions')
+                    ->where('name', $perm)
+                    ->where('guard_name', $guard)
+                    ->first();
+                
+                if ($existingPerm) {
+                    // Update group_name if it exists but is missing group
+                    DB::table('store_permissions')
+                        ->where('id', $existingPerm->id)
+                        ->update(['group_name' => $group, 'updated_at' => $now]);
+                    
+                    $permMap[$perm] = $existingPerm->id;
+                } else {
+                    // Insert new with group_name
+                    $id = DB::table('store_permissions')->insertGetId([
+                        'name' => $perm,
+                        'guard_name' => $guard,
+                        'group_name' => $group,
+                        'created_at' => $now,
+                        'updated_at' => $now
+                    ]);
+                    $permMap[$perm] = $id;
+                }
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 3. Insert Roles & Map Permissions
+        | 2. Insert Roles & Map Permissions
         |--------------------------------------------------------------------------
         */
         $rolesData = [
@@ -101,7 +107,7 @@ class StoreRolePermissionSeeder extends Seeder
         ];
 
         foreach ($rolesData as $roleName => $assignedPerms) {
-            // Create Role
+            // Create or Get Role
             $roleId = DB::table('store_roles')->where('name', $roleName)->where('guard_name', $guard)->value('id');
 
             if (!$roleId) {
@@ -116,7 +122,7 @@ class StoreRolePermissionSeeder extends Seeder
             // Assign Permissions to Role
             foreach ($assignedPerms as $permName) {
                 if (isset($permMap[$permName])) {
-                    // Avoid duplicate entry
+                    // Check if mapping exists to avoid duplicates
                     $exists = DB::table('store_role_has_permissions')
                         ->where('permission_id', $permMap[$permName])
                         ->where('role_id', $roleId)
@@ -132,6 +138,6 @@ class StoreRolePermissionSeeder extends Seeder
             }
         }
 
-        $this->command->info('Custom Store Roles & Permissions Seeded Successfully!');
+        $this->command->info('Custom Store Roles & Permissions (with Groups) Seeded Successfully!');
     }
 }

@@ -1,4 +1,6 @@
 <x-app-layout title="Store Details - {{ $store->store_name }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -18,6 +20,36 @@
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form id="filterForm" class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-4">
+                        <label class="form-label small text-muted text-uppercase fw-bold mb-2">Date Range</label>
+                        <input type="text" class="form-control form-control-sm" id="dateRange" placeholder="Select Dates">
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small text-muted text-uppercase fw-bold mb-2">Category</label>
+                        <select class="form-select form-select-sm">
+                            <option selected>All Categories</option>
+                            @foreach($analytics['categories'] as $cat)
+                                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small text-muted text-uppercase fw-bold mb-2">Region</label>
+                        <select class="form-select form-select-sm" disabled>
+                            <option selected>{{ $store->city }} (Fixed)</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 col-md-4 d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-primary"><i class="mdi mdi-filter me-1"></i> Apply</button>
+                        <button type="reset" class="btn btn-sm btn-outline-secondary"><i class="mdi mdi-refresh me-1"></i> Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
@@ -33,16 +65,16 @@
                     <div class="card-body">
                         <h6 class="text-muted text-uppercase mb-2 fw-bold">Total Products</h6>
                         <h3 class="mb-0 fw-bold">{{ $analytics['inventory_items'] }}</h3>
-                        <small class="text-muted">Unique SKUs in stock</small>
+                        <small class="text-muted">Unique SKUs</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm border-start border-4 border-warning h-100">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase mb-2 fw-bold">Low Stock Alerts</h6>
+                        <h6 class="text-muted text-uppercase mb-2 fw-bold">Low Stock</h6>
                         <h3 class="mb-0 fw-bold text-warning">{{ $analytics['low_stock_count'] }}</h3>
-                        <small class="text-danger fw-bold"><i class="mdi mdi-alert-circle me-1"></i>Action Needed</small>
+                        <small class="text-danger fw-bold">Action Needed</small>
                     </div>
                 </div>
             </div>
@@ -61,16 +93,10 @@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">Sales & Stock Analytics</h5>
-                            <small class="text-muted">Weekly Performance</small>
-                        </div>
+                        <h5 class="card-title mb-0">Weekly Sales Overview</h5>
                     </div>
-                    <div class="card-body p-4 d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                        <div class="text-center text-muted">
-                            <i class="mdi mdi-chart-bar fs-1 opacity-25"></i>
-                            <p class="mt-2">Analytics Chart Placeholder</p>
-                        </div>
+                    <div class="card-body p-4">
+                        <div id="salesChart" style="min-height: 300px;"></div>
                     </div>
                 </div>
 
@@ -109,33 +135,25 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
-                                                {{ $staff->role_name }}
+                                                {{ $staff->role ? $staff->role->name : 'No Role' }}
                                             </span>
                                         </td>
                                         <td>{{ $staff->phone ?? 'N/A' }}</td>
                                         <td>
-                                            @if($staff->is_active)
-                                                <span class="badge bg-success-subtle text-success">Active</span>
-                                            @else
-                                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
-                                            @endif
+                                            <span class="badge bg-success-subtle text-success">Active</span>
                                         </td>
                                         <td class="text-end pe-4">
                                             @if(!$staff->isStoreAdmin())
-                                            <form action="{{ route('warehouse.stores.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('Remove this user?');">
+                                            <form action="{{ route('warehouse.stores.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('Remove user?');">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0">
-                                                    <i class="mdi mdi-trash-can fs-5"></i>
-                                                </button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0"><i class="mdi mdi-trash-can"></i></button>
                                             </form>
-                                            @else
-                                            <span class="text-muted small"><i class="mdi mdi-shield-check me-1"></i>Main Admin</span>
                                             @endif
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">No staff members found.</td>
+                                        <td colspan="5" class="text-center py-4 text-muted">No staff found.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -148,55 +166,27 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0"><i class="mdi mdi-map-marker-outline me-2 text-primary"></i>Location Details</h5>
+                        <h5 class="card-title mb-0">Category Distribution</h5>
                     </div>
                     <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between px-0">
-                                <span class="text-muted">Code</span>
-                                <span class="fw-bold">{{ $store->store_code }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between px-0">
-                                <span class="text-muted">City</span>
-                                <span class="fw-bold">{{ $store->city }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between px-0">
-                                <span class="text-muted">Pincode</span>
-                                <span class="fw-bold">{{ $store->pincode }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between px-0">
-                                <span class="text-muted">Created</span>
-                                <span class="fw-bold">{{ $store->created_at->format('d M, Y') }}</span>
-                            </li>
-                        </ul>
-                        @if($store->latitude)
-                        <div class="mt-3 bg-light rounded p-3 text-center">
-                            <small class="text-muted d-block mb-1">Coordinates</small>
-                            <code>{{ $store->latitude }}, {{ $store->longitude }}</code>
-                        </div>
-                        @endif
+                        <div id="categoryChart" style="min-height: 250px;"></div>
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0"><i class="mdi mdi-chart-box-outline me-2 text-info"></i>Quick Stats</h5>
+                        <h5 class="card-title mb-0">Location</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row g-2 text-center">
-                            <div class="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <small class="text-muted d-block mb-1">Avg Rating</small>
-                                    <h6 class="mb-0 fw-bold">4.8<span class="text-warning fs-6">★</span></h6>
-                                </div>
+                        <p class="mb-1"><span class="fw-bold">Address:</span> {{ $store->address }}</p>
+                        <p class="mb-1"><span class="fw-bold">City:</span> {{ $store->city }} - {{ $store->pincode }}</p>
+                        @if($store->latitude)
+                            <div class="mt-3">
+                                <a href="https://www.google.com/maps?q={{ $store->latitude }},{{ $store->longitude }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="mdi mdi-map me-1"></i> View on Google Maps
+                                </a>
                             </div>
-                            <div class="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <small class="text-muted d-block mb-1">Performance</small>
-                                    <h6 class="mb-0 fw-bold text-success">95%</h6>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -218,19 +208,19 @@
                             <input type="text" name="name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Email Address</label>
+                            <label class="form-label fw-bold">Email</label>
                             <input type="email" name="email" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Phone Number</label>
+                            <label class="form-label fw-bold">Phone</label>
                             <input type="text" name="phone" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Assign Role</label>
-                            <select name="role_name" class="form-select" required>
+                            <label class="form-label fw-bold">Role</label>
+                            <select name="store_role_id" class="form-select" required>
                                 <option value="">Select Role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role }}">{{ $role }}</option>
+                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -247,4 +237,43 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        // Date Picker
+        flatpickr("#dateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
+
+        // Sales Chart
+        var salesOptions = {
+            series: [{
+                name: 'Sales',
+                data: @json($analytics['sales_trends']['data'])
+            }],
+            chart: { type: 'area', height: 300, toolbar: { show: false } },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth' },
+            xaxis: { categories: @json($analytics['sales_trends']['labels']) },
+            colors: ['#0d6efd']
+        };
+        new ApexCharts(document.querySelector("#salesChart"), salesOptions).render();
+
+        // Category Chart
+        var catLabels = @json($analytics['categories']->pluck('name'));
+        var catData = @json($analytics['categories']->pluck('total_qty'));
+        
+        var catOptions = {
+            series: catData.length ? catData : [1], 
+            labels: catLabels.length ? catLabels : ['No Data'],
+            chart: { type: 'donut', height: 250 },
+            colors: ['#0d6efd', '#6610f2', '#6f42c1', '#d63384'],
+            legend: { position: 'bottom' }
+        };
+        new ApexCharts(document.querySelector("#categoryChart"), catOptions).render();
+    </script>
+    @endpush
 </x-app-layout>

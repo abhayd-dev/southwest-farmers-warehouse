@@ -16,6 +16,7 @@ class StoreUser extends Authenticatable
 
     protected $fillable = [
         'store_id', 
+        'store_role_id',
         'name',
         'email',
         'password',
@@ -55,6 +56,11 @@ class StoreUser extends Authenticatable
     public function subordinates()
     {
         return $this->hasMany(StoreUser::class, 'parent_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(StoreRole::class, 'store_role_id');
     }
 
     public function roles()

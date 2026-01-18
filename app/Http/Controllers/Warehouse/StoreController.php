@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Warehouse;
 use App\Http\Controllers\Controller;
 use App\Models\StoreDetail;
 use App\Models\StoreUser;
+use App\Models\StoreRole;
 use App\Services\StoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,8 @@ class StoreController extends Controller
             'state'      => 'required|string',
             'pincode'    => 'required|string',
             'address'    => 'required|string',
+            'latitude'   => 'nullable|numeric',
+            'longitude'  => 'nullable|numeric',
             'manager_name' => 'required|string|max:255',
             'manager_email' => 'required|email|unique:store_users,email',
             'manager_phone' => 'nullable|string|max:15',
@@ -81,8 +84,14 @@ class StoreController extends Controller
         $store = StoreDetail::with('manager')->findOrFail($id);
         $analytics = $this->storeService->getStoreAnalytics($id);
         
-        $staffMembers = StoreUser::where('store_id', $id)->latest()->get();
-        $roles = DB::table('store_roles')->where('guard_name', 'store_web')->pluck('name');
+        // Fetch Staff with Roles (using relation)
+        $staffMembers = StoreUser::with('role')
+            ->where('store_id', $id)
+            ->latest()
+            ->get();
+            
+        // Fetch All Store Roles for Dropdown
+        $roles = StoreRole::where('guard_name', 'store_web')->get();
 
         return view('warehouse.stores.show', compact('store', 'analytics', 'staffMembers', 'roles'));
     }
@@ -102,6 +111,8 @@ class StoreController extends Controller
             'store_phone' => 'required|string|max:15',
             'city'       => 'required|string',
             'address'    => 'required|string',
+            'latitude'   => 'nullable|numeric',
+            'longitude'  => 'nullable|numeric',
         ]);
 
         try {
@@ -156,7 +167,7 @@ class StoreController extends Controller
             'email' => 'required|email|unique:store_users,email',
             'phone' => 'nullable|string|max:15',
             'password' => 'required|min:8',
-            'role_name' => 'required|exists:store_roles,name'
+            'store_role_id' => 'required|exists:store_roles,id'
         ]);
 
         try {
