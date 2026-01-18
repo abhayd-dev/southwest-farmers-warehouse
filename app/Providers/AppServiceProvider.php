@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\View\Composers\SidebarComposer;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
@@ -25,5 +26,7 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        View::composer('layouts.partials.sidebar', SidebarComposer::class);
     }
 }

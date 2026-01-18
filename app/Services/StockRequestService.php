@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\StockRequest;
 use App\Models\ProductBatch;
 use App\Models\StockTransaction;
+use App\Models\StoreStock; // <--- Critical Import
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,7 +25,6 @@ class StockRequestService
                 $query->where('status', $status);
             }
         } else {
-            // Default: Show active requests
             $query->whereIn('status', [
                 StockRequest::STATUS_PENDING, 
                 StockRequest::STATUS_PARTIAL
@@ -35,12 +35,12 @@ class StockRequestService
     }
 
     /**
-     * Approve & Dispatch Stock (FIFO Logic)
+     * Approve & Dispatch Stock (Full Cycle: Warehouse Out -> Store In)
      */
     public function approveRequest($requestId, $dispatchQuantity, $note = null)
     {
         return DB::transaction(function () use ($requestId, $dispatchQuantity, $note) {
-            $request = StockRequest::findOrFail($requestId);
+            $request = StockRequest::with('store')->findOrFail($requestId);
             $productId = $request->product_id;
             
             // 1. Validation
@@ -48,11 +48,11 @@ class StockRequestService
                 throw new \Exception("Cannot dispatch more than requested pending quantity ({$request->pending_quantity}).");
             }
 
-            // 2. Fetch Batches (FIFO: Oldest Expiry First)
+            // 2. Fetch Warehouse Batches (FIFO: Oldest Expiry First)
             $batches = ProductBatch::where('product_id', $productId)
-                        ->where('warehouse_id', 1) // Assuming Single Warehouse ID 1
+                        ->where('warehouse_id', 1) 
                         ->where('quantity', '>', 0)
-                        ->orderBy('expiry_date', 'asc') // First Expiring First Out
+                        ->orderBy('expiry_date', 'asc')
                         ->orderBy('created_at', 'asc')
                         ->lockForUpdate()
                         ->get();
@@ -62,7 +62,7 @@ class StockRequestService
                 throw new \Exception("Insufficient Warehouse Stock. Available: {$totalAvailable}");
             }
 
-            // 3. Deduct Stock from Batches
+            // 3. Deduct Stock from Warehouse (FIFO)
             $remainingToDeduct = $dispatchQuantity;
 
             foreach ($batches as $batch) {
@@ -70,33 +70,56 @@ class StockRequestService
 
                 $deductAmount = min($batch->quantity, $remainingToDeduct);
 
-                // Update Batch
+                // A. Update Warehouse Batch
                 $batch->quantity -= $deductAmount;
                 $batch->save();
 
-                // Log Transaction (Outward Transfer)
+                // B. Log Warehouse Transaction (OUT)
                 StockTransaction::create([
                     'product_id' => $productId,
                     'warehouse_id' => 1,
+                    'store_id' => null, // Warehouse side
                     'product_batch_id' => $batch->id,
-                    'user_id' => Auth::id(),
+                    'ware_user_id' => Auth::id(),
                     'type' => 'transfer_out',
                     'quantity_change' => -$deductAmount,
-                    'running_balance' => $batch->quantity, // Balance of this batch
+                    'running_balance' => $batch->quantity,
                     'reference_id' => 'REQ-' . $request->id,
-                    'remarks' => "Dispatch to " . $request->store->store_name
+                    'remarks' => "Dispatched to " . $request->store->store_name
                 ]);
 
                 $remainingToDeduct -= $deductAmount;
             }
 
-            // 4. Update Request Status
+            // 4. Add Stock to Store Inventory (Auto-Receive)
+            $storeStock = StoreStock::firstOrCreate(
+                ['store_id' => $request->store_id, 'product_id' => $productId],
+                ['quantity' => 0, 'selling_price' => 0] // Default values
+            );
+
+            $storeStock->increment('quantity', $dispatchQuantity);
+
+            // 5. Log Store Transaction (IN)
+            StockTransaction::create([
+                'product_id' => $productId,
+                'warehouse_id' => 1,
+                'store_id' => $request->store_id, // Store side
+                'product_batch_id' => null, // Stores don't track batches yet
+                'ware_user_id' => Auth::id(),
+                'type' => 'transfer_in',
+                'quantity_change' => $dispatchQuantity,
+                'running_balance' => $storeStock->quantity,
+                'reference_id' => 'REQ-' . $request->id,
+                'remarks' => "Received from Warehouse via Request #" . $request->id
+            ]);
+
+            // 6. Update Request Status
             $request->fulfilled_quantity += $dispatchQuantity;
             
             if ($request->fulfilled_quantity >= $request->requested_quantity) {
-                $request->status = StockRequest::STATUS_DISPATCHED; // Fully Sent (In Transit)
+                $request->status = StockRequest::STATUS_COMPLETED;
             } else {
-                $request->status = StockRequest::STATUS_PARTIAL; // Partially Sent
+                $request->status = StockRequest::STATUS_PARTIAL;
             }
 
             if ($note) $request->admin_note = $note;

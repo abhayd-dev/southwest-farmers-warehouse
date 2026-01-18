@@ -15,7 +15,8 @@ class StockTransaction extends Model
         'quantity_change',
         'running_balance',
         'reference_id',
-        'remarks'
+        'remarks',
+        'store_id',
     ];
 
     public function product()
@@ -31,6 +32,16 @@ class StockTransaction extends Model
     public function user()
     {
         return $this->belongsTo(WareUser::class, 'ware_user_id');
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(StoreDetail::class, 'store_id');
+    }
+    
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
     
 }

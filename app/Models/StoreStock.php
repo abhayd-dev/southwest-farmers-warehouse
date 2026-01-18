@@ -16,25 +16,19 @@ class StoreStock extends Model
         'product_id',
         'quantity',
         'selling_price',
-        'alert_level' // If you added this in a later migration, keep it. If not, remove.
+        'alert_level'
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
-        'price'    => 'decimal:2',
+        'quantity' => 'integer', // or 'decimal:2' if you use fractional units
+        'selling_price' => 'decimal:2',
     ];
 
-    /**
-     * The store where this stock is held.
-     */
     public function store()
     {
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
 
-    /**
-     * The product item.
-     */
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
