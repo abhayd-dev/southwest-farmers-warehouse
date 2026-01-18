@@ -21,6 +21,7 @@ use App\Http\Controllers\WarehouseController;
 | Warehouse Authentication
 |--------------------------------------------------------------------------
 */
+
 Route::get('/cc', function () {
 
     Artisan::call('optimize:clear');
@@ -176,6 +177,8 @@ Route::middleware('auth')->group(function () {
         Route::post('stores/update-status', [StoreController::class, 'updateStatus'])
             ->name('warehouse.stores.update-status');
 
+        Route::get('stores/{id}/analytics', [StoreController::class, 'analytics'])
+            ->name('warehouse.stores.analytics');
         Route::resource('stores', StoreController::class)
             ->names('warehouse.stores');
         Route::post('stores/{id}/staff', [StoreController::class, 'storeStaff'])

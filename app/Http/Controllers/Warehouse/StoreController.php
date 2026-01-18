@@ -6,9 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\StoreDetail;
 use App\Models\StoreUser;
 use App\Models\StoreRole;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Services\StoreService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -25,7 +26,7 @@ class StoreController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('store_name', 'like', "%$search%")
                   ->orWhere('store_code', 'like', "%$search%");
             });
@@ -55,19 +56,19 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'store_name' => 'required|string|max:255',
-            'store_email' => 'required|email|unique:store_details,email',
-            'store_phone' => 'required|string|max:15',
-            'city'       => 'required|string',
-            'state'      => 'required|string',
-            'pincode'    => 'required|string',
-            'address'    => 'required|string',
-            'latitude'   => 'nullable|numeric',
-            'longitude'  => 'nullable|numeric',
-            'manager_name' => 'required|string|max:255',
-            'manager_email' => 'required|email|unique:store_users,email',
-            'manager_phone' => 'nullable|string|max:15',
-            'password'     => 'required|min:8|confirmed',
+            'store_name'      => 'required|string|max:255',
+            'store_email'     => 'required|email|unique:store_details,email',
+            'store_phone'     => 'required|string|max:15',
+            'city'            => 'required|string',
+            'state'           => 'required|string',
+            'pincode'         => 'required|string',
+            'address'         => 'required|string',
+            'latitude'        => 'nullable|numeric',
+            'longitude'       => 'nullable|numeric',
+            'manager_name'    => 'required|string|max:255',
+            'manager_email'   => 'required|email|unique:store_users,email',
+            'manager_phone'   => 'nullable|string|max:15',
+            'password'        => 'required|min:8|confirmed',
         ]);
 
         try {
@@ -75,25 +76,53 @@ class StoreController extends Controller
             return redirect()->route('warehouse.stores.index')
                 ->with('success', 'Store registered successfully with Manager account.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Error creating store: ' . $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
     }
 
     public function show($id)
     {
         $store = StoreDetail::with('manager')->findOrFail($id);
-        $analytics = $this->storeService->getStoreAnalytics($id);
-        
-        // Fetch Staff with Roles
+
+        $stats = $this->storeService->getStoreStats($id);
+
         $staffMembers = StoreUser::with('role')
             ->where('store_id', $id)
             ->latest()
             ->get();
-            
-        // FIXED: Changed guard_name to 'store_user'
+
         $roles = StoreRole::where('guard_name', 'store_user')->get();
 
-        return view('warehouse.stores.show', compact('store', 'analytics', 'staffMembers', 'roles'));
+        $categories = ProductCategory::select('id', 'name')->get();
+
+        $products = Product::select('id', 'name', 'store_id')
+            ->whereNull('store_id')
+            ->orWhere('store_id', $id)
+            ->get();
+
+        return view('warehouse.stores.show', compact(
+            'store',
+            'stats',
+            'staffMembers',
+            'roles',
+            'categories',
+            'products'
+        ));
+    }
+
+    public function analytics(Request $request, $id)
+    {
+        $filters = $request->only([
+            'date_range',
+            'product_type',
+            'category_id',
+            'subcategory_id',
+            'product_id'
+        ]);
+
+        $data = $this->storeService->getAnalyticsData($id, $filters);
+
+        return response()->json($data);
     }
 
     public function edit($id)
@@ -105,30 +134,32 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $store = StoreDetail::findOrFail($id);
+
         $request->validate([
-            'store_name' => 'required|string|max:255',
+            'store_name'  => 'required|string|max:255',
             'store_email' => 'required|email|unique:store_details,email,' . $id,
             'store_phone' => 'required|string|max:15',
-            'city'       => 'required|string',
-            'address'    => 'required|string',
-            'latitude'   => 'nullable|numeric',
-            'longitude'  => 'nullable|numeric',
+            'city'        => 'required|string',
+            'address'     => 'required|string',
+            'latitude'    => 'nullable|numeric',
+            'longitude'   => 'nullable|numeric',
         ]);
 
         try {
             $this->storeService->updateStore($store, $request->all());
-            return redirect()->route('warehouse.stores.index')->with('success', 'Store details updated.');
+            return redirect()->route('warehouse.stores.index')
+                ->with('success', 'Store details updated.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Update failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
     }
 
     public function destroy($id)
     {
         try {
-            $store = StoreDetail::findOrFail($id);
-            $store->delete();
-            return redirect()->route('warehouse.stores.index')->with('success', 'Store deleted successfully.');
+            StoreDetail::findOrFail($id)->delete();
+            return redirect()->route('warehouse.stores.index')
+                ->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Cannot delete store.');
         }
@@ -136,12 +167,12 @@ class StoreController extends Controller
 
     public function updateStatus(Request $request)
     {
-        try {
-            $request->validate([
-                'id' => 'required|exists:store_details,id',
-                'status' => 'required|boolean'
-            ]);
+        $request->validate([
+            'id'     => 'required|exists:store_details,id',
+            'status' => 'required|boolean',
+        ]);
 
+        try {
             $store = StoreDetail::findOrFail($request->id);
             $store->is_active = $request->status;
             $store->save();
@@ -154,27 +185,33 @@ class StoreController extends Controller
                 }
             }
 
-            return response()->json(['success' => true, 'message' => 'Store status updated successfully.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Store status updated successfully.',
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error updating status.'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating status.',
+            ], 500);
         }
     }
 
     public function storeStaff(Request $request, $storeId)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:store_users,email',
-            'phone' => 'nullable|string|max:15',
-            'password' => 'required|min:8',
-            'store_role_id' => 'required|exists:store_roles,id'
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:store_users,email',
+            'phone'         => 'nullable|string|max:15',
+            'password'      => 'required|min:8',
+            'store_role_id' => 'required|exists:store_roles,id',
         ]);
 
         try {
             $this->storeService->createStoreStaff($storeId, $request->all());
             return back()->with('success', 'Staff member added successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error adding staff: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
