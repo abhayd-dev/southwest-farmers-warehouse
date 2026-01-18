@@ -36,8 +36,12 @@ class StoreService
                 'is_active'  => true,
             ]);
 
-            // Find Manager Role ID
-            $managerRole = StoreRole::where('name', 'Super Admin')->orWhere('name', 'Manager')->first();
+            // FIXED: Find Manager Role ID using 'store_user' guard
+            $managerRole = StoreRole::where('guard_name', 'store_user')
+                ->where(function($q) {
+                    $q->where('name', 'Super Admin')->orWhere('name', 'Manager');
+                })->first();
+                
             $roleId = $managerRole ? $managerRole->id : null;
 
             // Create Manager
@@ -138,6 +142,7 @@ class StoreService
             'low_stock_count' => StoreStock::where('store_id', $storeId)->where('quantity', '<', 10)->count(),
         ];
 
+        // 2. Category Distribution (For Charts)
         $categoryData = StoreStock::join('products', 'store_stocks.product_id', '=', 'products.id')
             ->join('product_categories', 'products.category_id', '=', 'product_categories.id')
             ->where('store_stocks.store_id', $storeId)

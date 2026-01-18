@@ -84,14 +84,14 @@ class StoreController extends Controller
         $store = StoreDetail::with('manager')->findOrFail($id);
         $analytics = $this->storeService->getStoreAnalytics($id);
         
-        // Fetch Staff with Roles (using relation)
+        // Fetch Staff with Roles
         $staffMembers = StoreUser::with('role')
             ->where('store_id', $id)
             ->latest()
             ->get();
             
-        // Fetch All Store Roles for Dropdown
-        $roles = StoreRole::where('guard_name', 'store_web')->get();
+        // FIXED: Changed guard_name to 'store_user'
+        $roles = StoreRole::where('guard_name', 'store_user')->get();
 
         return view('warehouse.stores.show', compact('store', 'analytics', 'staffMembers', 'roles'));
     }

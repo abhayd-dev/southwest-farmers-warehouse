@@ -39,7 +39,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small text-muted text-uppercase fw-bold mb-2">Region</label>
                         <select class="form-select form-select-sm" disabled>
-                            <option selected>{{ $store->city }} (Fixed)</option>
+                            <option selected>{{ $store->city }}</option>
                         </select>
                     </div>
                     <div class="col-lg-4 col-md-4 d-flex gap-2">
