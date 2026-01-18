@@ -81,17 +81,14 @@ class StoreService
         $user->delete();
     }
 
-    /**
-     * Advanced Analytics Logic
-     */
     public function getAnalyticsData($storeId, array $filters)
     {
-        // Base Query joining products to access product details
+        // Base Query
         $query = StockTransaction::join('products', 'stock_transactions.product_id', '=', 'products.id')
             ->where('stock_transactions.store_id', $storeId)
             ->where('stock_transactions.type', 'sale_out');
 
-        // 1. Date Filter
+        // --- Filters ---
         if (!empty($filters['date_range'])) {
             $dates = explode(' to ', $filters['date_range']);
             if (count($dates) === 2) {
@@ -102,7 +99,6 @@ class StoreService
             }
         }
 
-        // 2. Product Type Filter
         if (!empty($filters['product_type'])) {
             if ($filters['product_type'] === 'warehouse') {
                 $query->whereNull('products.store_id');
@@ -111,22 +107,21 @@ class StoreService
             }
         }
 
-        // 3. Category Filter
         if (!empty($filters['category_id'])) {
             $query->where('products.category_id', $filters['category_id']);
         }
 
-        // 4. Subcategory Filter
         if (!empty($filters['subcategory_id'])) {
             $query->where('products.subcategory_id', $filters['subcategory_id']);
         }
 
-        // 5. Product Filter
         if (!empty($filters['product_id'])) {
             $query->where('products.id', $filters['product_id']);
         }
 
-        // --- A. Sales Trend ---
+        // --- Data Aggregation ---
+
+        // 1. Sales Trend
         $trendQuery = clone $query;
         $trendData = $trendQuery
             ->select(
@@ -137,8 +132,7 @@ class StoreService
             ->orderBy('date')
             ->get();
 
-        // --- B. Product Performance ---
-        // FIX: Used 'product_name' instead of 'name'
+        // 2. Product Performance (Using correct column product_name)
         $productQuery = clone $query;
         $productData = $productQuery
             ->select(
@@ -150,8 +144,7 @@ class StoreService
             ->limit(10)
             ->get();
 
-        // --- C. Category Distribution ---
-        // Ensure we join categories to get the name
+        // 3. Category Distribution
         $catQuery = clone $query;
         $catData = $catQuery
             ->join('product_categories', 'products.category_id', '=', 'product_categories.id')
@@ -164,24 +157,24 @@ class StoreService
             ->get();
 
         $totalSales = $trendData->sum('total_qty');
-        $totalRevenue = 0; // Placeholder if revenue tracking is added
 
+        // **FIX**: Cast strings to floats for ApexCharts
         return [
             'sales_trend' => [
                 'labels' => $trendData->pluck('date'),
-                'data'   => $trendData->pluck('total_qty'),
+                'data'   => $trendData->pluck('total_qty')->map(fn($v) => (float)$v),
             ],
             'product_performance' => [
                 'labels' => $productData->pluck('name'),
-                'data'   => $productData->pluck('total_qty'),
+                'data'   => $productData->pluck('total_qty')->map(fn($v) => (float)$v),
             ],
             'category_distribution' => [
                 'labels' => $catData->pluck('name'),
-                'data'   => $catData->pluck('total_qty'),
+                'data'   => $catData->pluck('total_qty')->map(fn($v) => (float)$v),
             ],
             'totals' => [
-                'sales'   => $totalSales,
-                'revenue' => $totalRevenue,
+                'sales'   => (float)$totalSales,
+                'revenue' => 0, 
             ],
         ];
     }

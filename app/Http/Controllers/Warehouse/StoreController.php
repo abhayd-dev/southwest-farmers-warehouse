@@ -93,7 +93,7 @@ class StoreController extends Controller
         $roles = StoreRole::where('guard_name', 'store_user')->get();
         $categories = ProductCategory::select('id', 'name')->get();
 
-        // FIX: Select 'product_name'
+        // FIX: Ensure correct column name for dropdown
         $products = Product::select('id', 'product_name', 'store_id')
             ->whereNull('store_id')
             ->orWhere('store_id', $id)

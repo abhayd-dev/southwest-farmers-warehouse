@@ -132,7 +132,7 @@
                                     </div>
                                 </div>
                                 <div class="alert alert-warning border-0 shadow-sm py-2 px-3 small">
-                                    <i class="mdi mdi-alert-circle-outline me-1"></i> To change, visit <a href="{{ route('warehouse.staff.index') }}" class="alert-link">User Management</a>.
+                                    <i class="mdi mdi-alert-circle-outline me-1"></i> To change, visit <a href="{{ route('warehouse.staff.index') }}" class="alert-link">Store Panel -> My Profile Update</a>.
                                 </div>
                             @else
                                 <div class="text-center text-muted py-3">
