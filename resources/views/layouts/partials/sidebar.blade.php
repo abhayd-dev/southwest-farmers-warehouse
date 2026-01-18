@@ -63,12 +63,12 @@
                                         Stock & Inventory
                                     </a>
                                 </li>
-                                {{-- <li>
+                                <li>
                                     <a href="{{ route('warehouse.stock-requests.index') }}"
                                         class="{{ request()->routeIs('warehouse.stock-requests.*') ? 'active' : '' }}">
                                         Stock Requests <span class="badge bg-danger ms-1 float-end">New</span>
                                     </a>
-                                </li> --}}
+                                </li>
                             </ul>
                         </div>
                     </li>
