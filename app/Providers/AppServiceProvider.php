@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\View\Composers\SidebarComposer;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 
