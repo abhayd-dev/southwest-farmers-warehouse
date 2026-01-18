@@ -1,5 +1,33 @@
 <x-app-layout title="Add Store">
+    {{-- LEAFLET CSS --}}
+    @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .search-results {
+            position: absolute;
+            background: white;
+            width: 100%;
+            z-index: 1000;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .search-result-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        .search-result-item:hover {
+            background-color: #f1f3f5;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+    @endpush
 
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 bg-success text-white p-3 rounded shadow-sm">
@@ -25,42 +53,51 @@
                                     <input type="text" name="store_name" class="form-control form-control-lg" placeholder="e.g. Southwest Farmers Lucknow" value="{{ old('store_name') }}" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Store Email</label>
+                                    <label class="form-label fw-bold">Store Email <span class="text-danger">*</span></label>
                                     <input type="email" name="store_email" class="form-control" placeholder="store@example.com" value="{{ old('store_email') }}" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Phone Number</label>
+                                    <label class="form-label fw-bold">Phone Number <span class="text-danger">*</span></label>
                                     <input type="text" name="store_phone" class="form-control" placeholder="+91 98765..." value="{{ old('store_phone') }}" required>
                                 </div>
                                 <div class="col-md-12">
-                                    <label class="form-label fw-bold">Full Address</label>
+                                    <label class="form-label fw-bold">Full Address <span class="text-danger">*</span></label>
                                     <textarea name="address" class="form-control" rows="2" placeholder="Building No, Street..." required>{{ old('address') }}</textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">City</label>
+                                    <label class="form-label fw-bold">City <span class="text-danger">*</span></label>
                                     <input type="text" name="city" class="form-control" placeholder="City" value="{{ old('city') }}" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">State</label>
+                                    <label class="form-label fw-bold">State <span class="text-danger">*</span></label>
                                     <input type="text" name="state" class="form-control" placeholder="State" value="{{ old('state') }}" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold">Pincode</label>
+                                    <label class="form-label fw-bold">Pincode <span class="text-danger">*</span></label>
                                     <input type="text" name="pincode" class="form-control" placeholder="123456" value="{{ old('pincode') }}" required>
                                 </div>
                                 
                                 <div class="col-md-12 mt-4">
-                                    <label class="form-label fw-bold"><i class="mdi mdi-map-marker-radius me-1"></i> Store Location (Click on Map)</label>
-                                    <div id="map" style="height: 300px; border-radius: 8px; border: 1px solid #ddd;"></div>
-                                    <div class="row mt-2">
-                                        <div class="col-6">
-                                            <input type="text" name="latitude" id="latitude" class="form-control form-control-sm bg-light" placeholder="Latitude" readonly required>
+                                    <label class="form-label fw-bold mb-1"><i class="mdi mdi-map-marker-radius me-1 text-danger"></i> Pin Location on Map</label>
+                                    
+                                    {{-- Search Box --}}
+                                    <div class="position-relative mb-2">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-muted"><i class="mdi mdi-magnify"></i></span>
+                                            <input type="text" id="locationSearch" class="form-control" placeholder="Type to search location (e.g. Hazratganj, Lucknow)..." autocomplete="off">
                                         </div>
-                                        <div class="col-6">
-                                            <input type="text" name="longitude" id="longitude" class="form-control form-control-sm bg-light" placeholder="Longitude" readonly required>
-                                        </div>
+                                        {{-- Results Dropdown --}}
+                                        <div id="searchResults" class="search-results d-none"></div>
                                     </div>
-                                    <small class="text-muted">You can search or drag the marker to pinpoint exact location.</small>
+
+                                    {{-- Map Container --}}
+                                    <div id="map" style="height: 350px; border-radius: 8px; border: 1px solid #ddd; z-index: 1;"></div>
+                                    
+                                    {{-- Hidden Inputs --}}
+                                    <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
+                                    <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
+                                    
+                                    <small class="text-muted mt-1 d-block"><i class="mdi mdi-information-outline"></i> Search or click on the map to set the store location.</small>
                                 </div>
                             </div>
                         </div>
@@ -78,11 +115,11 @@
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-12">
-                                    <label class="form-label fw-bold">Manager Name</label>
+                                    <label class="form-label fw-bold">Manager Name <span class="text-danger">*</span></label>
                                     <input type="text" name="manager_name" class="form-control" placeholder="Full Name" value="{{ old('manager_name') }}" required>
                                 </div>
                                 <div class="col-md-12">
-                                    <label class="form-label fw-bold">Login Email</label>
+                                    <label class="form-label fw-bold">Login Email <span class="text-danger">*</span></label>
                                     <input type="email" name="manager_email" class="form-control" placeholder="manager@example.com" value="{{ old('manager_email') }}" required>
                                 </div>
                                 <div class="col-md-12">
@@ -90,11 +127,11 @@
                                     <input type="text" name="manager_phone" class="form-control" placeholder="Mobile" value="{{ old('manager_phone') }}">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Password</label>
+                                    <label class="form-label fw-bold">Password <span class="text-danger">*</span></label>
                                     <input type="password" name="password" class="form-control" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Confirm Password</label>
+                                    <label class="form-label fw-bold">Confirm Password <span class="text-danger">*</span></label>
                                     <input type="password" name="password_confirmation" class="form-control" required>
                                 </div>
                             </div>
@@ -115,37 +152,100 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Initialize Map (Default: India Center)
-            var map = L.map('map').setView([20.5937, 78.9629], 5);
+            
+            // --- MAP INITIALIZATION ---
+            var defaultLat = {{ old('latitude') ?? 20.5937 }};
+            var defaultLng = {{ old('longitude') ?? 78.9629 }};
+            var zoomLevel = {{ old('latitude') ? 14 : 5 }};
+
+            var map = L.map('map').setView([defaultLat, defaultLng], zoomLevel);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+                attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
             var marker;
 
-            // Click Event to set marker
-            map.on('click', function(e) {
-                var lat = e.latlng.lat.toFixed(6);
-                var lng = e.latlng.lng.toFixed(6);
+            // If old values exist, place marker
+            if ("{{ old('latitude') }}") {
+                marker = L.marker([defaultLat, defaultLng]).addTo(map);
+            }
 
+            // --- CLICK TO SET MARKER ---
+            map.on('click', function(e) {
+                updateLocation(e.latlng.lat, e.latlng.lng);
+            });
+
+            function updateLocation(lat, lng) {
                 if (marker) {
-                    marker.setLatLng(e.latlng);
+                    marker.setLatLng([lat, lng]);
                 } else {
-                    marker = L.marker(e.latlng).addTo(map);
+                    marker = L.marker([lat, lng]).addTo(map);
+                }
+                document.getElementById('latitude').value = lat.toFixed(7);
+                document.getElementById('longitude').value = lng.toFixed(7);
+            }
+
+            // --- DEBOUNCED SEARCH LOGIC ---
+            const searchInput = document.getElementById('locationSearch');
+            const resultsBox = document.getElementById('searchResults');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
+
+                if (query.length < 3) {
+                    resultsBox.classList.add('d-none');
+                    return;
                 }
 
-                document.getElementById('latitude').value = lat;
-                document.getElementById('longitude').value = lng;
-            });
-        });
+                debounceTimer = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            resultsBox.innerHTML = '';
+                            if (data.length > 0) {
+                                resultsBox.classList.remove('d-none');
+                                data.forEach(place => {
+                                    const item = document.createElement('div');
+                                    item.className = 'search-result-item';
+                                    item.innerText = place.display_name;
+                                    
+                                    item.onclick = function() {
+                                        const lat = parseFloat(place.lat);
+                                        const lon = parseFloat(place.lon);
+                                        
+                                        // Update Map
+                                        map.setView([lat, lon], 16);
+                                        updateLocation(lat, lon);
 
-        // Form Validation Logic
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
+                                        // Clear Search
+                                        searchInput.value = place.display_name;
+                                        resultsBox.classList.add('d-none');
+                                    };
+                                    resultsBox.appendChild(item);
+                                });
+                            } else {
+                                resultsBox.classList.add('d-none');
+                            }
+                        })
+                        .catch(err => console.error('Search Error:', err));
+                }, 500); // 500ms delay
+            });
+
+            // Close search results if clicked outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                    resultsBox.classList.add('d-none');
+                }
+            });
+
+            // --- FORM VALIDATION ---
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms).forEach(function (form) {
                     form.addEventListener('submit', function (event) {
                         if (!form.checkValidity()) {
                             event.preventDefault()
@@ -154,7 +254,8 @@
                         form.classList.add('was-validated')
                     }, false)
                 })
-        })()
+            })()
+        });
     </script>
     @endpush
 </x-app-layout>
