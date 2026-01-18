@@ -476,14 +476,7 @@
 
                 // Reset
                 document.getElementById('resetFilters').addEventListener('click', () => {
-                    datePicker.clear();
-                    document.getElementById('product_type').value = 'all';
-                    document.getElementById('category_id').value = '';
-                    document.getElementById('subcategory_id').innerHTML =
-                        '<option>Select Category First</option>';
-                    document.getElementById('subcategory_id').disabled = true;
-                    $('#product_id').val(null).trigger('change');
-                    setTimeout(fetchData, 100);
+                    window.location.reload();
                 });
 
                 fetchData();
