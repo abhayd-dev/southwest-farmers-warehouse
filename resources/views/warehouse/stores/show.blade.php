@@ -208,6 +208,58 @@
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="mb-0 fw-bold text-dark"><i class="mdi mdi-package-variant-closed me-2"></i> Current Store
+                    Inventory</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Product Name</th>
+                                <th>SKU</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($storeInventory as $item)
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ $item->product->product_name }}</td>
+                                    <td class="text-muted">{{ $item->product->sku }}</td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge {{ $item->quantity < 10 ? 'bg-danger' : 'bg-success' }} fs-6">
+                                            {{ $item->quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        @if ($item->quantity < 10)
+                                            <small class="text-danger fw-bold"><i class="mdi mdi-alert"></i> Low
+                                                Stock</small>
+                                        @else
+                                            <small class="text-success"><i class="mdi mdi-check"></i> Good</small>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Store has no inventory yet.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3">
+                    {{ $storeInventory->links() }}
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <h6 class="card-title mb-0 fw-bold"><i class="mdi mdi-account-group me-2"></i>Store Staff</h6>
@@ -253,8 +305,7 @@
                                     <td class="text-end pe-4">
                                         @if (!$staff->isStoreAdmin())
                                             <form action="{{ route('warehouse.stores.staff.destroy', $staff->id) }}"
-                                                method="POST" 
-                                                class="d-inline delete-form">
+                                                method="POST" class="d-inline delete-form">
                                                 @csrf @method('DELETE')
                                                 <button
                                                     class="btn btn-sm btn-outline-danger border-0 rounded-circle"><i
@@ -284,7 +335,8 @@
                     <h5 class="modal-title fw-bold">Add Staff Member</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('warehouse.stores.staff.store', $store->id) }}" method="POST" class="needs-validation" novalidate>
+                <form action="{{ route('warehouse.stores.staff.store', $store->id) }}" method="POST"
+                    class="needs-validation" novalidate>
                     @csrf
                     <div class="modal-body p-4">
                         <div class="mb-3">

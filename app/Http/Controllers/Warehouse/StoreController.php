@@ -28,7 +28,7 @@ class StoreController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('store_name', 'like', "%$search%")
-                  ->orWhere('store_code', 'like', "%$search%");
+                    ->orWhere('store_code', 'like', "%$search%");
             });
         }
 
@@ -99,8 +99,20 @@ class StoreController extends Controller
             ->orWhere('store_id', $id)
             ->get();
 
+        $storeInventory = \App\Models\StoreStock::with('product')
+            ->where('store_id', $id)
+            ->where('quantity', '>', 0) // Only show items in stock
+            ->orderBy('quantity', 'desc')
+            ->paginate(10);
+
         return view('warehouse.stores.show', compact(
-            'store', 'stats', 'staffMembers', 'roles', 'categories', 'products'
+            'store',
+            'stats',
+            'staffMembers',
+            'roles',
+            'categories',
+            'products',
+            'storeInventory'
         ));
     }
 
