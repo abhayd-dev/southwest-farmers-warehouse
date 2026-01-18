@@ -1,12 +1,23 @@
 <x-app-layout title="Store Dashboard - {{ $store->store_name }}">
     @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
-        .select2-container .select2-selection--single { height: 38px; border-color: #dee2e6; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
-        .chart-container { position: relative; height: 350px; width: 100%; }
-    </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <style>
+            .select2-container .select2-selection--single {
+                height: 38px;
+                border-color: #dee2e6;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 36px;
+            }
+
+            .chart-container {
+                position: relative;
+                height: 350px;
+                width: 100%;
+            }
+        </style>
     @endpush
 
     <div class="container-fluid">
@@ -18,8 +29,10 @@
                         <li class="breadcrumb-item active">{{ $store->store_code }}</li>
                     </ol>
                 </nav>
-                <h4 class="mb-0 fw-bold">{{ $store->store_name }} <span class="badge bg-success fs-6 align-middle ms-2">Active</span></h4>
-                <p class="text-muted mb-0"><i class="mdi mdi-map-marker me-1"></i> {{ $store->city }} ({{ $store->address }})</p>
+                <h4 class="mb-0 fw-bold">{{ $store->store_name }} <span
+                        class="badge bg-success fs-6 align-middle ms-2">Active</span></h4>
+                <p class="text-muted mb-0"><i class="mdi mdi-map-marker me-1"></i> {{ $store->city }}
+                    ({{ $store->address }})</p>
             </div>
             <div>
                 <a href="{{ route('warehouse.stores.edit', $store->id) }}" class="btn btn-primary shadow-sm">
@@ -65,7 +78,8 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
-                <h6 class="card-title mb-0 fw-bold"><i class="mdi mdi-filter-variant me-1"></i> Sales Analytics Filter</h6>
+                <h6 class="card-title mb-0 fw-bold"><i class="mdi mdi-filter-variant me-1"></i> Sales Analytics Filter
+                </h6>
             </div>
             <div class="card-body">
                 <form id="analyticsFilter" class="row g-3">
@@ -87,7 +101,7 @@
                         <label class="form-label small fw-bold text-muted">Category</label>
                         <select id="category_id" class="form-select">
                             <option value="">All Categories</option>
-                            @foreach($categories as $cat)
+                            @foreach ($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
@@ -104,8 +118,9 @@
                         <label class="form-label small fw-bold text-muted">Specific Product</label>
                         <select id="product_id" class="form-control select2">
                             <option value="">Search Product...</option>
-                            @foreach($products as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->name }} ({{ $prod->store_id ? 'Local' : 'Global' }})</option>
+                            @foreach ($products as $prod)
+                                <option value="{{ $prod->id }}">{{ $prod->product_name }}
+                                    ({{ $prod->store_id ? 'Local' : 'Global' }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -170,36 +185,42 @@
                         </thead>
                         <tbody>
                             @forelse($staffMembers as $staff)
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-light text-primary rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold">
-                                            {{ substr($staff->name, 0, 1) }}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div
+                                                class="avatar-sm bg-light text-primary rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold">
+                                                {{ substr($staff->name, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ $staff->name }}</h6>
+                                                <small class="text-muted">{{ $staff->email }}</small>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">{{ $staff->name }}</h6>
-                                            <small class="text-muted">{{ $staff->email }}</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
-                                        {{ $staff->role ? $staff->role->name : 'No Role' }}
-                                    </span>
-                                </td>
-                                <td>{{ $staff->phone ?? '-' }}</td>
-                                <td><span class="badge bg-success-subtle text-success">Active</span></td>
-                                <td class="text-end pe-4">
-                                    @if(!$staff->isStoreAdmin())
-                                    <form action="{{ route('warehouse.stores.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('Remove user?');" class="d-inline">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger border-0"><i class="mdi mdi-trash-can"></i></button>
-                                    </form>
-                                    @endif
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
+                                            {{ $staff->role ? $staff->role->name : 'No Role' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $staff->phone ?? '-' }}</td>
+                                    <td><span class="badge bg-success-subtle text-success">Active</span></td>
+                                    <td class="text-end pe-4">
+                                        @if (!$staff->isStoreAdmin())
+                                            <form action="{{ route('warehouse.stores.staff.destroy', $staff->id) }}"
+                                                method="POST" class="d-inline delete-form">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger border-0"><i
+                                                        class="mdi mdi-trash-can"></i></button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
                             @empty
-                            <tr><td colspan="5" class="text-center py-4 text-muted">No staff found.</td></tr>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No staff found.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -218,17 +239,20 @@
                 <form action="{{ route('warehouse.stores.staff.store', $store->id) }}" method="POST">
                     @csrf
                     <div class="modal-body">
-                        <div class="mb-3"><label class="form-label fw-bold">Name</label><input type="text" name="name" class="form-control" required></div>
-                        <div class="mb-3"><label class="form-label fw-bold">Email</label><input type="email" name="email" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Name</label><input type="text"
+                                name="name" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Email</label><input type="email"
+                                name="email" class="form-control" required></div>
                         <div class="mb-3"><label class="form-label fw-bold">Role</label>
                             <select name="store_role_id" class="form-select" required>
                                 <option value="">Select Role</option>
-                                @foreach($roles as $role)
+                                @foreach ($roles as $role)
                                     <option value="{{ $role->id }}">{{ $role->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="mb-3"><label class="form-label fw-bold">Password</label><input type="password" name="password" class="form-control" required></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Password</label><input type="password"
+                                name="password" class="form-control" required></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -240,99 +264,142 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const storeId = "{{ $store->id }}";
-            
-            // 1. Initialize Plugins
-            flatpickr("#date_range", { mode: "range", dateFormat: "Y-m-d" });
-            $('.select2').select2({ placeholder: "Search Product", allowClear: true });
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-            // 2. Initialize Charts (Empty)
-            const trendChart = new ApexCharts(document.querySelector("#trendChart"), {
-                chart: { type: 'area', height: 350 }, series: [], noData: { text: 'Loading...' }
-            });
-            trendChart.render();
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const storeId = "{{ $store->id }}";
 
-            const catChart = new ApexCharts(document.querySelector("#categoryChart"), {
-                chart: { type: 'donut', height: 350 }, series: [], labels: [], noData: { text: 'Loading...' }
-            });
-            catChart.render();
+                // 1. Initialize Plugins
+                flatpickr("#date_range", {
+                    mode: "range",
+                    dateFormat: "Y-m-d"
+                });
+                $('.select2').select2({
+                    placeholder: "Search Product",
+                    allowClear: true
+                });
 
-            const prodChart = new ApexCharts(document.querySelector("#productChart"), {
-                chart: { type: 'bar', height: 300 }, series: [], xaxis: { categories: [] }, noData: { text: 'Loading...' }
-            });
-            prodChart.render();
+                // 2. Initialize Charts (Empty)
+                const trendChart = new ApexCharts(document.querySelector("#trendChart"), {
+                    chart: {
+                        type: 'area',
+                        height: 350
+                    },
+                    series: [],
+                    noData: {
+                        text: 'Loading...'
+                    }
+                });
+                trendChart.render();
 
-            // 3. Fetch Data Logic
-            function fetchData() {
-                const filters = {
-                    date_range: document.getElementById('date_range').value,
-                    product_type: document.getElementById('product_type').value,
-                    category_id: document.getElementById('category_id').value,
-                    subcategory_id: document.getElementById('subcategory_id').value,
-                    product_id: $('#product_id').val() // Select2 uses jQuery
-                };
+                const catChart = new ApexCharts(document.querySelector("#categoryChart"), {
+                    chart: {
+                        type: 'donut',
+                        height: 350
+                    },
+                    series: [],
+                    labels: [],
+                    noData: {
+                        text: 'Loading...'
+                    }
+                });
+                catChart.render();
 
-                fetch(`/warehouse/stores/${storeId}/analytics?` + new URLSearchParams(filters))
-                    .then(res => res.json())
-                    .then(data => {
-                        // Update Trend Chart
-                        trendChart.updateOptions({
-                            series: [{ name: 'Sales', data: data.sales_trend.data }],
-                            xaxis: { categories: data.sales_trend.labels }
-                        });
+                const prodChart = new ApexCharts(document.querySelector("#productChart"), {
+                    chart: {
+                        type: 'bar',
+                        height: 300
+                    },
+                    series: [],
+                    xaxis: {
+                        categories: []
+                    },
+                    noData: {
+                        text: 'Loading...'
+                    }
+                });
+                prodChart.render();
 
-                        // Update Category Chart
-                        catChart.updateOptions({
-                            series: data.category_distribution.data,
-                            labels: data.category_distribution.labels
-                        });
+                // 3. Fetch Data Logic
+                function fetchData() {
+                    const filters = {
+                        date_range: document.getElementById('date_range').value,
+                        product_type: document.getElementById('product_type').value,
+                        category_id: document.getElementById('category_id').value,
+                        subcategory_id: document.getElementById('subcategory_id').value,
+                        product_id: $('#product_id').val() // Select2 uses jQuery
+                    };
 
-                        // Update Product Chart
-                        prodChart.updateOptions({
-                            series: [{ name: 'Qty Sold', data: data.product_performance.data }],
-                            xaxis: { categories: data.product_performance.labels }
-                        });
-                    });
-            }
-
-            // 4. Cascading Subcategory
-            document.getElementById('category_id').addEventListener('change', function() {
-                const catId = this.value;
-                const subSelect = document.getElementById('subcategory_id');
-                subSelect.innerHTML = '<option value="">Loading...</option>';
-                subSelect.disabled = true;
-
-                if(catId) {
-                    fetch("{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', catId))
+                    fetch(`/warehouse/stores/${storeId}/analytics?` + new URLSearchParams(filters))
                         .then(res => res.json())
                         .then(data => {
-                            subSelect.innerHTML = '<option value="">All Subcategories</option>';
-                            data.forEach(sub => {
-                                subSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                            // Update Trend Chart
+                            trendChart.updateOptions({
+                                series: [{
+                                    name: 'Sales',
+                                    data: data.sales_trend.data
+                                }],
+                                xaxis: {
+                                    categories: data.sales_trend.labels
+                                }
                             });
-                            subSelect.disabled = false;
+
+                            // Update Category Chart
+                            catChart.updateOptions({
+                                series: data.category_distribution.data,
+                                labels: data.category_distribution.labels
+                            });
+
+                            // Update Product Chart
+                            prodChart.updateOptions({
+                                series: [{
+                                    name: 'Qty Sold',
+                                    data: data.product_performance.data
+                                }],
+                                xaxis: {
+                                    categories: data.product_performance.labels
+                                }
+                            });
                         });
-                } else {
-                    subSelect.innerHTML = '<option value="">Select Category First</option>';
                 }
-                fetchData(); // Refresh charts
-            });
 
-            // 5. Event Listeners for Filters
-            ['date_range', 'product_type', 'subcategory_id'].forEach(id => {
-                document.getElementById(id).addEventListener('change', fetchData);
-            });
-            $('#product_id').on('change', fetchData);
+                // 4. Cascading Subcategory
+                document.getElementById('category_id').addEventListener('change', function() {
+                    const catId = this.value;
+                    const subSelect = document.getElementById('subcategory_id');
+                    subSelect.innerHTML = '<option value="">Loading...</option>';
+                    subSelect.disabled = true;
 
-            // Initial Load
-            fetchData();
-        });
-    </script>
+                    if (catId) {
+                        fetch("{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(
+                                ':id', catId))
+                            .then(res => res.json())
+                            .then(data => {
+                                subSelect.innerHTML = '<option value="">All Subcategories</option>';
+                                data.forEach(sub => {
+                                    subSelect.innerHTML +=
+                                        `<option value="${sub.id}">${sub.name}</option>`;
+                                });
+                                subSelect.disabled = false;
+                            });
+                    } else {
+                        subSelect.innerHTML = '<option value="">Select Category First</option>';
+                    }
+                    fetchData(); // Refresh charts
+                });
+
+                // 5. Event Listeners for Filters
+                ['date_range', 'product_type', 'subcategory_id'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', fetchData);
+                });
+                $('#product_id').on('change', fetchData);
+
+                // Initial Load
+                fetchData();
+            });
+        </script>
     @endpush
 </x-app-layout>

@@ -95,7 +95,7 @@ class StoreController extends Controller
 
         $categories = ProductCategory::select('id', 'name')->get();
 
-        $products = Product::select('id', 'name', 'store_id')
+        $products = Product::select('id', 'product_name', 'store_id')
             ->whereNull('store_id')
             ->orWhere('store_id', $id)
             ->get();
