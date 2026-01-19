@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Warehouse;
 use App\Http\Controllers\Controller;
 use App\Services\StockRequestService;
 use App\Models\StockRequest;
-use App\Models\Product;
-use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 
 class StockRequestController extends Controller
@@ -21,18 +19,47 @@ class StockRequestController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'pending');
-        $requests = $this->service->getRequests($status);
-        
-        $products = Product::whereNull('store_id')->where('is_active', true)->get();
-        
-        return view('warehouse.stock-requests.index', compact('requests', 'products'));
-    }
+        $search = $request->input('search');
 
+        $query = StockRequest::with(['store', 'product']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhereHas('store', fn($q) => $q->where('store_name', 'like', "%{$search}%"))
+                    ->orWhereHas('product', fn($q) => $q->where('product_name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status === 'history') {
+            $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
+        } elseif ($status === 'in_transit') {
+            $query->where('status', StockRequest::STATUS_DISPATCHED);
+        } else {
+            $query->where('status', $status);
+        }
+
+        $requests = $query->latest()->paginate(15)->appends($request->query());
+
+        // Stats counts
+        $pendingCount = StockRequest::where('status', 'pending')->count();
+        $inTransitCount = StockRequest::where('status', 'dispatched')->count();
+        $completedCount = StockRequest::where('status', 'completed')->count();
+        $rejectedCount = StockRequest::where('status', 'rejected')->count();
+
+        return view('warehouse.stock-requests.index', compact(
+            'requests',
+            'pendingCount',
+            'inTransitCount',
+            'completedCount',
+            'rejectedCount'
+        ));
+    }
     public function show($id)
     {
         $stockRequest = StockRequest::with([
-            'store', 
-            'product.batches' => function($q) {
+            'store',
+            'product.batches' => function ($q) {
                 $q->where('quantity', '>', 0)->orderBy('expiry_date');
             },
             'storeStock'
