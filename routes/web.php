@@ -102,8 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::controller(StockRequestController::class)->group(function () {
             Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');
             Route::get('stock-requests/{id}', 'show')->name('warehouse.stock-requests.show');
-            Route::post('stock-requests/{id}', 'update')->name('warehouse.stock-requests.update'); // Existing logic preserved
-            
+           
             // New Routes for Workflow
             Route::post('stock-requests/change-status', 'changeStatus')->name('warehouse.stock-requests.change-status');
             Route::post('stock-requests/verify-payment', 'verifyPayment')->name('warehouse.stock-requests.verify-payment');
