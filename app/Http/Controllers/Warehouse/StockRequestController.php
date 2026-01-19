@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\StockRequestService;
 use App\Models\StockRequest;
 use Illuminate\Http\Request;
