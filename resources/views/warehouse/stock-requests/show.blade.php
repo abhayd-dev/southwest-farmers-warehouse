@@ -13,7 +13,7 @@
             </div>
             
             <div class="d-flex gap-2">
-                {{-- Added Stock In Button --}}
+                {{-- Stock In Button --}}
                 <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-success">
                     <i class="mdi mdi-plus-box me-1"></i> Stock In (Purchase)
                 </a>
@@ -165,7 +165,7 @@
                                     
                                     <h6 class="text-danger fw-bold mb-2">Reject Request</h6>
                                     <label class="form-label small text-dark">Reason for Rejection <span class="text-danger">*</span></label>
-                                    {{-- CORRECTED NAME: admin_note --}}
+                                    {{-- FIX: NAME CHANGED FROM admin_note_reject TO admin_note --}}
                                     <textarea name="admin_note" class="form-control mb-3" rows="2" placeholder="Why are you rejecting this request?" required></textarea>
                                     <div class="d-flex justify-content-end gap-2">
                                         <button type="button" class="btn btn-light btn-sm" onclick="toggleRejectSection()">Cancel</button>

@@ -80,7 +80,9 @@
                                             Change Status
                                         </button>
                                     @elseif($req->status == 'dispatched')
-                                        <button class="btn btn-sm btn-outline-success ms-1" onclick="openVerifyModal({{ $req->id }})">
+                                        {{-- Added Logic to pass Store Proof Link to function if available --}}
+                                        @php $proof = $req->store_payment_proof ? asset('storage/'.$req->store_payment_proof) : null; @endphp
+                                        <button class="btn btn-sm btn-outline-success ms-1" onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
                                             Verify Payment
                                         </button>
                                     @endif
@@ -130,7 +132,6 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Remarks</label>
-                        {{-- CORRECTED NAME: admin_note --}}
                         <textarea name="admin_note" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
@@ -157,9 +158,8 @@
                     {{-- Store Proof Display --}}
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
-                        <div class="p-3 border rounded bg-light text-center">
-                            {{-- Ideally you would fetch the proof link via AJAX for the modal, but here we handle generic or "Check Manage Page" --}}
-                            <span class="text-muted small">Please view proof in the "Manage" page details.</span>
+                        <div class="p-3 border rounded bg-light text-center" id="storeProofContainer">
+                            {{-- Content injected via JS --}}
                         </div>
                     </div>
 
@@ -234,8 +234,16 @@
             modal.show();
         }
 
-        function openVerifyModal(id) {
+        function openVerifyModal(id, proofUrl) {
             document.getElementById('verify_req_id').value = id;
+            const container = document.getElementById('storeProofContainer');
+            
+            if(proofUrl && proofUrl !== 'null' && proofUrl !== '') {
+                container.innerHTML = `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
+            } else {
+                container.innerHTML = `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
+            }
+
             new bootstrap.Modal(document.getElementById('verifyModal')).show();
         }
 
@@ -263,7 +271,7 @@
                     qtyInput.classList.add('is-invalid');
                     qtyInput.style.borderColor = 'red';
                     
-                    // Inline error logic
+                    // Inline error logic for modal
                     let errorSpan = qtyInput.nextElementSibling;
                     if(!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
                         errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');

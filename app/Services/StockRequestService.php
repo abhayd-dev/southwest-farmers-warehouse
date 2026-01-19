@@ -39,7 +39,8 @@ class StockRequestService
             if ($data['status'] === StockRequest::STATUS_REJECTED) {
                 $request->update([
                     'status' => StockRequest::STATUS_REJECTED,
-                    'admin_note' => $data['admin_note']
+                    // Use null coalescing to safely access the key
+                    'admin_note' => $data['admin_note'] ?? null
                 ]);
                 return;
             }
@@ -59,7 +60,7 @@ class StockRequestService
                 $request->update([
                     'status' => StockRequest::STATUS_DISPATCHED,
                     'fulfilled_quantity' => $dispatchQty,
-                    'admin_note' => $data['admin_note']
+                    'admin_note' => $data['admin_note'] ?? null
                 ]);
             }
         });

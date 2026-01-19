@@ -23,7 +23,7 @@ class StockRequestController extends Controller
         $status = $request->get('status', 'pending');
         $requests = $this->service->getRequests($status);
         
-        // Data for Stock In (Purchase In) Modal - Only Warehouse Level Data
+        // Data for Stock In (Purchase In) Modal
         $products = Product::whereNull('store_id')->where('is_active', true)->get();
         $categories = ProductCategory::whereNull('store_id')->where('is_active', true)->get();
         
@@ -43,8 +43,7 @@ class StockRequestController extends Controller
         return view('warehouse.stock-requests.show', compact('stockRequest'));
     }
 
-    // Existing update method preserved for backward compatibility if needed, 
-    // but UI now uses specific AJAX routes below.
+    // Standard Form Submit (Fallback)
     public function update(Request $request, $id)
     {
         $action = $request->input('action'); 
@@ -66,12 +65,13 @@ class StockRequestController extends Controller
                     ->with('success', 'Stock dispatched successfully.');
 
             } elseif ($action === 'reject') {
-                $request->validate(['admin_note_reject' => 'required|string']);
+                // Note: If using standard form, ensure input name matches this validation
+                $request->validate(['admin_note' => 'required|string']);
                 
                 $this->service->processStatusChange([
                     'request_id' => $id,
                     'status' => 'rejected',
-                    'admin_note' => $request->admin_note_reject
+                    'admin_note' => $request->admin_note
                 ]);
                 
                 return redirect()->route('warehouse.stock-requests.index')
@@ -88,8 +88,8 @@ class StockRequestController extends Controller
         $request->validate([
             'request_id' => 'required|exists:stock_requests,id',
             'status' => 'required|in:dispatched,rejected',
-            'dispatch_quantity' => 'nullable|numeric|min:1',
-            'admin_note' => 'nullable|string'
+            'dispatch_quantity' => 'required_if:status,dispatched|nullable|numeric|min:1',
+            'admin_note' => 'required_if:status,rejected|nullable|string'
         ]);
 
         try {
@@ -106,7 +106,7 @@ class StockRequestController extends Controller
         $request->validate([
             'request_id' => 'required|exists:stock_requests,id',
             'warehouse_payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'warehouse_remarks' => 'nullable|string'
+            'warehouse_remarks' => 'required|string'
         ]);
 
         try {
