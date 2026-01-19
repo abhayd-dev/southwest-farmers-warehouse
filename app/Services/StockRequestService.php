@@ -22,7 +22,7 @@ class StockRequestService
             $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
         } elseif ($status === 'in_transit') {
             // Dispatched items are In Transit until Payment Verified & Completed
-            $query->whereIn('status', [StockRequest::STATUS_DISPATCHED]); 
+            $query->whereIn('status', [StockRequest::STATUS_DISPATCHED]);
         } else {
             // Pending
             $query->where('status', $status);
@@ -36,33 +36,44 @@ class StockRequestService
         return DB::transaction(function () use ($data) {
             $request = StockRequest::findOrFail($data['request_id']);
 
-            // Safely get admin_note to prevent "Undefined index" error
-            $note = $data['admin_note'] ?? null;
+            // Calculate current pending (assumes fulfilled_quantity defaults to 0)
+            $currentFulfilled = $request->fulfilled_quantity ?? 0;
+            $pendingQuantity = $request->requested_quantity - $currentFulfilled;
 
             if ($data['status'] === StockRequest::STATUS_REJECTED) {
+                // Prevent reject after any dispatch has happened
+                if ($currentFulfilled > 0 || $request->status === StockRequest::STATUS_DISPATCHED) {
+                    throw new \Exception('Cannot reject a request after stock has been dispatched.');
+                }
+
                 $request->update([
                     'status' => StockRequest::STATUS_REJECTED,
-                    'admin_note' => $note
+                    'admin_note' => $data['admin_note'] ?? null
                 ]);
                 return;
             }
 
             if ($data['status'] === StockRequest::STATUS_DISPATCHED) {
-                if ($data['dispatch_quantity'] > $request->requested_quantity) {
-                    throw new \Exception("Dispatch quantity cannot exceed requested quantity");
+                if ($pendingQuantity <= 0) {
+                    throw new \Exception('No pending quantity left to dispatch.');
                 }
 
-                // 1. Deduct from Warehouse (Physical Movement)
-                $productId = $request->product_id;
                 $dispatchQty = $data['dispatch_quantity'];
-                
+
+                if ($dispatchQty > $pendingQuantity) {
+                    throw new \Exception("Dispatch quantity cannot exceed pending quantity ({$pendingQuantity}).");
+                }
+
+                $productId = $request->product_id;
+
+                // Deduct from warehouse (your existing method - unchanged)
                 $this->deductWarehouseStock($productId, $dispatchQty, $request);
 
-                // 2. Update Request - Status is now Dispatched (In Transit)
+                // Increment fulfilled quantity (critical fix for partial dispatch)
                 $request->update([
                     'status' => StockRequest::STATUS_DISPATCHED,
-                    'fulfilled_quantity' => $dispatchQty,
-                    'admin_note' => $note
+                    'fulfilled_quantity' => $currentFulfilled + $dispatchQty,
+                    'admin_note' => $data['admin_note'] ?? null
                 ]);
             }
         });
@@ -88,7 +99,7 @@ class StockRequestService
         foreach ($batches as $batch) {
             if ($remainingToDeduct <= 0) break;
             $deductAmount = min($batch->quantity, $remainingToDeduct);
-            
+
             $batch->quantity -= $deductAmount;
             $batch->save();
 
@@ -107,7 +118,7 @@ class StockRequestService
 
             $remainingToDeduct -= $deductAmount;
         }
-        
+
         // Update ProductStock snapshot
         $stock = ProductStock::firstOrCreate(
             ['product_id' => $productId, 'warehouse_id' => 1],
@@ -120,7 +131,7 @@ class StockRequestService
     {
         return DB::transaction(function () use ($requestData) {
             $request = StockRequest::findOrFail($requestData->request_id);
-            
+
             if ($request->status !== StockRequest::STATUS_DISPATCHED) {
                 throw new \Exception("Invalid status for verification. Request must be Dispatched first.");
             }
@@ -163,7 +174,7 @@ class StockRequestService
     {
         return DB::transaction(function () use ($data) {
             $product = Product::findOrFail($data['product_id']);
-            
+
             // 1. Create Batch
             $batch = ProductBatch::create([
                 'product_id' => $product->id,

@@ -17,16 +17,16 @@
         {{-- Tabs --}}
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
-                <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold' : '' }}" 
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">Pending</a>
+                <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold' : '' }}"
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">Pending</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request('status') == 'in_transit' ? 'active fw-bold' : '' }}" 
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'in_transit']) }}">In Transit</a>
+                <a class="nav-link {{ request('status') == 'in_transit' ? 'active fw-bold' : '' }}"
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'in_transit']) }}">In Transit</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request('status') == 'history' ? 'active fw-bold' : '' }}" 
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'history']) }}">History</a>
+                <a class="nav-link {{ request('status') == 'history' ? 'active fw-bold' : '' }}"
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'history']) }}">History</a>
             </li>
         </ul>
 
@@ -46,51 +46,54 @@
                         </thead>
                         <tbody>
                             @forelse($requests as $req)
-                            <tr>
-                                <td class="ps-4 fw-bold">#{{ $req->id }}</td>
-                                <td>
-                                    <span class="d-block fw-bold">{{ $req->store->store_name }}</span>
-                                    <small class="text-muted">{{ $req->created_at->format('d M Y') }}</small>
-                                </td>
-                                <td>
-                                    <span class="d-block fw-bold">{{ $req->product->product_name }}</span>
-                                    <small class="text-muted">{{ $req->product->sku }}</small>
-                                </td>
-                                <td>{{ $req->requested_quantity }}</td>
-                                <td>
-                                    @php
-                                        $badge = match($req->status) {
-                                            'pending' => 'bg-warning text-dark',
-                                            'dispatched' => 'bg-info',
-                                            'verify_payment' => 'bg-primary',
-                                            'completed' => 'bg-success',
-                                            'rejected' => 'bg-danger',
-                                            default => 'bg-secondary'
-                                        };
-                                        $statusLabel = str_replace('_', ' ', ucfirst($req->status));
-                                    @endphp
-                                    <span class="badge {{ $badge }}">{{ $statusLabel }}</span>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <a href="{{ route('warehouse.stock-requests.show', $req->id) }}" class="btn btn-sm btn-outline-dark shadow-sm">
-                                        Manage
-                                    </a>
-                                    @if($req->status == 'pending')
-                                        <button class="btn btn-sm btn-outline-primary ms-1" onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
-                                            Change Status
-                                        </button>
-                                    @elseif($req->status == 'dispatched')
-                                        {{-- Only verify payment here --}}
-                                        <button class="btn btn-sm btn-outline-success ms-1" onclick="openVerifyModal({{ $req->id }})">
-                                            Verify Payment
-                                        </button>
-                                    @endif
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td class="ps-4 fw-bold">#{{ $req->id }}</td>
+                                    <td>
+                                        <span class="d-block fw-bold">{{ $req->store->store_name }}</span>
+                                        <small class="text-muted">{{ $req->created_at->format('d M Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold">{{ $req->product->product_name }}</span>
+                                        <small class="text-muted">{{ $req->product->sku }}</small>
+                                    </td>
+                                    <td>{{ $req->requested_quantity }}</td>
+                                    <td>
+                                        @php
+                                            $badge = match ($req->status) {
+                                                'pending' => 'bg-warning text-dark',
+                                                'dispatched' => 'bg-info',
+                                                'verify_payment' => 'bg-primary',
+                                                'completed' => 'bg-success',
+                                                'rejected' => 'bg-danger',
+                                                default => 'bg-secondary',
+                                            };
+                                            $statusLabel = str_replace('_', ' ', ucfirst($req->status));
+                                        @endphp
+                                        <span class="badge {{ $badge }}">{{ $statusLabel }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ route('warehouse.stock-requests.show', $req->id) }}"
+                                            class="btn btn-sm btn-outline-dark shadow-sm">
+                                            Manage
+                                        </a>
+                                        @if ($req->status == 'pending')
+                                            <button class="btn btn-sm btn-outline-primary ms-1"
+                                                onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
+                                                Change Status
+                                            </button>
+                                        @elseif($req->status == 'dispatched')
+                                            {{-- Only verify payment here --}}
+                                            <button class="btn btn-sm btn-outline-success ms-1"
+                                                onclick="openVerifyModal({{ $req->id }})">
+                                                Verify Payment
+                                            </button>
+                                        @endif
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">No requests found.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">No requests found.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -126,7 +129,8 @@
                     </div>
                     <div class="mb-3" id="dispatch_qty_div">
                         <label class="form-label">Quantity to Dispatch <span class="text-danger">*</span></label>
-                        <input type="number" name="dispatch_quantity" id="dispatch_qty" class="form-control" min="1">
+                        <input type="number" name="dispatch_quantity" id="dispatch_qty" class="form-control"
+                            min="1">
                         <div class="invalid-feedback">Must be greater than 0 and less than requested.</div>
                     </div>
                     <div class="mb-3">
@@ -153,19 +157,20 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="verify_req_id">
-                    
+
                     {{-- Store Proof Display --}}
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
                         <div class="p-3 border rounded bg-light text-center" id="storeProofContainer">
-                           {{-- JS Injects Link Here --}}
-                           <span class="text-muted small">Loading...</span>
+                            {{-- JS Injects Link Here --}}
+                            <span class="text-muted small">Loading...</span>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
-                        <input type="file" name="warehouse_payment_proof" class="form-control" required accept="image/*,.pdf">
+                        <input type="file" name="warehouse_payment_proof" class="form-control" required
+                            accept="image/*,.pdf">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Remarks <span class="text-danger">*</span></label>
@@ -194,8 +199,9 @@
                         <label class="form-label">Product <span class="text-danger">*</span></label>
                         <select name="product_id" class="form-select" required>
                             <option value="">Select Product</option>
-                            @foreach($products as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->sku }})</option>
+                            @foreach ($products as $prod)
+                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->sku }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -221,116 +227,119 @@
     </div>
 
     @push('scripts')
-    <script>
-        let maxQty = 0;
+        <script>
+            let maxQty = 0;
 
-        function openDispatchModal(id, store, qty) {
-            document.getElementById('dispatch_req_id').value = id;
-            document.getElementById('dispatch_store').value = store;
-            document.getElementById('dispatch_qty').value = qty;
-            maxQty = parseInt(qty);
-            
-            const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
-            modal.show();
-        }
+            function openDispatchModal(id, store, qty) {
+                document.getElementById('dispatch_req_id').value = id;
+                document.getElementById('dispatch_store').value = store;
+                document.getElementById('dispatch_qty').value = qty;
+                maxQty = parseInt(qty);
 
-        // Updated Verify Modal to handle proof
-        function openVerifyModal(id, proofUrl) {
-            document.getElementById('verify_req_id').value = id;
-            const container = document.getElementById('storeProofContainer');
-            
-            // Note: Since proofUrl isn't directly passed in the loop in index yet (difficult without AJAX in index list), 
-            // we will show a generic message instructing to check Manage page for details, 
-            // OR we can make an AJAX call here to get details. 
-            // For stability now:
-            container.innerHTML = `<span class="text-muted small">To view the store's payment proof, please open the <b>Manage</b> page for this request.</span>`;
-            
-            new bootstrap.Modal(document.getElementById('verifyModal')).show();
-        }
-
-        // Dispatch Validation
-        document.getElementById('dispatch_status').addEventListener('change', function() {
-            const qtyDiv = document.getElementById('dispatch_qty_div');
-            const qtyInput = document.getElementById('dispatch_qty');
-            if(this.value === 'rejected') {
-                qtyDiv.style.display = 'none';
-                qtyInput.removeAttribute('required');
-            } else {
-                qtyDiv.style.display = 'block';
-                qtyInput.setAttribute('required', 'true');
+                const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
+                modal.show();
             }
-        });
 
-        document.getElementById('dispatchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const status = document.getElementById('dispatch_status').value;
-            const qtyInput = document.getElementById('dispatch_qty');
-            const qty = parseInt(qtyInput.value);
+            function openVerifyModal(id, proofUrl) {
+                document.getElementById('verify_req_id').value = id;
+                const container = document.getElementById('storeProofContainer');
 
-            if(status === 'dispatched') {
-                if(qty <= 0 || qty > maxQty || isNaN(qty)) {
-                    qtyInput.classList.add('is-invalid');
-                    qtyInput.style.borderColor = 'red';
-                    
-                    // Inline error logic for modal
-                    let errorSpan = qtyInput.nextElementSibling;
-                    if(!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
-                        errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
-                    }
-                    if(errorSpan) {
-                        errorSpan.style.display = 'block';
-                        errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
-                    }
-                    return;
+                if (proofUrl && proofUrl !== 'null' && proofUrl !== '') {
+                    container.innerHTML =
+                        `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
+                } else {
+                    container.innerHTML =
+                        `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
                 }
-                qtyInput.classList.remove('is-invalid');
-                qtyInput.style.borderColor = '';
-                const errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
-                if(errorSpan) errorSpan.style.display = 'none';
+
+                new bootstrap.Modal(document.getElementById('verifyModal')).show();
             }
 
-            const formData = new FormData(this);
-            fetch("{{ route('warehouse.stock-requests.change-status') }}", {
-                method: "POST",
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) location.reload();
-                else alert(data.message);
-            });
-        });
+            // Reusable AJAX submit function
+            function submitAjaxForm(url, formElement, successCallback) {
+                const formData = new FormData(formElement);
 
-        document.getElementById('verifyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            fetch("{{ route('warehouse.stock-requests.verify-payment') }}", {
-                method: "POST",
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) location.reload();
-                else alert(data.message);
-            });
-        });
+                fetch(url, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                let msg = err.message || 'Server error';
+                                if (err.errors) {
+                                    msg = Object.values(err.errors).flat().join('\n');
+                                }
+                                throw new Error(msg);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            successCallback ? successCallback() : location.reload();
+                        } else {
+                            alert(data.message || 'Operation failed');
+                        }
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+            }
 
-        document.getElementById('stockInForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            fetch("{{ route('warehouse.stock-requests.purchase-in') }}", {
-                method: "POST",
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) location.reload();
-                else alert(data.message);
+            // Dispatch / Change Status Form
+            document.getElementById('dispatchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const status = document.getElementById('dispatch_status').value;
+                const qtyInput = document.getElementById('dispatch_qty');
+                const qty = parseInt(qtyInput.value);
+
+                if (status === 'dispatched') {
+                    if (qty <= 0 || qty > maxQty || isNaN(qty)) {
+                        qtyInput.classList.add('is-invalid');
+                        let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
+                        if (errorSpan) {
+                            errorSpan.style.display = 'block';
+                            errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                        }
+                        return;
+                    }
+                    qtyInput.classList.remove('is-invalid');
+                }
+
+                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this, () => location.reload());
             });
-        });
-    </script>
+
+            // Verify Payment Form
+            document.getElementById('verifyForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this, () => location
+            .reload());
+            });
+
+            // Purchase In Form
+            document.getElementById('stockInForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this, () => location.reload());
+            });
+
+            // Status change → show/hide qty field
+            document.getElementById('dispatch_status').addEventListener('change', function() {
+                const qtyDiv = document.getElementById('dispatch_qty_div');
+                const qtyInput = document.getElementById('dispatch_qty');
+                if (this.value === 'rejected') {
+                    qtyDiv.style.display = 'none';
+                    qtyInput.removeAttribute('required');
+                } else {
+                    qtyDiv.style.display = 'block';
+                    qtyInput.setAttribute('required', 'true');
+                }
+            });
+        </script>
     @endpush
 </x-app-layout>
