@@ -15,14 +15,27 @@ class StockRequest extends Model
         'requested_quantity',
         'fulfilled_quantity',
         'status',
-        'admin_note'
+        'admin_note',
+        'store_payment_proof',
+        'store_remarks',
+        'warehouse_payment_proof',
+        'warehouse_remarks',
+        'verified_at',
+        'purchase_ref'
     ];
 
     const STATUS_PENDING = 'pending';
-    const STATUS_PARTIAL = 'partial';
-    const STATUS_DISPATCHED = 'dispatched';
+    const STATUS_DISPATCHED = 'dispatched'; // Warehouse sends items
+    const STATUS_VERIFY_PAYMENT = 'verify_payment'; // Optional intermediate step if needed, but per prompt: Dispatched -> Verify Payment (Action) -> Completed
     const STATUS_COMPLETED = 'completed';
     const STATUS_REJECTED = 'rejected';
+    
+    // Legacy support if needed
+    const STATUS_PARTIAL = 'partial'; 
+
+    protected $casts = [
+        'verified_at' => 'datetime'
+    ];
 
     public function store()
     {
@@ -51,19 +64,5 @@ class StockRequest extends Model
             return true;
         }
         return $this->storeStock->quantity < 10;
-    }
-
-    public function scopeOpen($query)
-    {
-        return $query->whereIn('status', [
-            self::STATUS_PENDING, 
-            self::STATUS_PARTIAL, 
-            self::STATUS_APPROVED
-        ]);
-    }
-
-    public function scopeUrgent($query)
-    {
-        return $query->where('status', self::STATUS_PENDING);
     }
 }

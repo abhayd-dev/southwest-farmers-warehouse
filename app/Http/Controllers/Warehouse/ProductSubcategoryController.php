@@ -15,25 +15,31 @@ class ProductSubcategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $subcategories = ProductSubcategory::with('category')
+        // FILTER: Only Warehouse Subcategories (store_id IS NULL)
+        $subcategories = ProductSubcategory::whereNull('store_id')
+            ->with('category')
             ->when($request->search, function ($q) use ($request) {
                 $s = $request->search;
-                $q->where('name', 'ilike', "%$s%")
-                    ->orWhere('code', 'ilike', "%$s%")
-                    ->orWhereHas('category', fn($c) => $c->where('name', 'ilike', "%$s%"));
+                $q->where(function($query) use ($s) {
+                    $query->where('name', 'ilike', "%$s%")
+                        ->orWhere('code', 'ilike', "%$s%")
+                        ->orWhereHas('category', fn($c) => $c->where('name', 'ilike', "%$s%"));
+                });
             })
             ->when($request->status !== null, fn($q) => $q->where('is_active', $request->status))
             ->latest()
             ->paginate(10);
 
-        $categories = ProductCategory::active()->orderBy('name')->get();
+        // Fetch Categories for Filter (Warehouse Level Only)
+        $categories = ProductCategory::whereNull('store_id')->active()->orderBy('name')->get();
 
         return view('warehouse.subcategories.index', compact('subcategories', 'categories'));
     }
 
     public function create()
     {
-        $categories = ProductCategory::active()->get();
+        // Only show warehouse categories in dropdown
+        $categories = ProductCategory::whereNull('store_id')->active()->get();
         return view('warehouse.subcategories.create', compact('categories'));
     }
 
@@ -47,6 +53,8 @@ class ProductSubcategoryController extends Controller
         ]);
 
         $data = $request->all();
+        $data['store_id'] = null; // Explicit isolation
+
         if ($request->hasFile('icon')) {
             $data['icon'] = $request->file('icon')->store('subcategories', 'public');
         }
@@ -57,12 +65,15 @@ class ProductSubcategoryController extends Controller
 
     public function edit(ProductSubcategory $subcategory)
     {
-        $categories = ProductCategory::active()->get();
+        if ($subcategory->store_id !== null) abort(403);
+        $categories = ProductCategory::whereNull('store_id')->active()->get();
         return view('warehouse.subcategories.edit', compact('subcategory', 'categories'));
     }
 
     public function update(Request $request, ProductSubcategory $subcategory)
     {
+        if ($subcategory->store_id !== null) abort(403);
+
         $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
@@ -82,6 +93,8 @@ class ProductSubcategoryController extends Controller
 
     public function destroy(ProductSubcategory $subcategory)
     {
+        if ($subcategory->store_id !== null) abort(403);
+
         try {
             if ($subcategory->productOptions()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Product Options.');
             if ($subcategory->products()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Products.');
@@ -94,10 +107,11 @@ class ProductSubcategoryController extends Controller
             return back()->with('error', 'Delete failed');
         }
     }
+    
     public function changeStatus(Request $request)
     {
         try {
-            ProductSubcategory::findOrFail($request->id)->update(['is_active' => $request->status]);
+            ProductSubcategory::whereNull('store_id')->findOrFail($request->id)->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error'], 500);

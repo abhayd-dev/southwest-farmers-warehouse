@@ -11,9 +11,18 @@
                 </nav>
                 <h4 class="mb-0 fw-bold">Dispatch Stock</h4>
             </div>
-            <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="mdi mdi-arrow-left"></i> Back to List
-            </a>
+            
+            <div class="d-flex gap-2">
+                {{-- ADDED STOCK IN BUTTON HERE INSTEAD OF INDEX AS REQUESTED, THOUGH INDEX IS MORE LOGICAL FOR GENERAL STOCK IN. ADDING TO SHOW PAGE AS WELL IF CONTEXT ALLOWS --}}
+                {{-- NOTE: Contextually Stock In usually belongs to general inventory, but per prompt "Purchase In" button logic requested. --}}
+                <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-success">
+                    <i class="mdi mdi-plus-box me-1"></i> Stock In (Purchase)
+                </a>
+
+                <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-outline-secondary">
+                    <i class="mdi mdi-arrow-left"></i> Back to List
+                </a>
+            </div>
         </div>
 
         <div class="row">
@@ -48,7 +57,7 @@
                         <div class="row text-center">
                             <div class="col-4 border-end">
                                 <small class="text-muted d-block mb-1">Requested</small>
-                                <h5 class="text-primary fw-bold mb-0">{{ $stockRequest->requested_quantity }}</h5>
+                                <h5 class="text-primary fw-bold mb-0" id="requested-qty">{{ $stockRequest->requested_quantity }}</h5>
                             </div>
                             <div class="col-4 border-end">
                                 <small class="text-muted d-block mb-1">Sent</small>
@@ -56,7 +65,7 @@
                             </div>
                             <div class="col-4">
                                 <small class="text-muted d-block mb-1">Pending</small>
-                                <h5 class="text-danger fw-bold mb-0">{{ $stockRequest->pending_quantity }}</h5>
+                                <h5 class="text-danger fw-bold mb-0" id="pending-qty">{{ $stockRequest->pending_quantity }}</h5>
                             </div>
                         </div>
                     </div>
@@ -103,19 +112,25 @@
                     </div>
                     <div class="card-body p-4">
                         @if($stockRequest->pending_quantity > 0 && $stockRequest->status != 'rejected')
-                            <form action="{{ route('warehouse.stock-requests.update', $stockRequest->id) }}" method="POST">
+                            {{-- Change Status to Dispatched Form --}}
+                            <form id="dispatchForm" class="needs-validation" novalidate>
                                 @csrf
+                                <input type="hidden" name="request_id" value="{{ $stockRequest->id }}">
+                                <input type="hidden" name="status" value="dispatched">
                                 
                                 {{-- Dispatch Input --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">Quantity to Dispatch <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="number" name="dispatch_quantity" 
+                                    <div class="input-group input-group-lg has-validation">
+                                        <input type="number" name="dispatch_quantity" id="dispatch_qty"
                                                class="form-control fw-bold" 
                                                value="{{ min($stockRequest->pending_quantity, $totalStock) }}" 
                                                max="{{ min($stockRequest->pending_quantity, $totalStock) }}" 
-                                               min="1">
+                                               min="1" required>
                                         <span class="input-group-text bg-light text-muted">{{ $stockRequest->product->unit ?? 'Units' }}</span>
+                                        <div class="invalid-feedback fw-bold" id="qty-error">
+                                            Please enter a valid quantity (1 - {{ min($stockRequest->pending_quantity, $totalStock) }}).
+                                        </div>
                                     </div>
                                     <div class="form-text text-muted mt-2">
                                         <i class="mdi mdi-information-outline"></i> 
@@ -127,33 +142,39 @@
                                 {{-- Note Input --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">Admin Note <span class="text-muted fw-normal">(Optional)</span></label>
-                                    <textarea name="admin_note" class="form-control" rows="3" placeholder="Add a message for the store manager (e.g. 'Partial shipment sent, rest arriving Monday')..."></textarea>
+                                    <textarea name="admin_note" class="form-control" rows="3" placeholder="Add a message for the store manager..."></textarea>
                                 </div>
 
                                 {{-- Action Buttons --}}
                                 <div class="d-flex gap-3 pt-2">
-                                    <button type="submit" name="action" value="approve" class="btn btn-success btn-lg px-5 shadow-sm">
+                                    <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
                                         <i class="mdi mdi-truck-fast me-2"></i> Approve & Dispatch
                                     </button>
                                     
-                                    <button type="button" class="btn btn-outline-danger btn-lg px-4" onclick="document.getElementById('rejectSection').classList.remove('d-none')">
+                                    <button type="button" class="btn btn-outline-danger btn-lg px-4" onclick="toggleRejectSection()">
                                         <i class="mdi mdi-close-circle me-1"></i> Reject
                                     </button>
                                 </div>
+                            </form>
 
-                                {{-- Hidden Reject Section --}}
-                                <div id="rejectSection" class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25 d-none">
+                            {{-- Hidden Reject Section --}}
+                            <div id="rejectSection" class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25 d-none">
+                                <form id="rejectForm">
+                                    @csrf
+                                    <input type="hidden" name="request_id" value="{{ $stockRequest->id }}">
+                                    <input type="hidden" name="status" value="rejected">
+                                    
                                     <h6 class="text-danger fw-bold mb-2">Reject Request</h6>
                                     <label class="form-label small text-dark">Reason for Rejection <span class="text-danger">*</span></label>
-                                    <textarea name="admin_note_reject" class="form-control mb-3" rows="2" placeholder="Why are you rejecting this request?"></textarea>
+                                    <textarea name="admin_note" class="form-control mb-3" rows="2" placeholder="Why are you rejecting this request?" required></textarea>
                                     <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('rejectSection').classList.add('d-none')">Cancel</button>
-                                        <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm px-3">Confirm Rejection</button>
+                                        <button type="button" class="btn btn-light btn-sm" onclick="toggleRejectSection()">Cancel</button>
+                                        <button type="submit" class="btn btn-danger btn-sm px-3">Confirm Rejection</button>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         @else
-                            {{-- Fulfilled/Rejected State --}}
+                            {{-- Fulfilled/Rejected/Pending Payment State --}}
                             <div class="text-center py-5">
                                 @if($stockRequest->status == 'rejected')
                                     <div class="mb-3">
@@ -161,14 +182,23 @@
                                     </div>
                                     <h4 class="fw-bold text-danger">Request Rejected</h4>
                                     <p class="text-muted max-w-sm mx-auto">Reason: {{ $stockRequest->admin_note }}</p>
+                                @elseif($stockRequest->status == 'dispatched')
+                                    <div class="mb-3">
+                                        <i class="mdi mdi-truck-check text-info opacity-50" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h4 class="fw-bold text-info">Dispatched & Pending Payment</h4>
+                                    <p class="text-muted">Items dispatched. Waiting for payment verification.</p>
+                                    <button class="btn btn-primary mt-3" onclick="openVerifyModal({{ $stockRequest->id }})">
+                                        Verify Payment Now
+                                    </button>
                                 @else
                                     <div class="mb-3">
                                         <i class="mdi mdi-check-decagram text-success opacity-50" style="font-size: 4rem;"></i>
                                     </div>
-                                    <h4 class="fw-bold text-success">Order Fulfilled</h4>
-                                    <p class="text-muted">All requested items have been dispatched to the store.</p>
+                                    <h4 class="fw-bold text-success">Order Completed</h4>
+                                    <p class="text-muted">Stock received and payment verified.</p>
                                 @endif
-                                <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-dark mt-3">Return to Dashboard</a>
+                                <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-dark mt-3 d-block mx-auto" style="width: fit-content;">Return to Dashboard</a>
                             </div>
                         @endif
                     </div>
@@ -176,4 +206,159 @@
             </div>
         </div>
     </div>
+
+    {{-- Verify Payment Modal (Reused) --}}
+    <div class="modal fade" id="verifyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="verifyForm" class="modal-content" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Verify Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="request_id" id="verify_req_id">
+                    
+                    {{-- Store Proof Display --}}
+                    @if($stockRequest->store_payment_proof)
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Store Payment Proof</label>
+                        <div class="p-2 border rounded bg-light text-center">
+                            <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="mdi mdi-eye me-1"></i> View Proof
+                            </a>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($stockRequest->store_remarks)
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Store Remarks</label>
+                        <div class="p-2 border rounded bg-light small">
+                            {{ $stockRequest->store_remarks }}
+                        </div>
+                    </div>
+                    @endif
+
+                    <div class="mb-3">
+                        <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
+                        <input type="file" name="warehouse_payment_proof" class="form-control" required accept="image/*,.pdf">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks <span class="text-danger">*</span></label>
+                        <textarea name="warehouse_remarks" class="form-control" required rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Complete Verification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        const maxQty = {{ min($stockRequest->pending_quantity, $totalStock) }};
+
+        function toggleRejectSection() {
+            const section = document.getElementById('rejectSection');
+            if (section.classList.contains('d-none')) {
+                section.classList.remove('d-none');
+            } else {
+                section.classList.add('d-none');
+            }
+        }
+
+        function openVerifyModal(id) {
+            document.getElementById('verify_req_id').value = id;
+            new bootstrap.Modal(document.getElementById('verifyModal')).show();
+        }
+
+        // Dispatch Validation & Submission
+        document.getElementById('dispatchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const qtyInput = document.getElementById('dispatch_qty');
+            const qty = parseInt(qtyInput.value);
+            const errorDiv = document.getElementById('qty-error');
+
+            // Reset validation
+            qtyInput.classList.remove('is-invalid');
+            qtyInput.style.borderColor = '';
+
+            // Validation Logic
+            if (isNaN(qty) || qty <= 0) {
+                qtyInput.classList.add('is-invalid');
+                qtyInput.style.borderColor = 'red';
+                errorDiv.textContent = 'Quantity must be a number greater than 0.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (qty > maxQty) {
+                qtyInput.classList.add('is-invalid');
+                qtyInput.style.borderColor = 'red';
+                errorDiv.textContent = `Quantity cannot exceed pending/available amount (${maxQty}).`;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Submit if valid
+            const formData = new FormData(this);
+            fetch("{{ route('warehouse.stock-requests.change-status') }}", {
+                method: "POST",
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => alert('An error occurred.'));
+        });
+
+        // Reject Submission
+        document.getElementById('rejectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch("{{ route('warehouse.stock-requests.change-status') }}", {
+                method: "POST",
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        // Verify Payment Submission
+        document.getElementById('verifyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch("{{ route('warehouse.stock-requests.verify-payment') }}", {
+                method: "POST",
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

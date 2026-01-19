@@ -14,10 +14,14 @@ class ProductCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = ProductCategory::withCount('subcategories')
+        // FILTER: Only Warehouse Categories (store_id IS NULL)
+        $categories = ProductCategory::whereNull('store_id')
+            ->withCount('subcategories')
             ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'ilike', "%{$request->search}%")
-                  ->orWhere('code', 'ilike', "%{$request->search}%");
+                $q->where(function($query) use ($request) {
+                    $query->where('name', 'ilike', "%{$request->search}%")
+                          ->orWhere('code', 'ilike', "%{$request->search}%");
+                });
             })
             ->when($request->status !== null, function ($q) use ($request) {
                 $q->where('is_active', $request->status);
@@ -38,10 +42,11 @@ class ProductCategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_categories,code',
-            'icon' => 'nullable|image|max:2048', // Validation
+            'icon' => 'nullable|image|max:2048',
         ]);
 
         $data = $request->all();
+        $data['store_id'] = null; // Explicit isolation
 
         if ($request->hasFile('icon')) {
             $data['icon'] = $request->file('icon')->store('categories', 'public');
@@ -55,11 +60,14 @@ class ProductCategoryController extends Controller
 
     public function edit(ProductCategory $category)
     {
+        if ($category->store_id !== null) abort(403);
         return view('warehouse.categories.edit', compact('category'));
     }
 
     public function update(Request $request, ProductCategory $category)
     {
+        if ($category->store_id !== null) abort(403);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:product_categories,code,' . $category->id,
@@ -69,7 +77,6 @@ class ProductCategoryController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('icon')) {
-            // Delete old icon
             if ($category->icon) {
                 Storage::disk('public')->delete($category->icon);
             }
@@ -83,6 +90,8 @@ class ProductCategoryController extends Controller
 
     public function destroy(ProductCategory $category)
     {
+        if ($category->store_id !== null) abort(403);
+
         try {
             if ($category->subcategories()->exists()) {
                 return back()->with('error', 'Cannot delete category with associated subcategories.');
@@ -102,7 +111,7 @@ class ProductCategoryController extends Controller
     public function changeStatus(Request $request)
     {
         try {
-            ProductCategory::findOrFail($request->id)
+            ProductCategory::whereNull('store_id')->findOrFail($request->id)
                 ->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {

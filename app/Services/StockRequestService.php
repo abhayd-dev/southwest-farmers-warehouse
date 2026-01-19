@@ -5,140 +5,191 @@ namespace App\Services;
 use App\Models\StockRequest;
 use App\Models\ProductBatch;
 use App\Models\StockTransaction;
-use App\Models\StoreStock; // <--- Critical Import
+use App\Models\StoreStock;
+use App\Models\Product;
+use App\Models\ProductStock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class StockRequestService
 {
-    /**
-     * Get list of requests with filters
-     */
-    public function getRequests($status = null)
+    public function getRequests($status)
     {
-        $query = StockRequest::with(['store', 'product', 'storeStock'])->latest();
+        $query = StockRequest::with(['store', 'product'])->latest();
 
-        if ($status) {
-            if ($status === 'history') {
-                $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
-            } else {
-                $query->where('status', $status);
-            }
+        if ($status === 'history') {
+            $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
+        } elseif ($status === 'in_transit') {
+            // Dispatched items are In Transit until Payment Verified & Completed
+            $query->whereIn('status', [StockRequest::STATUS_DISPATCHED]); 
         } else {
-            $query->whereIn('status', [
-                StockRequest::STATUS_PENDING, 
-                StockRequest::STATUS_PARTIAL
-            ]);
+            // Pending
+            $query->where('status', $status);
         }
 
         return $query->paginate(15);
     }
 
-    /**
-     * Approve & Dispatch Stock (Full Cycle: Warehouse Out -> Store In)
-     */
-    public function approveRequest($requestId, $dispatchQuantity, $note = null)
+    public function processStatusChange($data)
     {
-        return DB::transaction(function () use ($requestId, $dispatchQuantity, $note) {
-            $request = StockRequest::with('store')->findOrFail($requestId);
-            $productId = $request->product_id;
-            
-            // 1. Validation
-            if ($dispatchQuantity > $request->pending_quantity) {
-                throw new \Exception("Cannot dispatch more than requested pending quantity ({$request->pending_quantity}).");
-            }
+        return DB::transaction(function () use ($data) {
+            $request = StockRequest::findOrFail($data['request_id']);
 
-            // 2. Fetch Warehouse Batches (FIFO: Oldest Expiry First)
-            $batches = ProductBatch::where('product_id', $productId)
-                        ->where('warehouse_id', 1) 
-                        ->where('quantity', '>', 0)
-                        ->orderBy('expiry_date', 'asc')
-                        ->orderBy('created_at', 'asc')
-                        ->lockForUpdate()
-                        ->get();
-
-            $totalAvailable = $batches->sum('quantity');
-            if ($totalAvailable < $dispatchQuantity) {
-                throw new \Exception("Insufficient Warehouse Stock. Available: {$totalAvailable}");
-            }
-
-            // 3. Deduct Stock from Warehouse (FIFO)
-            $remainingToDeduct = $dispatchQuantity;
-
-            foreach ($batches as $batch) {
-                if ($remainingToDeduct <= 0) break;
-
-                $deductAmount = min($batch->quantity, $remainingToDeduct);
-
-                // A. Update Warehouse Batch
-                $batch->quantity -= $deductAmount;
-                $batch->save();
-
-                // B. Log Warehouse Transaction (OUT)
-                StockTransaction::create([
-                    'product_id' => $productId,
-                    'warehouse_id' => 1,
-                    'store_id' => null, // Warehouse side
-                    'product_batch_id' => $batch->id,
-                    'ware_user_id' => Auth::id(),
-                    'type' => 'transfer_out',
-                    'quantity_change' => -$deductAmount,
-                    'running_balance' => $batch->quantity,
-                    'reference_id' => 'REQ-' . $request->id,
-                    'remarks' => "Dispatched to " . $request->store->store_name
+            if ($data['status'] === StockRequest::STATUS_REJECTED) {
+                $request->update([
+                    'status' => StockRequest::STATUS_REJECTED,
+                    'admin_note' => $data['admin_note']
                 ]);
-
-                $remainingToDeduct -= $deductAmount;
+                return;
             }
 
-            // 4. Add Stock to Store Inventory (Auto-Receive)
-            $storeStock = StoreStock::firstOrCreate(
-                ['store_id' => $request->store_id, 'product_id' => $productId],
-                ['quantity' => 0, 'selling_price' => 0] // Default values
-            );
+            if ($data['status'] === StockRequest::STATUS_DISPATCHED) {
+                if ($data['dispatch_quantity'] > $request->requested_quantity) {
+                    throw new \Exception("Dispatch quantity cannot exceed requested quantity");
+                }
 
-            $storeStock->increment('quantity', $dispatchQuantity);
+                // 1. Deduct from Warehouse (Physical Movement)
+                $productId = $request->product_id;
+                $dispatchQty = $data['dispatch_quantity'];
+                
+                $this->deductWarehouseStock($productId, $dispatchQty, $request);
 
-            // 5. Log Store Transaction (IN)
-            StockTransaction::create([
-                'product_id' => $productId,
-                'warehouse_id' => 1,
-                'store_id' => $request->store_id, // Store side
-                'product_batch_id' => null, // Stores don't track batches yet
-                'ware_user_id' => Auth::id(),
-                'type' => 'transfer_in',
-                'quantity_change' => $dispatchQuantity,
-                'running_balance' => $storeStock->quantity,
-                'reference_id' => 'REQ-' . $request->id,
-                'remarks' => "Received from Warehouse via Request #" . $request->id
-            ]);
-
-            // 6. Update Request Status
-            $request->fulfilled_quantity += $dispatchQuantity;
-            
-            if ($request->fulfilled_quantity >= $request->requested_quantity) {
-                $request->status = StockRequest::STATUS_COMPLETED;
-            } else {
-                $request->status = StockRequest::STATUS_PARTIAL;
+                // 2. Update Request - Status is now Dispatched (In Transit)
+                $request->update([
+                    'status' => StockRequest::STATUS_DISPATCHED,
+                    'fulfilled_quantity' => $dispatchQty,
+                    'admin_note' => $data['admin_note']
+                ]);
             }
-
-            if ($note) $request->admin_note = $note;
-            $request->save();
-
-            return $request;
         });
     }
 
-    /**
-     * Reject Request
-     */
-    public function rejectRequest($requestId, $note)
+    private function deductWarehouseStock($productId, $qty, $request)
     {
-        $request = StockRequest::findOrFail($requestId);
-        $request->update([
-            'status' => StockRequest::STATUS_REJECTED,
-            'admin_note' => $note
-        ]);
-        return $request;
+        $batches = ProductBatch::where('product_id', $productId)
+            ->where('warehouse_id', 1)
+            ->where('quantity', '>', 0)
+            ->orderBy('expiry_date', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->lockForUpdate()
+            ->get();
+
+        $totalAvailable = $batches->sum('quantity');
+        if ($totalAvailable < $qty) {
+            throw new \Exception("Insufficient Warehouse Stock. Available: {$totalAvailable}");
+        }
+
+        $remainingToDeduct = $qty;
+
+        foreach ($batches as $batch) {
+            if ($remainingToDeduct <= 0) break;
+            $deductAmount = min($batch->quantity, $remainingToDeduct);
+            
+            $batch->quantity -= $deductAmount;
+            $batch->save();
+
+            StockTransaction::create([
+                'product_id' => $productId,
+                'warehouse_id' => 1,
+                'store_id' => null,
+                'product_batch_id' => $batch->id,
+                'ware_user_id' => Auth::id(),
+                'type' => 'transfer_out',
+                'quantity_change' => -$deductAmount,
+                'running_balance' => $batch->quantity,
+                'reference_id' => 'REQ-' . $request->id,
+                'remarks' => "Dispatched to " . $request->store->store_name
+            ]);
+
+            $remainingToDeduct -= $deductAmount;
+        }
+        
+        // Update ProductStock snapshot
+        $stock = ProductStock::firstOrCreate(
+            ['product_id' => $productId, 'warehouse_id' => 1],
+            ['quantity' => 0]
+        );
+        $stock->decrement('quantity', $qty);
+    }
+
+    public function verifyPayment($requestData)
+    {
+        return DB::transaction(function () use ($requestData) {
+            $request = StockRequest::findOrFail($requestData->request_id);
+            
+            if ($request->status !== StockRequest::STATUS_DISPATCHED) {
+                throw new \Exception("Invalid status for verification. Request must be Dispatched first.");
+            }
+
+            $path = $requestData->file('warehouse_payment_proof')->store('payment_proofs', 'public');
+
+            // 1. Update Request to Completed
+            $request->update([
+                'status' => StockRequest::STATUS_COMPLETED,
+                'warehouse_payment_proof' => $path,
+                'warehouse_remarks' => $requestData->warehouse_remarks,
+                'verified_at' => Carbon::now()
+            ]);
+
+            // 2. Credit to Store (Only now does the store get the stock)
+            $storeStock = StoreStock::firstOrCreate(
+                ['store_id' => $request->store_id, 'product_id' => $request->product_id],
+                ['quantity' => 0, 'selling_price' => 0]
+            );
+
+            $storeStock->increment('quantity', $request->fulfilled_quantity);
+
+            // 3. Log Store Transaction
+            StockTransaction::create([
+                'product_id' => $request->product_id,
+                'warehouse_id' => 1,
+                'store_id' => $request->store_id,
+                'product_batch_id' => null,
+                'ware_user_id' => Auth::id(),
+                'type' => 'transfer_in',
+                'quantity_change' => $request->fulfilled_quantity,
+                'running_balance' => $storeStock->quantity,
+                'reference_id' => 'REQ-' . $request->id,
+                'remarks' => "Stock Received & Payment Verified"
+            ]);
+        });
+    }
+
+    public function addStockDirectly($data)
+    {
+        return DB::transaction(function () use ($data) {
+            $product = Product::findOrFail($data['product_id']);
+            
+            // 1. Create Batch
+            $batch = ProductBatch::create([
+                'product_id' => $product->id,
+                'warehouse_id' => 1,
+                'batch_number' => 'PUR-' . time(),
+                'cost_price' => $product->cost_price,
+                'quantity' => $data['quantity'],
+            ]);
+
+            // 2. Update Warehouse Snapshot
+            $stock = ProductStock::firstOrCreate(
+                ['product_id' => $product->id, 'warehouse_id' => 1],
+                ['quantity' => 0]
+            );
+            $stock->increment('quantity', $data['quantity']);
+
+            // 3. Log Transaction
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'warehouse_id' => 1,
+                'store_id' => null,
+                'product_batch_id' => $batch->id,
+                'ware_user_id' => Auth::id(),
+                'type' => 'purchase_in',
+                'quantity_change' => $data['quantity'],
+                'running_balance' => $stock->quantity,
+                'reference_id' => $data['purchase_ref'] ?? 'DIRECT-ADD',
+                'remarks' => $data['remarks'] ?? 'Direct Purchase In'
+            ]);
+        });
     }
 }
