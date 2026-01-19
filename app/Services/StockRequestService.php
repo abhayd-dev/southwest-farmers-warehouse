@@ -36,11 +36,13 @@ class StockRequestService
         return DB::transaction(function () use ($data) {
             $request = StockRequest::findOrFail($data['request_id']);
 
+            // Safely get admin_note to prevent "Undefined index" error
+            $note = $data['admin_note'] ?? null;
+
             if ($data['status'] === StockRequest::STATUS_REJECTED) {
                 $request->update([
                     'status' => StockRequest::STATUS_REJECTED,
-                    // Use null coalescing to safely access the key
-                    'admin_note' => $data['admin_note'] ?? null
+                    'admin_note' => $note
                 ]);
                 return;
             }
@@ -60,7 +62,7 @@ class StockRequestService
                 $request->update([
                     'status' => StockRequest::STATUS_DISPATCHED,
                     'fulfilled_quantity' => $dispatchQty,
-                    'admin_note' => $data['admin_note'] ?? null
+                    'admin_note' => $note
                 ]);
             }
         });
