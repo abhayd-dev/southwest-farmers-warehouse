@@ -62,6 +62,7 @@
                                         $badge = match($req->status) {
                                             'pending' => 'bg-warning text-dark',
                                             'dispatched' => 'bg-info',
+                                            'verify_payment' => 'bg-primary',
                                             'completed' => 'bg-success',
                                             'rejected' => 'bg-danger',
                                             default => 'bg-secondary'
@@ -129,6 +130,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Remarks</label>
+                        {{-- CORRECTED NAME: admin_note --}}
                         <textarea name="admin_note" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
@@ -154,10 +156,10 @@
                     
                     {{-- Store Proof Display --}}
                     <div class="mb-3">
-                        <label class="form-label text-muted small">Store Payment Proof</label>
-                        <div class="p-2 border rounded bg-light text-center">
-                            {{-- In a real scenario, fetch this via AJAX or pass data. Placeholder for now --}}
-                            <span class="text-muted small">View via Manage Page</span>
+                        <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
+                        <div class="p-3 border rounded bg-light text-center">
+                            {{-- Ideally you would fetch the proof link via AJAX for the modal, but here we handle generic or "Check Manage Page" --}}
+                            <span class="text-muted small">Please view proof in the "Manage" page details.</span>
                         </div>
                     </div>
 
@@ -261,18 +263,21 @@
                     qtyInput.classList.add('is-invalid');
                     qtyInput.style.borderColor = 'red';
                     
-                    // Show inline error if not present
+                    // Inline error logic
                     let errorSpan = qtyInput.nextElementSibling;
                     if(!errorSpan || !errorSpan.classList.contains('invalid-feedback')) {
                         errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
                     }
-                    errorSpan.style.display = 'block';
-                    errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                    if(errorSpan) {
+                        errorSpan.style.display = 'block';
+                        errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                    }
                     return;
                 }
                 qtyInput.classList.remove('is-invalid');
                 qtyInput.style.borderColor = '';
-                document.querySelector('#dispatch_qty_div .invalid-feedback').style.display = 'none';
+                const errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
+                if(errorSpan) errorSpan.style.display = 'none';
             }
 
             const formData = new FormData(this);

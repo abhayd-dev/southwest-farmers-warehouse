@@ -13,8 +13,7 @@
             </div>
             
             <div class="d-flex gap-2">
-                {{-- ADDED STOCK IN BUTTON HERE INSTEAD OF INDEX AS REQUESTED, THOUGH INDEX IS MORE LOGICAL FOR GENERAL STOCK IN. ADDING TO SHOW PAGE AS WELL IF CONTEXT ALLOWS --}}
-                {{-- NOTE: Contextually Stock In usually belongs to general inventory, but per prompt "Purchase In" button logic requested. --}}
+                {{-- Added Stock In Button --}}
                 <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-success">
                     <i class="mdi mdi-plus-box me-1"></i> Stock In (Purchase)
                 </a>
@@ -119,7 +118,7 @@
                                 <input type="hidden" name="status" value="dispatched">
                                 
                                 {{-- Dispatch Input --}}
-                                <div class="mb-4">
+                                <div class="mb-4" id="dispatch_qty_div">
                                     <label class="form-label fw-bold">Quantity to Dispatch <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-lg has-validation">
                                         <input type="number" name="dispatch_quantity" id="dispatch_qty"
@@ -166,6 +165,7 @@
                                     
                                     <h6 class="text-danger fw-bold mb-2">Reject Request</h6>
                                     <label class="form-label small text-dark">Reason for Rejection <span class="text-danger">*</span></label>
+                                    {{-- CORRECTED NAME: admin_note --}}
                                     <textarea name="admin_note" class="form-control mb-3" rows="2" placeholder="Why are you rejecting this request?" required></textarea>
                                     <div class="d-flex justify-content-end gap-2">
                                         <button type="button" class="btn btn-light btn-sm" onclick="toggleRejectSection()">Cancel</button>
@@ -197,6 +197,33 @@
                                     </div>
                                     <h4 class="fw-bold text-success">Order Completed</h4>
                                     <p class="text-muted">Stock received and payment verified.</p>
+                                    
+                                    {{-- Show Payment Proof if Exists --}}
+                                    <div class="mt-4 p-3 bg-light rounded text-start mx-auto" style="max-width: 400px;">
+                                        <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2 mb-2">Verification Details</h6>
+                                        
+                                        <div class="mb-2">
+                                            <small class="d-block text-muted fw-bold">Store Proof:</small>
+                                            @if($stockRequest->store_payment_proof)
+                                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
+                                                    <i class="mdi mdi-file-document me-1"></i> View Store File
+                                                </a>
+                                            @else
+                                                <span class="text-danger small">No proof uploaded by store.</span>
+                                            @endif
+                                        </div>
+
+                                        <div>
+                                            <small class="d-block text-muted fw-bold">Warehouse Proof:</small>
+                                            @if($stockRequest->warehouse_payment_proof)
+                                                <a href="{{ asset('storage/'.$stockRequest->warehouse_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
+                                                    <i class="mdi mdi-file-check me-1"></i> View Warehouse File
+                                                </a>
+                                            @else
+                                                 <span class="text-muted small">Pending upload.</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 @endif
                                 <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-dark mt-3 d-block mx-auto" style="width: fit-content;">Return to Dashboard</a>
                             </div>
@@ -207,7 +234,7 @@
         </div>
     </div>
 
-    {{-- Verify Payment Modal (Reused) --}}
+    {{-- Verify Payment Modal --}}
     <div class="modal fade" id="verifyModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="verifyForm" class="modal-content" enctype="multipart/form-data">
@@ -220,21 +247,23 @@
                     <input type="hidden" name="request_id" id="verify_req_id">
                     
                     {{-- Store Proof Display --}}
-                    @if($stockRequest->store_payment_proof)
                     <div class="mb-3">
-                        <label class="form-label text-muted small">Store Payment Proof</label>
-                        <div class="p-2 border rounded bg-light text-center">
-                            <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                <i class="mdi mdi-eye me-1"></i> View Proof
-                            </a>
+                        <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
+                        <div class="p-3 border rounded bg-light text-center">
+                            @if($stockRequest->store_payment_proof)
+                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="mdi mdi-eye me-1"></i> View Store Proof
+                                </a>
+                            @else
+                                <span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>
+                            @endif
                         </div>
                     </div>
-                    @endif
 
                     @if($stockRequest->store_remarks)
                     <div class="mb-3">
-                        <label class="form-label text-muted small">Store Remarks</label>
-                        <div class="p-2 border rounded bg-light small">
+                        <label class="form-label text-muted small fw-bold">STORE REMARKS</label>
+                        <div class="p-2 border rounded bg-white small text-muted">
                             {{ $stockRequest->store_remarks }}
                         </div>
                     </div>
@@ -285,21 +314,26 @@
             // Reset validation
             qtyInput.classList.remove('is-invalid');
             qtyInput.style.borderColor = '';
+            if(errorDiv) errorDiv.style.display = 'none';
 
             // Validation Logic
             if (isNaN(qty) || qty <= 0) {
                 qtyInput.classList.add('is-invalid');
                 qtyInput.style.borderColor = 'red';
-                errorDiv.textContent = 'Quantity must be a number greater than 0.';
-                errorDiv.style.display = 'block';
+                if(errorDiv) {
+                    errorDiv.textContent = 'Quantity must be a number greater than 0.';
+                    errorDiv.style.display = 'block';
+                }
                 return;
             }
 
             if (qty > maxQty) {
                 qtyInput.classList.add('is-invalid');
                 qtyInput.style.borderColor = 'red';
-                errorDiv.textContent = `Quantity cannot exceed pending/available amount (${maxQty}).`;
-                errorDiv.style.display = 'block';
+                if(errorDiv) {
+                    errorDiv.textContent = `Quantity cannot exceed pending/available amount (${maxQty}).`;
+                    errorDiv.style.display = 'block';
+                }
                 return;
             }
 
