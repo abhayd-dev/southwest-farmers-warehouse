@@ -238,30 +238,12 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="verify_req_id">
-
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
-                        <div class="p-3 border rounded bg-light text-center">
-                            @if ($stockRequest->store_payment_proof)
-                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank"
-                                    class="btn btn-sm btn-outline-info">
-                                    <i class="mdi mdi-eye me-1"></i> View Store Proof
-                                </a>
-                            @else
-                                <span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>
-                            @endif
+                        <div class="p-3 border rounded bg-light text-center" id="storeProofContainer">
+                            <span class="text-muted small">Loading...</span>
                         </div>
                     </div>
-
-                    @if ($stockRequest->store_remarks)
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold">STORE REMARKS</label>
-                            <div class="p-2 border rounded bg-white small text-muted">
-                                {{ $stockRequest->store_remarks }}
-                            </div>
-                        </div>
-                    @endif
-
                     <div class="mb-3">
                         <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
                         <input type="file" name="warehouse_payment_proof" class="form-control" required
