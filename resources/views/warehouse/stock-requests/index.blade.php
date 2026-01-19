@@ -105,7 +105,7 @@
 
     <div class="modal fade" id="dispatchModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="dispatchForm" class="modal-content">
+            <form id="dispatchForm" class="modal-content" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Process Request</h5>
@@ -145,7 +145,7 @@
 
     <div class="modal fade" id="verifyModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="verifyForm" class="modal-content" enctype="multipart/form-data">
+            <form id="verifyForm" class="modal-content" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Verify Payment</h5>
@@ -179,7 +179,7 @@
 
     <div class="modal fade" id="stockInModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="stockInForm" class="modal-content">
+            <form id="stockInForm" class="modal-content" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Purchase In (Direct Stock)</h5>
@@ -258,11 +258,11 @@
             .then(response => response.text().then(text => ({response, text})))
             .then(({response, text}) => {
                 let data = {};
-                if (text) {
+                if (text.trim()) {
                     try {
                         data = JSON.parse(text);
                     } catch (e) {
-                        throw new Error('Invalid server response (not JSON)');
+                        throw new Error('Server returned invalid response');
                     }
                 }
 
@@ -281,7 +281,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        html: data.message || 'Operation completed successfully',
+                        html: data.message || 'Operation completed',
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => location.reload());
@@ -297,55 +297,67 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    html: error.message
+                    html: error.message || 'An unexpected error occurred'
                 });
             });
         }
 
-        document.getElementById('dispatchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        const dispatchForm = document.getElementById('dispatchForm');
+        if (dispatchForm) {
+            dispatchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            const status = document.getElementById('dispatch_status').value;
-            const qtyInput = document.getElementById('dispatch_qty');
-            const qty = parseInt(qtyInput.value);
+                const status = document.getElementById('dispatch_status').value;
+                const qtyInput = document.getElementById('dispatch_qty');
+                const qty = parseInt(qtyInput.value);
 
-            if (status === 'dispatched') {
-                if (qty <= 0 || qty > maxQty || isNaN(qty)) {
-                    qtyInput.classList.add('is-invalid');
-                    let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
-                    if (errorSpan) {
-                        errorSpan.style.display = 'block';
-                        errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                if (status === 'dispatched') {
+                    if (qty <= 0 || qty > maxQty || isNaN(qty)) {
+                        qtyInput.classList.add('is-invalid');
+                        let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
+                        if (errorSpan) {
+                            errorSpan.style.display = 'block';
+                            errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                        }
+                        return;
                     }
-                    return;
+                    qtyInput.classList.remove('is-invalid');
                 }
-                qtyInput.classList.remove('is-invalid');
-            }
 
-            submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
-        });
+                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
+            });
+        }
 
-        document.getElementById('verifyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
-        });
+        const verifyFormIndex = document.getElementById('verifyForm');
+        if (verifyFormIndex) {
+            verifyFormIndex.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
+            });
+        }
 
-        document.getElementById('stockInForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this);
-        });
+        const stockInForm = document.getElementById('stockInForm');
+        if (stockInForm) {
+            stockInForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this);
+            });
+        }
 
-        document.getElementById('dispatch_status').addEventListener('change', function() {
-            const qtyDiv = document.getElementById('dispatch_qty_div');
-            const qtyInput = document.getElementById('dispatch_qty');
-            if (this.value === 'rejected') {
-                qtyDiv.style.display = 'none';
-                qtyInput.removeAttribute('required');
-            } else {
-                qtyDiv.style.display = 'block';
-                qtyInput.setAttribute('required', 'true');
-            }
-        });
+        const dispatchStatus = document.getElementById('dispatch_status');
+        if (dispatchStatus) {
+            dispatchStatus.addEventListener('change', function() {
+                const qtyDiv = document.getElementById('dispatch_qty_div');
+                const qtyInput = document.getElementById('dispatch_qty');
+                if (this.value === 'rejected') {
+                    qtyDiv.style.display = 'none';
+                    qtyInput.removeAttribute('required');
+                } else {
+                    qtyDiv.style.display = 'block';
+                    qtyInput.setAttribute('required', 'true');
+                }
+            });
+        }
     </script>
     @endpush
 </x-app-layout>

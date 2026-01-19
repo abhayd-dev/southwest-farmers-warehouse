@@ -12,9 +12,9 @@
             </div>
 
             <div class="d-flex gap-2">
-                <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-success">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#stockInModal">
                     <i class="mdi mdi-plus-box me-1"></i> Stock In (Purchase)
-                </a>
+                </button>
 
                 <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-outline-secondary">
                     <i class="mdi mdi-arrow-left"></i> Back to List
@@ -56,7 +56,7 @@
                             </div>
                             <div class="col-4 border-end">
                                 <small class="text-muted d-block mb-1">Sent</small>
-                                <h5 class="text-success fw-bold mb-0">{{ $stockRequest->fulfilled_quantity }}</h5>
+                                <h5 class="text-success fw-bold mb-0">{{ $stockRequest->fulfilled_quantity ?? 0 }}</h5>
                             </div>
                             <div class="col-4">
                                 <small class="text-muted d-block mb-1">Pending</small>
@@ -105,8 +105,8 @@
                         <h6 class="card-title mb-0 fw-bold text-dark">Process Dispatch</h6>
                     </div>
                     <div class="card-body p-4">
-                        @if ($stockRequest->pending_quantity > 0 && $stockRequest->status != 'rejected')
-                            <form id="dispatchForm" class="needs-validation" novalidate>
+                        @if ($stockRequest->pending_quantity > 0 && $stockRequest->status !== 'rejected')
+                            <form id="dispatchForm" class="needs-validation" novalidate method="POST">
                                 @csrf
                                 <input type="hidden" name="request_id" value="{{ $stockRequest->id }}">
                                 <input type="hidden" name="status" value="dispatched">
@@ -150,7 +150,7 @@
 
                             <div id="rejectSection"
                                 class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25 d-none">
-                                <form id="rejectForm">
+                                <form id="rejectForm" method="POST">
                                     @csrf
                                     <input type="hidden" name="request_id" value="{{ $stockRequest->id }}">
                                     <input type="hidden" name="status" value="rejected">
@@ -174,7 +174,7 @@
                                         <i class="mdi mdi-close-circle text-danger opacity-50" style="font-size: 4rem;"></i>
                                     </div>
                                     <h4 class="fw-bold text-danger">Request Rejected</h4>
-                                    <p class="text-muted max-w-sm mx-auto">Reason: {{ $stockRequest->admin_note }}</p>
+                                    <p class="text-muted max-w-sm mx-auto">Reason: {{ $stockRequest->admin_note ?? 'N/A' }}</p>
                                 @elseif($stockRequest->status == 'dispatched')
                                     <div class="mb-3">
                                         <i class="mdi mdi-truck-check text-info opacity-50" style="font-size: 4rem;"></i>
@@ -230,7 +230,7 @@
 
     <div class="modal fade" id="verifyModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="verifyForm" class="modal-content" enctype="multipart/form-data">
+            <form id="verifyForm" class="modal-content" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Verify Payment</h5>
@@ -238,12 +238,30 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="verify_req_id">
+
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
-                        <div class="p-3 border rounded bg-light text-center" id="storeProofContainer">
-                            <span class="text-muted small">Loading...</span>
+                        <div class="p-3 border rounded bg-light text-center">
+                            @if ($stockRequest->store_payment_proof)
+                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-info">
+                                    <i class="mdi mdi-eye me-1"></i> View Store Proof
+                                </a>
+                            @else
+                                <span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>
+                            @endif
                         </div>
                     </div>
+
+                    @if ($stockRequest->store_remarks)
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">STORE REMARKS</label>
+                            <div class="p-2 border rounded bg-white small text-muted">
+                                {{ $stockRequest->store_remarks }}
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="mb-3">
                         <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
                         <input type="file" name="warehouse_payment_proof" class="form-control" required
@@ -262,6 +280,45 @@
         </div>
     </div>
 
+    <div class="modal fade" id="stockInModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="stockInFormShow" class="modal-content" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Purchase In (Direct Stock)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Product <span class="text-danger">*</span></label>
+                        <select name="product_id" class="form-select" required>
+                            <option value="">Select Product</option>
+                            @foreach ($products as $prod)
+                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->sku }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <input type="number" name="quantity" class="form-control" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purchase Reference</label>
+                        <input type="text" name="purchase_ref" class="form-control" placeholder="PO-XXXX">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -269,7 +326,7 @@
 
         function toggleRejectSection() {
             const section = document.getElementById('rejectSection');
-            section.classList.toggle('d-none');
+            if (section) section.classList.toggle('d-none');
         }
 
         function openVerifyModal(id) {
@@ -291,11 +348,11 @@
             .then(response => response.text().then(text => ({response, text})))
             .then(({response, text}) => {
                 let data = {};
-                if (text) {
+                if (text.trim()) {
                     try {
                         data = JSON.parse(text);
                     } catch (e) {
-                        throw new Error('Invalid server response (not JSON)');
+                        throw new Error('Server returned invalid response');
                     }
                 }
 
@@ -314,7 +371,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        html: data.message || 'Operation completed successfully',
+                        html: data.message || 'Operation completed',
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => location.reload());
@@ -330,42 +387,59 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    html: error.message
+                    html: error.message || 'An unexpected error occurred'
                 });
             });
         }
 
-        document.getElementById('dispatchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        const dispatchForm = document.getElementById('dispatchForm');
+        if (dispatchForm) {
+            dispatchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            const qtyInput = document.getElementById('dispatch_qty');
-            const qty = parseInt(qtyInput.value);
-            const errorDiv = document.getElementById('qty-error');
+                const qtyInput = document.getElementById('dispatch_qty');
+                const qty = parseInt(qtyInput.value);
+                const errorDiv = document.getElementById('qty-error');
 
-            qtyInput.classList.remove('is-invalid');
-            if (errorDiv) errorDiv.style.display = 'none';
+                qtyInput.classList.remove('is-invalid');
+                if (errorDiv) errorDiv.style.display = 'none';
 
-            if (isNaN(qty) || qty <= 0 || qty > maxQty) {
-                qtyInput.classList.add('is-invalid');
-                if (errorDiv) {
-                    errorDiv.textContent = `Quantity must be between 1 and ${maxQty}.`;
-                    errorDiv.style.display = 'block';
+                if (isNaN(qty) || qty <= 0 || qty > maxQty) {
+                    qtyInput.classList.add('is-invalid');
+                    if (errorDiv) {
+                        errorDiv.textContent = `Quantity must be between 1 and ${maxQty}.`;
+                        errorDiv.style.display = 'block';
+                    }
+                    return;
                 }
-                return;
-            }
 
-            submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
-        });
+                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
+            });
+        }
 
-        document.getElementById('rejectForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
-        });
+        const rejectForm = document.getElementById('rejectForm');
+        if (rejectForm) {
+            rejectForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
+            });
+        }
 
-        document.getElementById('verifyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
-        });
+        const verifyForm = document.getElementById('verifyForm');
+        if (verifyForm) {
+            verifyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
+            });
+        }
+
+        const stockInFormShow = document.getElementById('stockInFormShow');
+        if (stockInFormShow) {
+            stockInFormShow.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this);
+            });
+        }
     </script>
     @endpush
 </x-app-layout>

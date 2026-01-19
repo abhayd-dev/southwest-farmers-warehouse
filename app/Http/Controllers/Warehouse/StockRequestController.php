@@ -24,9 +24,8 @@ class StockRequestController extends Controller
         $requests = $this->service->getRequests($status);
         
         $products = Product::whereNull('store_id')->where('is_active', true)->get();
-        $categories = ProductCategory::whereNull('store_id')->where('is_active', true)->get();
         
-        return view('warehouse.stock-requests.index', compact('requests', 'products', 'categories'));
+        return view('warehouse.stock-requests.index', compact('requests', 'products'));
     }
 
     public function show($id)
