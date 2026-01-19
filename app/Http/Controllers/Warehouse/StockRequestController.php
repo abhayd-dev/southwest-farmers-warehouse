@@ -23,7 +23,6 @@ class StockRequestController extends Controller
         $status = $request->get('status', 'pending');
         $requests = $this->service->getRequests($status);
         
-        // Data for Stock In (Purchase In) Modal
         $products = Product::whereNull('store_id')->where('is_active', true)->get();
         $categories = ProductCategory::whereNull('store_id')->where('is_active', true)->get();
         
@@ -40,49 +39,11 @@ class StockRequestController extends Controller
             'storeStock'
         ])->findOrFail($id);
 
-        return view('warehouse.stock-requests.show', compact('stockRequest'));
+        $products = Product::whereNull('store_id')->where('is_active', true)->get();
+
+        return view('warehouse.stock-requests.show', compact('stockRequest', 'products'));
     }
 
-    // Standard Form Submit (Fallback)
-    public function update(Request $request, $id)
-    {
-        $action = $request->input('action'); 
-
-        try {
-            if ($action === 'approve') {
-                $request->validate([
-                    'dispatch_quantity' => 'required|numeric|min:1',
-                ]);
-                
-                $this->service->processStatusChange([
-                    'request_id' => $id,
-                    'status' => 'dispatched',
-                    'dispatch_quantity' => $request->dispatch_quantity,
-                    'admin_note' => $request->admin_note
-                ]);
-                
-                return redirect()->route('warehouse.stock-requests.index')
-                    ->with('success', 'Stock dispatched successfully.');
-
-            } elseif ($action === 'reject') {
-                // Note: If using standard form, ensure input name matches this validation
-                $request->validate(['admin_note' => 'required|string']);
-                
-                $this->service->processStatusChange([
-                    'request_id' => $id,
-                    'status' => 'rejected',
-                    'admin_note' => $request->admin_note
-                ]);
-                
-                return redirect()->route('warehouse.stock-requests.index')
-                    ->with('success', 'Request rejected.');
-            }
-        } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
-        }
-    }
-
-    // AJAX Endpoint for Dispatch/Reject
     public function changeStatus(Request $request)
     {
         $request->validate([
@@ -100,7 +61,6 @@ class StockRequestController extends Controller
         }
     }
 
-    // AJAX Endpoint for Payment Verification
     public function verifyPayment(Request $request)
     {
         $request->validate([
@@ -117,7 +77,6 @@ class StockRequestController extends Controller
         }
     }
 
-    // AJAX Endpoint for Direct Stock Purchase
     public function purchaseIn(Request $request)
     {
         $request->validate([

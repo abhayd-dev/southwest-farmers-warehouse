@@ -21,10 +21,8 @@ class StockRequestService
         if ($status === 'history') {
             $query->whereIn('status', [StockRequest::STATUS_COMPLETED, StockRequest::STATUS_REJECTED]);
         } elseif ($status === 'in_transit') {
-            // Dispatched items are In Transit until Payment Verified & Completed
             $query->whereIn('status', [StockRequest::STATUS_DISPATCHED]);
         } else {
-            // Pending
             $query->where('status', $status);
         }
 
@@ -36,12 +34,10 @@ class StockRequestService
         return DB::transaction(function () use ($data) {
             $request = StockRequest::findOrFail($data['request_id']);
 
-            // Calculate current pending (assumes fulfilled_quantity defaults to 0)
             $currentFulfilled = $request->fulfilled_quantity ?? 0;
             $pendingQuantity = $request->requested_quantity - $currentFulfilled;
 
             if ($data['status'] === StockRequest::STATUS_REJECTED) {
-                // Prevent reject after any dispatch has happened
                 if ($currentFulfilled > 0 || $request->status === StockRequest::STATUS_DISPATCHED) {
                     throw new \Exception('Cannot reject a request after stock has been dispatched.');
                 }
@@ -66,10 +62,8 @@ class StockRequestService
 
                 $productId = $request->product_id;
 
-                // Deduct from warehouse (your existing method - unchanged)
                 $this->deductWarehouseStock($productId, $dispatchQty, $request);
 
-                // Increment fulfilled quantity (critical fix for partial dispatch)
                 $request->update([
                     'status' => StockRequest::STATUS_DISPATCHED,
                     'fulfilled_quantity' => $currentFulfilled + $dispatchQty,
@@ -119,7 +113,6 @@ class StockRequestService
             $remainingToDeduct -= $deductAmount;
         }
 
-        // Update ProductStock snapshot
         $stock = ProductStock::firstOrCreate(
             ['product_id' => $productId, 'warehouse_id' => 1],
             ['quantity' => 0]
@@ -138,7 +131,6 @@ class StockRequestService
 
             $path = $requestData->file('warehouse_payment_proof')->store('payment_proofs', 'public');
 
-            // 1. Update Request to Completed
             $request->update([
                 'status' => StockRequest::STATUS_COMPLETED,
                 'warehouse_payment_proof' => $path,
@@ -146,7 +138,6 @@ class StockRequestService
                 'verified_at' => Carbon::now()
             ]);
 
-            // 2. Credit to Store (Only now does the store get the stock)
             $storeStock = StoreStock::firstOrCreate(
                 ['store_id' => $request->store_id, 'product_id' => $request->product_id],
                 ['quantity' => 0, 'selling_price' => 0]
@@ -154,7 +145,6 @@ class StockRequestService
 
             $storeStock->increment('quantity', $request->fulfilled_quantity);
 
-            // 3. Log Store Transaction
             StockTransaction::create([
                 'product_id' => $request->product_id,
                 'warehouse_id' => 1,
@@ -175,7 +165,6 @@ class StockRequestService
         return DB::transaction(function () use ($data) {
             $product = Product::findOrFail($data['product_id']);
 
-            // 1. Create Batch
             $batch = ProductBatch::create([
                 'product_id' => $product->id,
                 'warehouse_id' => 1,
@@ -184,14 +173,12 @@ class StockRequestService
                 'quantity' => $data['quantity'],
             ]);
 
-            // 2. Update Warehouse Snapshot
             $stock = ProductStock::firstOrCreate(
                 ['product_id' => $product->id, 'warehouse_id' => 1],
                 ['quantity' => 0]
             );
             $stock->increment('quantity', $data['quantity']);
 
-            // 3. Log Transaction
             StockTransaction::create([
                 'product_id' => $product->id,
                 'warehouse_id' => 1,

@@ -14,7 +14,6 @@
             </div>
         </div>
 
-        {{-- Tabs --}}
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold' : '' }}"
@@ -62,7 +61,6 @@
                                             $badge = match ($req->status) {
                                                 'pending' => 'bg-warning text-dark',
                                                 'dispatched' => 'bg-info',
-                                                'verify_payment' => 'bg-primary',
                                                 'completed' => 'bg-success',
                                                 'rejected' => 'bg-danger',
                                                 default => 'bg-secondary',
@@ -82,9 +80,9 @@
                                                 Change Status
                                             </button>
                                         @elseif($req->status == 'dispatched')
-                                            {{-- Only verify payment here --}}
+                                            @php $proof = $req->store_payment_proof ? asset('storage/'.$req->store_payment_proof) : ''; @endphp
                                             <button class="btn btn-sm btn-outline-success ms-1"
-                                                onclick="openVerifyModal({{ $req->id }})">
+                                                onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
                                                 Verify Payment
                                             </button>
                                         @endif
@@ -105,7 +103,6 @@
         </div>
     </div>
 
-    {{-- Change Status / Dispatch Modal --}}
     <div class="modal fade" id="dispatchModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="dispatchForm" class="modal-content">
@@ -146,7 +143,6 @@
         </div>
     </div>
 
-    {{-- Verify Payment Modal --}}
     <div class="modal fade" id="verifyModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="verifyForm" class="modal-content" enctype="multipart/form-data">
@@ -157,16 +153,12 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="verify_req_id">
-
-                    {{-- Store Proof Display --}}
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
                         <div class="p-3 border rounded bg-light text-center" id="storeProofContainer">
-                            {{-- JS Injects Link Here --}}
                             <span class="text-muted small">Loading...</span>
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
                         <input type="file" name="warehouse_payment_proof" class="form-control" required
@@ -185,7 +177,6 @@
         </div>
     </div>
 
-    {{-- Stock In Modal --}}
     <div class="modal fade" id="stockInModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="stockInForm" class="modal-content">
@@ -200,8 +191,7 @@
                         <select name="product_id" class="form-select" required>
                             <option value="">Select Product</option>
                             @foreach ($products as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->sku }})
-                                </option>
+                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->sku }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -227,119 +217,135 @@
     </div>
 
     @push('scripts')
-        <script>
-            let maxQty = 0;
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let maxQty = 0;
 
-            function openDispatchModal(id, store, qty) {
-                document.getElementById('dispatch_req_id').value = id;
-                document.getElementById('dispatch_store').value = store;
-                document.getElementById('dispatch_qty').value = qty;
-                maxQty = parseInt(qty);
+        function openDispatchModal(id, store, qty) {
+            document.getElementById('dispatch_req_id').value = id;
+            document.getElementById('dispatch_store').value = store;
+            document.getElementById('dispatch_qty').value = qty;
+            maxQty = parseInt(qty);
 
-                const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
-                modal.show();
+            const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
+            modal.show();
+        }
+
+        function openVerifyModal(id, proofUrl) {
+            document.getElementById('verify_req_id').value = id;
+            const container = document.getElementById('storeProofContainer');
+
+            if (proofUrl && proofUrl !== '') {
+                container.innerHTML = `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
+            } else {
+                container.innerHTML = `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
             }
 
-            function openVerifyModal(id, proofUrl) {
-                document.getElementById('verify_req_id').value = id;
-                const container = document.getElementById('storeProofContainer');
+            new bootstrap.Modal(document.getElementById('verifyModal')).show();
+        }
 
-                if (proofUrl && proofUrl !== 'null' && proofUrl !== '') {
-                    container.innerHTML =
-                        `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
-                } else {
-                    container.innerHTML =
-                        `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
+        function submitAjaxForm(url, formElement) {
+            const formData = new FormData(formElement);
+
+            fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-
-                new bootstrap.Modal(document.getElementById('verifyModal')).show();
-            }
-
-            // Reusable AJAX submit function
-            function submitAjaxForm(url, formElement, successCallback) {
-                const formData = new FormData(formElement);
-
-                fetch(url, {
-                        method: "POST",
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => {
-                                let msg = err.message || 'Server error';
-                                if (err.errors) {
-                                    msg = Object.values(err.errors).flat().join('\n');
-                                }
-                                throw new Error(msg);
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            successCallback ? successCallback() : location.reload();
-                        } else {
-                            alert(data.message || 'Operation failed');
-                        }
-                    })
-                    .catch(error => {
-                        alert(error.message);
-                    });
-            }
-
-            // Dispatch / Change Status Form
-            document.getElementById('dispatchForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const status = document.getElementById('dispatch_status').value;
-                const qtyInput = document.getElementById('dispatch_qty');
-                const qty = parseInt(qtyInput.value);
-
-                if (status === 'dispatched') {
-                    if (qty <= 0 || qty > maxQty || isNaN(qty)) {
-                        qtyInput.classList.add('is-invalid');
-                        let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
-                        if (errorSpan) {
-                            errorSpan.style.display = 'block';
-                            errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
-                        }
-                        return;
+            })
+            .then(response => response.text().then(text => ({response, text})))
+            .then(({response, text}) => {
+                let data = {};
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Invalid server response (not JSON)');
                     }
-                    qtyInput.classList.remove('is-invalid');
                 }
 
-                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this, () => location.reload());
-            });
+                if (!response.ok) {
+                    let msg = data.message || 'Server error';
+                    if (data.errors) {
+                        msg = Object.values(data.errors).flat().join('<br>');
+                    }
+                    throw new Error(msg);
+                }
 
-            // Verify Payment Form
-            document.getElementById('verifyForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this, () => location
-            .reload());
-            });
-
-            // Purchase In Form
-            document.getElementById('stockInForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this, () => location.reload());
-            });
-
-            // Status change → show/hide qty field
-            document.getElementById('dispatch_status').addEventListener('change', function() {
-                const qtyDiv = document.getElementById('dispatch_qty_div');
-                const qtyInput = document.getElementById('dispatch_qty');
-                if (this.value === 'rejected') {
-                    qtyDiv.style.display = 'none';
-                    qtyInput.removeAttribute('required');
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        html: data.message || 'Operation completed successfully',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
                 } else {
-                    qtyDiv.style.display = 'block';
-                    qtyInput.setAttribute('required', 'true');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed',
+                        html: data.message || 'Operation failed'
+                    });
                 }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: error.message
+                });
             });
-        </script>
+        }
+
+        document.getElementById('dispatchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const status = document.getElementById('dispatch_status').value;
+            const qtyInput = document.getElementById('dispatch_qty');
+            const qty = parseInt(qtyInput.value);
+
+            if (status === 'dispatched') {
+                if (qty <= 0 || qty > maxQty || isNaN(qty)) {
+                    qtyInput.classList.add('is-invalid');
+                    let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
+                    if (errorSpan) {
+                        errorSpan.style.display = 'block';
+                        errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                    }
+                    return;
+                }
+                qtyInput.classList.remove('is-invalid');
+            }
+
+            submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
+        });
+
+        document.getElementById('verifyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
+        });
+
+        document.getElementById('stockInForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitAjaxForm("{{ route('warehouse.stock-requests.purchase-in') }}", this);
+        });
+
+        document.getElementById('dispatch_status').addEventListener('change', function() {
+            const qtyDiv = document.getElementById('dispatch_qty_div');
+            const qtyInput = document.getElementById('dispatch_qty');
+            if (this.value === 'rejected') {
+                qtyDiv.style.display = 'none';
+                qtyInput.removeAttribute('required');
+            } else {
+                qtyDiv.style.display = 'block';
+                qtyInput.setAttribute('required', 'true');
+            }
+        });
+    </script>
     @endpush
 </x-app-layout>
