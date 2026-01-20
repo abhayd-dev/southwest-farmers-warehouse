@@ -5,6 +5,7 @@ namespace App\View\Composers;
 use Illuminate\View\View;
 use App\Models\StockRequest;
 use App\Models\StoreStock;
+use App\Models\RecallRequest;
 
 class SidebarComposer
 {
@@ -14,7 +15,8 @@ class SidebarComposer
 
         $lowStockCount = StoreStock::where('quantity', '<', 10)->count();
 
-        $view->with('pendingRequestsCount', $pendingRequestsCount);
-        $view->with('lowStockCount', $lowStockCount);
+        $pendingRecallCount = RecallRequest::where('status', 'pending_store_approval')->count();
+
+        $view->with(compact('pendingRequestsCount', 'lowStockCount', 'pendingRecallCount'));
     }
 }

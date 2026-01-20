@@ -53,11 +53,11 @@ class ProductController extends Controller
         try {
             return view('warehouse.products.create', [
                 // Only Warehouse Options & Categories
-                'options' => ProductOption::whereNull('store_id')->where('is_active', 1)->get(),
+                'options' => ProductOption::where('is_active', 1)->get(),
                 'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
             ]);
         } catch (\Exception $e) {
-            return back()->with('error', 'Unable to open create page');
+            return back()->with('error', 'Unable to open create page' . $e->getMessage());
         }
     }
 

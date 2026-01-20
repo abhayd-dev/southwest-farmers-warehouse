@@ -5,13 +5,16 @@ use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Warehouse\MinMaxController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\Warehouse\ProductCategoryController;
 use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
+use App\Http\Controllers\Warehouse\RecallController;
 use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\Warehouse\StaffController;
+use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\WarehouseController;
@@ -49,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/warehouse/update-status', [WarehouseController::class, 'updateStatus'])->name('warehouse.update-status');
 
     Route::prefix('warehouse')->group(function () {
-        
+
         // Product Management (Isolated)
         Route::resource('product-options', ProductOptionController::class)->names('warehouse.product-options')->except(['show']);
         Route::post('product-options/status', [ProductOptionController::class, 'changeStatus'])->name('warehouse.product-options.status');
@@ -102,11 +105,47 @@ Route::middleware('auth')->group(function () {
         Route::controller(StockRequestController::class)->group(function () {
             Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');
             Route::get('stock-requests/{id}', 'show')->name('warehouse.stock-requests.show');
-           
+
             // New Routes for Workflow
             Route::post('stock-requests/change-status', 'changeStatus')->name('warehouse.stock-requests.change-status');
             Route::post('stock-requests/verify-payment', 'verifyPayment')->name('warehouse.stock-requests.verify-payment');
             Route::post('stock-requests/purchase-in', 'purchaseIn')->name('warehouse.stock-requests.purchase-in');
+        });
+
+        // Stock Control Module Routes
+        Route::prefix('stock-control')->name('warehouse.stock-control.')->group(function () {
+
+            // Consolidated Stock Overview
+            Route::get('overview', [StockControlController::class, 'overview'])
+                ->name('overview');
+
+            Route::get('overview/data', [StockControlController::class, 'overviewData'])
+                ->name('overview.data');
+
+            // Recall Stock Requests
+            Route::resource('recall', RecallController::class)
+                ->only(['index', 'create', 'store', 'show']);
+
+            Route::post('recall/{recall}/approve', [RecallController::class, 'approve'])
+                ->name('recall.approve');
+            Route::post('recall/{recall}/reject', [RecallController::class, 'reject'])
+                ->name('recall.reject');
+            Route::post('recall/{recall}/dispatch', [RecallController::class, 'dispatch'])
+                ->name('recall.dispatch');
+            Route::post('recall/{recall}/receive', [RecallController::class, 'receive'])
+                ->name('recall.receive');
+
+            // Expiry & Damage Report
+            Route::get('expiry-damage', [StockControlController::class, 'expiryDamage'])
+                ->name('expiry');
+
+            // Stock Valuation
+            Route::get('valuation', [StockControlController::class, 'valuation'])
+                ->name('valuation');
+
+            // Min-Max Levels
+            Route::resource('minmax', MinMaxController::class)
+                ->only(['index', 'edit', 'update']);
         });
     });
 });
