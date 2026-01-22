@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Models\StockRequest;
 use App\Models\ProductBatch;
 use App\Models\StockTransaction;
 use App\Models\StoreStock;
-use App\Models\Product;
 use App\Models\ProductStock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -62,7 +62,7 @@ class StockRequestService
 
                 $productId = $request->product_id;
 
-                $this->deductWarehouseStock($productId, $dispatchQty, $request);
+                $this->dispatchToStore($request, $dispatchQty);
 
                 $request->update([
                     'status' => StockRequest::STATUS_DISPATCHED,
@@ -73,51 +73,64 @@ class StockRequestService
         });
     }
 
-    private function deductWarehouseStock($productId, $qty, $request)
+    public function dispatchToStore(StockRequest $request, $dispatchQty)
     {
+        $productId = $request->product_id;
+        $storeId = $request->store_id;
+
+        // Lock batches for update to prevent race conditions
         $batches = ProductBatch::where('product_id', $productId)
             ->where('warehouse_id', 1)
             ->where('quantity', '>', 0)
-            ->orderBy('expiry_date', 'asc')
-            ->orderBy('created_at', 'asc')
+            ->orderBy('expiry_date', 'asc') // FIFO: oldest expiry first
             ->lockForUpdate()
             ->get();
 
         $totalAvailable = $batches->sum('quantity');
-        if ($totalAvailable < $qty) {
-            throw new \Exception("Insufficient Warehouse Stock. Available: {$totalAvailable}");
+
+        if ($totalAvailable < $dispatchQty) {
+            throw new \Exception("Insufficient warehouse stock. Available: {$totalAvailable}, Requested: {$dispatchQty}");
         }
 
-        $remainingToDeduct = $qty;
+        $remainingToDispatch = $dispatchQty;
 
         foreach ($batches as $batch) {
-            if ($remainingToDeduct <= 0) break;
-            $deductAmount = min($batch->quantity, $remainingToDeduct);
+            if ($remainingToDispatch <= 0) {
+                break;
+            }
 
-            $batch->quantity -= $deductAmount;
-            $batch->save();
+            $dispatchFromBatch = min($batch->quantity, $remainingToDispatch);
 
+            // Deduct from warehouse batch
+            $batch->decrement('quantity', $dispatchFromBatch);
+
+            // Assign batch to store (update existing record)
+            $batch->update(['store_id' => $storeId]);
+
+            // Warehouse out transaction
             StockTransaction::create([
                 'product_id' => $productId,
-                'warehouse_id' => 1,
-                'store_id' => null,
                 'product_batch_id' => $batch->id,
-                'ware_user_id' => Auth::id(),
+                'warehouse_id' => 1,
+                'store_id' => $storeId,
                 'type' => 'transfer_out',
-                'quantity_change' => -$deductAmount,
-                'running_balance' => $batch->quantity,
+                'quantity_change' => -$dispatchFromBatch,
+                'running_balance' => ProductStock::where('warehouse_id', 1)
+                    ->where('product_id', $productId)
+                    ->first()
+                    ->quantity ?? 0,
+                'ware_user_id' => Auth::id(),
                 'reference_id' => 'REQ-' . $request->id,
-                'remarks' => "Dispatched to " . $request->store->store_name
+                'remarks' => "Dispatched to store {$request->store->store_name}",
             ]);
 
-            $remainingToDeduct -= $deductAmount;
+            $remainingToDispatch -= $dispatchFromBatch;
         }
 
-        $stock = ProductStock::firstOrCreate(
-            ['product_id' => $productId, 'warehouse_id' => 1],
-            ['quantity' => 0]
-        );
-        $stock->decrement('quantity', $qty);
+        // Deduct from warehouse total stock
+        ProductStock::where('warehouse_id', 1)
+            ->where('product_id', $productId)
+            ->decrement('quantity', $dispatchQty);
     }
 
     public function verifyPayment($requestData)

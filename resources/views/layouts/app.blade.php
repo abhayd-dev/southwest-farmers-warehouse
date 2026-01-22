@@ -121,7 +121,22 @@
             });
         });
     </script>
-
+    <script>
+        $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
+            console.warn('DataTables Ajax Error:', message);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Load Issue',
+                    text: 'Unable to fetch data right now. Please try again or check your connection.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            }
+        };
+    </script>
 
     @stack('scripts')
 

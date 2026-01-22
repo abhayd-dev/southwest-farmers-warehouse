@@ -138,14 +138,18 @@ Route::middleware('auth')->group(function () {
             // Expiry & Damage Report
             Route::get('expiry-damage', [StockControlController::class, 'expiryDamage'])
                 ->name('expiry');
+            Route::get('expiry-damage/data', [StockControlController::class, 'expiryData'])
+                ->name('expiry.data');
 
             // Stock Valuation
             Route::get('valuation', [StockControlController::class, 'valuation'])
                 ->name('valuation');
 
             // Min-Max Levels
-            Route::resource('minmax', MinMaxController::class)
-                ->only(['index', 'edit', 'update']);
+            Route::resource('minmax', MinMaxController::class)->only(['index']);
+            Route::get('minmax/data', [MinMaxController::class, 'data'])->name('minmax.data');
+            Route::post('minmax', [MinMaxController::class, 'store'])->name('minmax.store');
+            Route::put('minmax/{id}', [MinMaxController::class, 'update'])->name('minmax.update');
         });
     });
 });

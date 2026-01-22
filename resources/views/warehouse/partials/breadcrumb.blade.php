@@ -1,27 +1,26 @@
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb mb-0">
-        {{-- Dashboard --}}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb mb-0 bg-white p-3 rounded shadow-sm">
         <li class="breadcrumb-item">
-            <a href="{{ route('dashboard') }}" class="text-decoration-none">
-                <i class="mdi mdi-home-outline"></i> Dashboard
+            <a href="{{ route('dashboard') }}" class="text-decoration-none text-dark">
+                <i class="mdi mdi-home-outline me-1"></i> Dashboard
             </a>
         </li>
 
-        {{-- Parent --}}
-        @isset($parent)
-            <li class="breadcrumb-item">
-                @if(isset($parentRoute))
-                    <a href="{{ route($parentRoute) }}" class="text-decoration-none">
-                        {{ $parent }}
-                    </a>
-                @else
-                    {{ $parent }}
-                @endif
-            </li>
-        @endisset
+        <li class="breadcrumb-item">
+            <a href="{{ route('warehouse.index') }}" class="text-decoration-none text-dark">
+                Warehouse
+            </a>
+        </li>
 
-        {{-- Current --}}
-        <li class="breadcrumb-item active" aria-current="page">
+        @if($title !== 'Stock Control')
+            <li class="breadcrumb-item">
+                <a href="{{ route('warehouse.stock-control.overview') }}" class="text-decoration-none text-dark">
+                    Stock Control
+                </a>
+            </li>
+        @endif
+
+        <li class="breadcrumb-item active fw-bold" aria-current="page">
             {{ $title }}
         </li>
     </ol>

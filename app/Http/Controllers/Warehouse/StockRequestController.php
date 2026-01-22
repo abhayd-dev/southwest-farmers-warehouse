@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductBatch;
+use App\Models\ProductStock;
 use App\Services\StockRequestService;
 use App\Models\StockRequest;
+use App\Models\StockTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class StockRequestController extends Controller
 {
@@ -109,13 +114,50 @@ class StockRequestController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|numeric|min:1',
+            'batch_number' => 'required|string|max:50',
+            'mfg_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date|after_or_equal:mfg_date',
+            'cost_price' => 'required|numeric|min:0',
             'remarks' => 'nullable|string',
             'purchase_ref' => 'nullable|string'
         ]);
 
         try {
-            $this->service->addStockDirectly($request->all());
-            return response()->json(['success' => true, 'message' => 'Stock added successfully to Warehouse']);
+            DB::transaction(function () use ($request) {
+                // 1. Create Batch
+                $batch = ProductBatch::create([
+                    'product_id' => $request->product_id,
+                    'warehouse_id' => 1,
+                    'store_id' => null, 
+                    'batch_number' => $request->batch_number,
+                    'manufacturing_date' => $request->mfg_date,
+                    'expiry_date' => $request->expiry_date,
+                    'cost_price' => $request->cost_price,
+                    'quantity' => $request->quantity,
+                    'is_active' => true,
+                ]);
+
+                // 2. Update Warehouse Stock
+                ProductStock::updateOrCreate(
+                    ['warehouse_id' => 1, 'product_id' => $request->product_id],
+                    ['quantity' => DB::raw('quantity + ' . $request->quantity)]
+                );
+
+                // 3. Log Transaction
+                StockTransaction::create([
+                    'product_id' => $request->product_id,
+                    'product_batch_id' => $batch->id,
+                    'warehouse_id' => 1,
+                    'type' => 'purchase_in',
+                    'quantity_change' => $request->quantity,
+                    'running_balance' => ProductStock::where('warehouse_id', 1)->where('product_id', $request->product_id)->first()->quantity,
+                    'ware_user_id' => Auth::id(),
+                    'reference_id' => 'PUR-' . $request->purchase_ref ?? time(),
+                    'remarks' => $request->remarks ?? 'Purchase received',
+                ]);
+            });
+
+            return response()->json(['success' => true, 'message' => 'Batch created & stock added to warehouse']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
