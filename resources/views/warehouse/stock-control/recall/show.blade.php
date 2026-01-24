@@ -15,7 +15,7 @@
                 {{ $recall->product->product_name }} (SKU: {{ $recall->product->sku ?? 'N/A' }})
             </p>
         </div>
-        <a href="{{ route('warehouse.stock-control.recall.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('warehouse.stock-control.recall') }}" class="btn btn-outline-secondary">
             <i class="mdi mdi-arrow-left me-1"></i> Back to List
         </a>
     </div>

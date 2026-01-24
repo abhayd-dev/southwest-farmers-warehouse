@@ -114,14 +114,16 @@
                     </li>
                 @endif
 
+                <!-- Updated Stock Control Section in sidebar.blade.php -->
+
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_control'))
-                    <li class="menu-title mt-2">Inventory & Operations</li>
+                    <li class="menu-title mt-2">Stock Control</li>
 
                     <li>
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
                             class="{{ request()->routeIs('warehouse.stock-control.*') ? 'active' : '' }}">
                             <span class="nav-icon">
-                                <iconify-icon icon="tabler:settings-cog"></iconify-icon>
+                                <iconify-icon icon="tabler:chart-line"></iconify-icon>
                             </span>
                             <span class="sidebar-text">Stock Control</span>
                             <span class="menu-arrow"></span>
@@ -129,40 +131,51 @@
                         <div class="collapse {{ request()->routeIs('warehouse.stock-control.*') ? 'show' : '' }}"
                             id="sidebarStockControl">
                             <ul class="nav-second-level">
+
+                                <!-- Stock Overview -->
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.overview') }}"
                                         class="{{ request()->routeIs('warehouse.stock-control.overview') ? 'active' : '' }}">
-                                        Consolidated Stock Overview
+                                        <i class="mdi mdi-view-dashboard-outline me-2"></i> Stock Overview
                                     </a>
                                 </li>
+
+                                <!-- Recall Stock with dynamic badge -->
                                 <li>
-                                    <a href="{{ route('warehouse.stock-control.recall.index') }}"
-                                        class="{{ request()->routeIs('warehouse.stock-control.recall.*') ? 'active' : '' }}">
-                                        Recall Stock Requests
+                                    <a href="{{ route('warehouse.stock-control.recall') }}"
+                                        class="{{ request()->routeIs('warehouse.stock-control.recall*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
                                         @if (isset($pendingRecallCount) && $pendingRecallCount > 0)
                                             <span
-                                                class="badge bg-warning text-dark ms-1 float-end">{{ $pendingRecallCount }}</span>
+                                                class="badge bg-warning text-dark ms-auto">{{ $pendingRecallCount }}</span>
                                         @endif
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="{{ route('warehouse.stock-control.expiry') }}"
-                                        class="{{ request()->routeIs('warehouse.stock-control.expiry') ? 'active' : '' }}">
-                                        Expiry & Damage Report
-                                    </a>
-                                </li>
+
+                                <!-- Stock Valuations -->
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.valuation') }}"
-                                        class="{{ request()->routeIs('warehouse.stock-control.valuation') ? 'active' : '' }}">
-                                        Stock Valuation
+                                        class="{{ request()->routeIs('warehouse.stock-control.valuation*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-cash-multiple me-2"></i> Stock Valuations
                                     </a>
                                 </li>
+
+                                <!-- Min-Max Levels -->
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.minmax.index') }}"
-                                        class="{{ request()->routeIs('warehouse.stock-control.minmax.*') ? 'active' : '' }}">
-                                        Min-Max Levels
+                                        class="{{ request()->routeIs('warehouse.stock-control.minmax*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-sort-variant-lock me-2"></i> Min-Max Levels
                                     </a>
                                 </li>
+
+                                <!-- Rules (Future) -->
+                                <li>
+                                    <a href="{{ route('warehouse.stock-control.rules') }}"
+                                        class="{{ request()->routeIs('warehouse.stock-control.rules') ? 'active' : '' }}">
+                                        <i class="mdi mdi-shield-check-outline me-2"></i></i> Rules
+                                    </a>
+                                </li>
+
                             </ul>
                         </div>
                     </li>

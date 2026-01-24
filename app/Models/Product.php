@@ -23,10 +23,11 @@ class Product extends Model
         'price',
         'cost_price',
         'icon',
-        'is_active'
+        'is_active',
+        'store_id',
     ];
 
-    // ... (Existing relationships same rahenge) ...
+    // ===== RELATIONSHIPS =====
 
     public function option()
     {
@@ -53,6 +54,16 @@ class Product extends Model
         return $this->hasOne(ProductStock::class);
     }
 
+    public function stocks()
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
+    public function storeStocks()
+    {
+        return $this->hasMany(StoreStock::class);
+    }
+
     public function transactions()
     {
         return $this->hasMany(StockTransaction::class)->latest();
@@ -63,8 +74,67 @@ class Product extends Model
         return $this->belongsTo(WareUser::class, 'ware_user_id');
     }
 
-    // --- UPDATED STOCK LOGIC ---
+    public function recallRequests()
+    {
+        return $this->hasMany(RecallRequest::class);
+    }
 
+    public function stockRequests()
+    {
+        return $this->hasMany(StockRequest::class);
+    }
+
+    // ===== SCOPES =====
+
+    /**
+     * Get only active products.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Get only warehouse products (not store-specific).
+     */
+    public function scopeWarehouse($query)
+    {
+        return $query->whereNull('store_id');
+    }
+
+    /**
+     * Get products by category.
+     */
+    public function scopeByCategory($query, $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
+
+    /**
+     * Get products by subcategory.
+     */
+    public function scopeBySubcategory($query, $subcategoryId)
+    {
+        return $query->where('subcategory_id', $subcategoryId);
+    }
+
+    /**
+     * Get low stock products (warehouse level).
+     */
+    public function scopeLowStock($query, $threshold = 10)
+    {
+        return $query->addSelect([
+            'warehouse_qty' => ProductStock::selectRaw('COALESCE(SUM(quantity), 0)')
+                ->whereColumn('product_id', 'products.id')
+                ->where('warehouse_id', 1)
+        ])->havingRaw('warehouse_qty < ?', [$threshold]);
+    }
+
+    // ===== STOCK MANAGEMENT METHODS =====
+
+    /**
+     * Add stock to warehouse with batch tracking.
+     */
     public function addStock($warehouseId, $qty, $type, $batchData = [], $userId = null, $remarks = null)
     {
         return DB::transaction(function () use ($warehouseId, $qty, $type, $batchData, $userId, $remarks) {
@@ -78,6 +148,7 @@ class Product extends Model
                 'expiry_date' => $batchData['exp_date'] ?? null,
                 'cost_price' => $batchData['cost_price'] ?? $this->cost_price,
                 'quantity' => $qty,
+                'is_active' => true,
             ]);
 
             // 2. Update Total Snapshot
@@ -87,12 +158,12 @@ class Product extends Model
             );
             $stock->increment('quantity', $qty);
 
-            // 3. Log Transaction (UPDATED: user_id -> ware_user_id)
+            // 3. Log Transaction
             StockTransaction::create([
                 'product_id' => $this->id,
                 'warehouse_id' => $warehouseId,
                 'product_batch_id' => $batch->id,
-                'ware_user_id' => $userId, // Change here
+                'ware_user_id' => $userId,
                 'type' => $type,
                 'quantity_change' => $qty,
                 'running_balance' => $stock->quantity,
@@ -103,6 +174,9 @@ class Product extends Model
         });
     }
 
+    /**
+     * Remove stock from warehouse using FIFO.
+     */
     public function removeStock($warehouseId, $qty, $type, $userId = null, $remarks = null)
     {
         return DB::transaction(function () use ($warehouseId, $qty, $type, $userId, $remarks) {
@@ -130,12 +204,11 @@ class Product extends Model
                 $batch->decrement('quantity', $deduct);
                 $remainingToDeduct -= $deduct;
 
-                // Log Transaction (UPDATED: user_id -> ware_user_id)
                 StockTransaction::create([
                     'product_id' => $this->id,
                     'warehouse_id' => $warehouseId,
                     'product_batch_id' => $batch->id,
-                    'ware_user_id' => $userId, // Change here
+                    'ware_user_id' => $userId,
                     'type' => $type,
                     'quantity_change' => -$deduct, 
                     'running_balance' => $stock->quantity - ($qty - $remainingToDeduct),
@@ -147,5 +220,84 @@ class Product extends Model
 
             return true;
         });
+    }
+
+    /**
+     * Get total warehouse quantity.
+     */
+    public function getWarehouseQuantity()
+    {
+        return ProductStock::where('product_id', $this->id)
+            ->where('warehouse_id', 1)
+            ->sum('quantity');
+    }
+
+    /**
+     * Get total stores quantity.
+     */
+    public function getStoresQuantity()
+    {
+        return StoreStock::where('product_id', $this->id)->sum('quantity');
+    }
+
+    /**
+     * Get total inventory (warehouse + stores).
+     */
+    public function getTotalQuantity()
+    {
+        return $this->getWarehouseQuantity() + $this->getStoresQuantity();
+    }
+
+    /**
+     * Get warehouse stock value.
+     */
+    public function getWarehouseValue()
+    {
+        return $this->getWarehouseQuantity() * $this->cost_price;
+    }
+
+    /**
+     * Get stores stock value.
+     */
+    public function getStoresValue()
+    {
+        return $this->getStoresQuantity() * $this->cost_price;
+    }
+
+    /**
+     * Get total stock value.
+     */
+    public function getTotalValue()
+    {
+        return $this->getWarehouseValue() + $this->getStoresValue();
+    }
+
+    /**
+     * Get expiring batches.
+     */
+    public function getExpiringBatches($days = 30)
+    {
+        return $this->batches()
+            ->where('expiry_date', '<=', now()->addDays($days))
+            ->where('expiry_date', '>', now())
+            ->get();
+    }
+
+    /**
+     * Get expired batches.
+     */
+    public function getExpiredBatches()
+    {
+        return $this->batches()
+            ->where('expiry_date', '<', now())
+            ->get();
+    }
+
+    /**
+     * Check if product has low stock.
+     */
+    public function isLowStock($threshold = 10)
+    {
+        return $this->getTotalQuantity() < $threshold;
     }
 }

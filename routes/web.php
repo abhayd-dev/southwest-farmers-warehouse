@@ -19,17 +19,6 @@ use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\WarehouseController;
 
-/*
-|--------------------------------------------------------------------------
-| Warehouse Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/cc', function () {
-    Artisan::call('optimize:clear');
-    echo "Cache cleared..";
-});
-
 Route::middleware('guest')->group(function () {
     Route::get('/', fn() => redirect()->route('login'));
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -53,7 +42,6 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('warehouse')->group(function () {
 
-        // Product Management (Isolated)
         Route::resource('product-options', ProductOptionController::class)->names('warehouse.product-options')->except(['show']);
         Route::post('product-options/status', [ProductOptionController::class, 'changeStatus'])->name('warehouse.product-options.status');
         Route::post('product-options/import', [ProductOptionController::class, 'import'])->name('warehouse.product-options.import');
@@ -80,7 +68,6 @@ Route::middleware('auth')->group(function () {
         Route::get('products/sample', [ProductController::class, 'sample'])->name('warehouse.products.sample');
         Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])->name('warehouse.products.fetch-option');
 
-        // Stock Management
         Route::controller(ProductStockController::class)->group(function () {
             Route::get('stocks', 'index')->name('warehouse.stocks.index');
             Route::get('stocks/create', 'create')->name('warehouse.stocks.create');
@@ -101,55 +88,51 @@ Route::middleware('auth')->group(function () {
         Route::post('stores/{id}/staff', [StoreController::class, 'storeStaff'])->name('warehouse.stores.staff.store');
         Route::delete('stores/staff/{id}', [StoreController::class, 'destroyStaff'])->name('warehouse.stores.staff.destroy');
 
-        // Stock Requests
         Route::controller(StockRequestController::class)->group(function () {
             Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');
             Route::get('stock-requests/{id}', 'show')->name('warehouse.stock-requests.show');
-
-            // New Routes for Workflow
             Route::post('stock-requests/change-status', 'changeStatus')->name('warehouse.stock-requests.change-status');
             Route::post('stock-requests/verify-payment', 'verifyPayment')->name('warehouse.stock-requests.verify-payment');
             Route::post('stock-requests/purchase-in', 'purchaseIn')->name('warehouse.stock-requests.purchase-in');
         });
 
-        // Stock Control Module Routes
+        // ===== STOCK CONTROL MODULE ROUTES (COMPLETE) =====
         Route::prefix('stock-control')->name('warehouse.stock-control.')->group(function () {
 
-            // Consolidated Stock Overview
-            Route::get('overview', [StockControlController::class, 'overview'])
-                ->name('overview');
+            // Stock Overview
+            Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
+            Route::get('overview/data', [StockControlController::class, 'overviewData'])->name('overview.data');
 
-            Route::get('overview/data', [StockControlController::class, 'overviewData'])
-                ->name('overview.data');
+            
+            // Recall Stock - NEW 3-TAB STRUCTURE
+            Route::get('recall', [RecallController::class, 'indexTabs'])->name('recall');
+            Route::get('recall/my-requests', [RecallController::class, 'myRequests'])->name('recall.my-requests');
+            Route::get('recall/store-requests', [RecallController::class, 'storeRequests'])->name('recall.store-requests');
+            Route::get('recall/expiry-damage', [RecallController::class, 'expiryDamage'])->name('recall.expiry-damage');
+            Route::get('recall/create', [RecallController::class, 'create'])->name('recall.create');
+            Route::post('recall/store', [RecallController::class, 'store'])->name('recall.store');
+            Route::get('recall/{recall}', [RecallController::class, 'show'])->name('recall.show');
+            Route::post('recall/{recall}/approve', [RecallController::class, 'approve'])->name('recall.approve');
+            Route::post('recall/{recall}/reject', [RecallController::class, 'reject'])->name('recall.reject');
+            Route::post('recall/{recall}/dispatch', [RecallController::class, 'dispatch'])->name('recall.dispatch');
+            Route::post('recall/{recall}/receive', [RecallController::class, 'receive'])->name('recall.receive');
 
-            // Recall Stock Requests
-            Route::resource('recall', RecallController::class)
-                ->only(['index', 'create', 'store', 'show']);
-
-            Route::post('recall/{recall}/approve', [RecallController::class, 'approve'])
-                ->name('recall.approve');
-            Route::post('recall/{recall}/reject', [RecallController::class, 'reject'])
-                ->name('recall.reject');
-            Route::post('recall/{recall}/dispatch', [RecallController::class, 'dispatch'])
-                ->name('recall.dispatch');
-            Route::post('recall/{recall}/receive', [RecallController::class, 'receive'])
-                ->name('recall.receive');
-
-            // Expiry & Damage Report
-            Route::get('expiry-damage', [StockControlController::class, 'expiryDamage'])
-                ->name('expiry');
-            Route::get('expiry-damage/data', [StockControlController::class, 'expiryData'])
-                ->name('expiry.data');
-
-            // Stock Valuation
-            Route::get('valuation', [StockControlController::class, 'valuation'])
-                ->name('valuation');
+            // Stock Valuation - NEW FULL IMPLEMENTATION
+            Route::get('valuation', [StockControlController::class, 'valuation'])->name('valuation');
+            Route::get('valuation/data', [StockControlController::class, 'valuationData'])->name('valuation.data');
+            Route::get('valuation/stores', [StockControlController::class, 'storeValuation'])->name('valuation.stores');
+            Route::get('valuation/store/{store}', [StockControlController::class, 'storeAnalytics'])->name('valuation.store-analytics');
+            
+            Route::get('valuation/product/{product}', [StockControlController::class, 'productAnalytics'])->name('valuation.product');
 
             // Min-Max Levels
             Route::resource('minmax', MinMaxController::class)->only(['index']);
             Route::get('minmax/data', [MinMaxController::class, 'data'])->name('minmax.data');
             Route::post('minmax', [MinMaxController::class, 'store'])->name('minmax.store');
             Route::put('minmax/{id}', [MinMaxController::class, 'update'])->name('minmax.update');
+
+            // Rules (placeholder for future expansion)
+            Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
         });
     });
 });
