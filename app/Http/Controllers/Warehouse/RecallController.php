@@ -79,8 +79,7 @@ class RecallController extends Controller
     // ===== TAB 2: STORE REQUESTS (Store → Warehouse) =====
     public function storeRequests(Request $request)
     {
-        $query = RecallRequest::whereNotNull('approved_by_store_user_id')
-            ->with(['store', 'product', 'storeApprover']);
+        $query = RecallRequest::with(['store', 'product', 'storeApprover']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

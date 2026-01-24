@@ -11,12 +11,14 @@ use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\Warehouse\ProductCategoryController;
 use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
+use App\Http\Controllers\Warehouse\PurchaseOrderController;
 use App\Http\Controllers\Warehouse\RecallController;
 use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\Warehouse\StaffController;
 use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
+use App\Http\Controllers\Warehouse\VendorController;
 use App\Http\Controllers\WarehouseController;
 
 Route::middleware('guest')->group(function () {
@@ -103,7 +105,7 @@ Route::middleware('auth')->group(function () {
             Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
             Route::get('overview/data', [StockControlController::class, 'overviewData'])->name('overview.data');
 
-            
+
             // Recall Stock - NEW 3-TAB STRUCTURE
             Route::get('recall', [RecallController::class, 'indexTabs'])->name('recall');
             Route::get('recall/my-requests', [RecallController::class, 'myRequests'])->name('recall.my-requests');
@@ -122,7 +124,7 @@ Route::middleware('auth')->group(function () {
             Route::get('valuation/data', [StockControlController::class, 'valuationData'])->name('valuation.data');
             Route::get('valuation/stores', [StockControlController::class, 'storeValuation'])->name('valuation.stores');
             Route::get('valuation/store/{store}', [StockControlController::class, 'storeAnalytics'])->name('valuation.store-analytics');
-            
+
             Route::get('valuation/product/{product}', [StockControlController::class, 'productAnalytics'])->name('valuation.product');
 
             // Min-Max Levels
@@ -134,5 +136,12 @@ Route::middleware('auth')->group(function () {
             // Rules (placeholder for future expansion)
             Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
         });
+
+        Route::resource('vendors', VendorController::class)->names('warehouse.vendors');
+        Route::post('vendors/status', [VendorController::class, 'changeStatus'])->name('warehouse.vendors.status');
+        Route::resource('purchase-orders', PurchaseOrderController::class)->names('warehouse.purchase-orders');
+        Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
+        Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
+        Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
     });
 });

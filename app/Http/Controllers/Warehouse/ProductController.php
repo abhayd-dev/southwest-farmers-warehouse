@@ -130,7 +130,7 @@ class ProductController extends Controller
 
         return view('warehouse.products.edit', [
             'product' => $product,
-            'options' => ProductOption::whereNull('store_id')->where('is_active', 1)->get(),
+            'options' => ProductOption::where('is_active', 1)->get(),
             'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
             'subcategories' => ProductSubcategory::whereNull('store_id')->where('category_id', $product->category_id)->get(),
         ]);

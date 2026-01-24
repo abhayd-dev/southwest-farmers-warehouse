@@ -73,6 +73,7 @@
                     </li>
                 @endif
 
+
                 {{-- STORES --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
                     <li>
@@ -109,6 +110,39 @@
                                         </a>
                                     </li>
                                 @endif
+                            </ul>
+                        </div>
+                    </li>
+                @endif
+
+                {{-- PROCUREMENT (NEW) --}}
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_procurement'))
+                    <li class="menu-title mt-2">Procurement</li>
+
+                    <li>
+                        <a href="#sidebarProcurement" data-bs-toggle="collapse"
+                            class="{{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
+                            <span class="nav-icon">
+                                <iconify-icon icon="tabler:truck-delivery"></iconify-icon>
+                            </span>
+                            <span class="sidebar-text">Purchases & Supply</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse {{ request()->routeIs('warehouse.vendors.*') ? 'show' : '' }}"
+                            id="sidebarProcurement">
+                            <ul class="nav-second-level">
+                                <li>
+                                    <a href="{{ route('warehouse.vendors.index') }}"
+                                        class="{{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
+                                        Vendor Management
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('warehouse.purchase-orders.index') }}"
+                                        class="{{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
+                                        Purchase Orders (PO)
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
