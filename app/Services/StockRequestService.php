@@ -76,13 +76,14 @@ class StockRequestService
     public function dispatchToStore(StockRequest $request, $dispatchQty)
     {
         $productId = $request->product_id;
-        $storeId = $request->store_id;
+        $warehouseId = 1; // Central Warehouse
 
-        // Lock batches for update to prevent race conditions
+        // 1. FIFO LOGIC: Get Oldest Batches First
+        // We use lockForUpdate to prevent two admins dispatching the same batch at the exact same time
         $batches = ProductBatch::where('product_id', $productId)
-            ->where('warehouse_id', 1)
+            ->where('warehouse_id', $warehouseId)
             ->where('quantity', '>', 0)
-            ->orderBy('expiry_date', 'asc') // FIFO: oldest expiry first
+            ->orderBy('expiry_date', 'asc') // Oldest Expiry First
             ->lockForUpdate()
             ->get();
 
@@ -93,44 +94,52 @@ class StockRequestService
         }
 
         $remainingToDispatch = $dispatchQty;
+        $dispatchedBatchLog = []; // To store in JSON
 
         foreach ($batches as $batch) {
-            if ($remainingToDispatch <= 0) {
-                break;
-            }
+            if ($remainingToDispatch <= 0) break;
 
-            $dispatchFromBatch = min($batch->quantity, $remainingToDispatch);
+            // How much can we take from this specific batch?
+            $qtyFromThisBatch = min($batch->quantity, $remainingToDispatch);
 
-            // Deduct from warehouse batch
-            $batch->decrement('quantity', $dispatchFromBatch);
+            // A. Deduct from Warehouse Batch
+            $batch->decrement('quantity', $qtyFromThisBatch);
 
-            // Assign batch to store (update existing record)
-            $batch->update(['store_id' => $storeId]);
-
-            // Warehouse out transaction
+            // B. Log the Transaction (Warehouse Out)
             StockTransaction::create([
                 'product_id' => $productId,
                 'product_batch_id' => $batch->id,
-                'warehouse_id' => 1,
-                'store_id' => $storeId,
+                'warehouse_id' => $warehouseId,
+                'store_id' => $request->store_id, // Target Store
                 'type' => 'transfer_out',
-                'quantity_change' => -$dispatchFromBatch,
-                'running_balance' => ProductStock::where('warehouse_id', 1)
-                    ->where('product_id', $productId)
-                    ->first()
-                    ->quantity ?? 0,
+                'quantity_change' => -$qtyFromThisBatch,
+                'running_balance' => $batch->quantity, // Balance of this batch
                 'ware_user_id' => Auth::id(),
                 'reference_id' => 'REQ-' . $request->id,
-                'remarks' => "Dispatched to store {$request->store->store_name}",
+                'remarks' => "FIFO Dispatch to {$request->store->store_name}"
             ]);
 
-            $remainingToDispatch -= $dispatchFromBatch;
+            // C. Add to Log for Challan/JSON
+            $dispatchedBatchLog[] = [
+                'batch_number' => $batch->batch_number,
+                'expiry_date' => $batch->expiry_date, // Keep as string or format it
+                'qty' => $qtyFromThisBatch,
+                'cost_price' => $batch->cost_price
+            ];
+
+            $remainingToDispatch -= $qtyFromThisBatch;
         }
 
-        // Deduct from warehouse total stock
-        ProductStock::where('warehouse_id', 1)
+        // 2. Deduct from Warehouse Total Stock (ProductStock Table)
+        ProductStock::where('warehouse_id', $warehouseId)
             ->where('product_id', $productId)
             ->decrement('quantity', $dispatchQty);
+
+        $existingDetails = $request->batch_details ?? [];
+        $updatedDetails = array_merge($existingDetails, $dispatchedBatchLog);
+
+        $request->batch_details = $updatedDetails;
+        $request->save();
     }
 
     public function verifyPayment($requestData)

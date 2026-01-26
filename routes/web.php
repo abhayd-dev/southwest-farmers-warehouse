@@ -5,6 +5,8 @@ use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Warehouse\DiscrepancyController;
+use App\Http\Controllers\Warehouse\FinanceReportController;
 use App\Http\Controllers\Warehouse\MinMaxController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
@@ -143,5 +145,17 @@ Route::middleware('auth')->group(function () {
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
         Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
+
+        Route::controller(DiscrepancyController::class)->group(function () {
+            Route::get('/discrepancy', 'index')->name('warehouse.discrepancy.index');
+            Route::get('/discrepancy/transfer-issues', 'transferIssues')->name('warehouse.discrepancy.transfer-issues');
+            Route::get('/discrepancy/store-returns', 'storeReturns')->name('warehouse.discrepancy.store-returns');
+        });
+
+        Route::controller(FinanceReportController::class)->group(function () {
+            Route::get('/finance/overview', 'index')->name('warehouse.finance.index');
+            Route::get('/finance/ledger', 'ledger')->name('warehouse.finance.ledger');
+            Route::get('/finance/ledger/export', 'exportLedger')->name('warehouse.finance.ledger.export');
+        });
     });
 });

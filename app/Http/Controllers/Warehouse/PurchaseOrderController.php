@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use Carbon\Carbon;
 
 class PurchaseOrderController extends Controller
 {
@@ -33,7 +34,10 @@ class PurchaseOrderController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('vendor_name', fn($row) => $row->vendor->name)
-                ->addColumn('total_amount', fn($row) => '₹ ' . number_format($row->total_amount, 2))
+                ->editColumn('order_date', function ($row) {
+                    return $row->order_date ? Carbon::parse($row->order_date)->format('d M Y H:i:s') : '-';
+                })
+                ->addColumn('total_amount', fn($row) => '$ ' . number_format($row->total_amount, 2))
                 ->addColumn('progress', function ($row) {
                     $color = $row->progress == 100 ? 'success' : 'primary';
                     return '<div class="progress" style="height: 6px;">

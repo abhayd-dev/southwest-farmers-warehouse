@@ -59,7 +59,7 @@
                         <th>Warehouse Qty</th>
                         <th>Stores Total Qty</th>
                         <th>Total Qty</th>
-                        <th>Cost Value (₹)</th>
+                        <th>Cost Value ($)</th>
                     </tr>
                 </thead>
             </table>
@@ -99,7 +99,7 @@ $(document).ready(function() {
             { data: 'warehouse_qty' },
             { data: 'total_stores_qty' },
             { data: 'total_qty' },
-            { data: 'value', render: data => '₹ ' + parseFloat(data || 0).toLocaleString('en-IN') }
+            { data: 'value', render: data => '$ ' + parseFloat(data || 0).toLocaleString('en-IN') }
         ],
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print']

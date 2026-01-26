@@ -23,6 +23,7 @@
         </div>
 
         <div class="row">
+            {{-- LEFT COLUMN: INFO & WAREHOUSE AVAILABILITY --}}
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3">
@@ -99,13 +100,17 @@
                 </div>
             </div>
 
+            {{-- RIGHT COLUMN: ACTION & DISPATCH DETAILS --}}
             <div class="col-md-8">
-                <div class="card border-0 shadow-sm h-100">
+                
+                {{-- 1. ACTION CARD (Pending Form OR Status Card) --}}
+                <div class="card border-0 shadow-sm h-100 mb-3">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h6 class="card-title mb-0 fw-bold text-dark">Process Dispatch</h6>
                     </div>
                     <div class="card-body p-4">
                         @if ($stockRequest->pending_quantity > 0 && $stockRequest->status !== 'rejected')
+                            {{-- DISPATCH FORM --}}
                             <form id="dispatchForm" class="needs-validation" novalidate method="POST">
                                 @csrf
                                 <input type="hidden" name="request_id" value="{{ $stockRequest->id }}">
@@ -148,6 +153,7 @@
                                 </div>
                             </form>
 
+                            {{-- REJECT FORM (Hidden) --}}
                             <div id="rejectSection"
                                 class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25 d-none">
                                 <form id="rejectForm" method="POST">
@@ -168,23 +174,25 @@
                                 </form>
                             </div>
                         @else
-                            <div class="text-center py-5">
+                            {{-- STATUS CARDS (Rejected / Dispatched / Completed) --}}
+                            <div class="text-center py-4">
                                 @if ($stockRequest->status == 'rejected')
                                     <div class="mb-3">
                                         <i class="mdi mdi-close-circle text-danger opacity-50" style="font-size: 4rem;"></i>
                                     </div>
                                     <h4 class="fw-bold text-danger">Request Rejected</h4>
                                     <p class="text-muted max-w-sm mx-auto">Reason: {{ $stockRequest->admin_note ?? 'N/A' }}</p>
+
                                 @elseif($stockRequest->status == 'dispatched')
                                     <div class="mb-3">
                                         <i class="mdi mdi-truck-check text-info opacity-50" style="font-size: 4rem;"></i>
                                     </div>
                                     <h4 class="fw-bold text-info">Dispatched & Pending Payment</h4>
                                     <p class="text-muted">Items dispatched. Waiting for payment verification.</p>
-                                    <button class="btn btn-primary mt-3"
-                                        onclick="openVerifyModal({{ $stockRequest->id }})">
+                                    <button class="btn btn-primary mt-3" onclick="openVerifyModal({{ $stockRequest->id }})">
                                         Verify Payment Now
                                     </button>
+
                                 @else
                                     <div class="mb-3">
                                         <i class="mdi mdi-check-decagram text-success opacity-50" style="font-size: 4rem;"></i>
@@ -192,9 +200,9 @@
                                     <h4 class="fw-bold text-success">Order Completed</h4>
                                     <p class="text-muted">Stock received and payment verified.</p>
 
+                                    {{-- COMPLETED VERIFICATION DETAILS --}}
                                     <div class="mt-4 p-3 bg-light rounded text-start mx-auto" style="max-width: 400px;">
                                         <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2 mb-2">Verification Details</h6>
-
                                         <div class="mb-2">
                                             <small class="d-block text-muted fw-bold">Store Proof:</small>
                                             @if ($stockRequest->store_payment_proof)
@@ -205,7 +213,6 @@
                                                 <span class="text-danger small">No proof uploaded by store.</span>
                                             @endif
                                         </div>
-
                                         <div>
                                             <small class="d-block text-muted fw-bold">Warehouse Proof:</small>
                                             @if ($stockRequest->warehouse_payment_proof)
@@ -218,16 +225,72 @@
                                         </div>
                                     </div>
                                 @endif
-                                <a href="{{ route('warehouse.stock-requests.index') }}"
-                                    class="btn btn-dark mt-3 d-block mx-auto" style="width: fit-content;">Return to Dashboard</a>
+                                <a href="{{ route('warehouse.stock-requests.index') }}" class="btn btn-dark mt-3 d-block mx-auto" style="width: fit-content;">Return to Dashboard</a>
                             </div>
                         @endif
                     </div>
                 </div>
+
+                {{-- 2. NEW: DISPATCHED BATCH DETAILS (Visible if dispatched/completed) --}}
+                @if($stockRequest->batch_details && count($stockRequest->batch_details) > 0)
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0 fw-bold text-dark">
+                            <i class="mdi mdi-clipboard-list-outline text-primary me-1"></i> Dispatched Batch Details (FIFO)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-3 py-3">Batch Number</th>
+                                        <th class="py-3">Expiry Date</th>
+                                        <th class="py-3">Cost Price</th>
+                                        <th class="text-end pe-3 py-3">Quantity Sent</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($stockRequest->batch_details as $batch)
+                                    <tr>
+                                        <td class="ps-3 fw-bold font-monospace text-primary">
+                                            {{ $batch['batch_number'] ?? 'N/A' }}
+                                        </td>
+                                        <td>
+                                            @if(isset($batch['expiry_date']))
+                                                {{ \Carbon\Carbon::parse($batch['expiry_date'])->format('d M Y') }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ number_format($batch['cost_price'] ?? 0, 2) }}
+                                        </td>
+                                        <td class="text-end pe-3 fw-bold text-success fs-6">
+                                            {{ $batch['qty'] ?? 0 }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold py-2">Total Dispatched:</td>
+                                        <td class="text-end pe-3 fw-bold py-2">
+                                            {{ collect($stockRequest->batch_details)->sum('qty') }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
             </div>
         </div>
     </div>
 
+    {{-- MODALS --}}
     <div class="modal fade" id="verifyModal" tabindex="-1">
         <div class="modal-dialog">
             <form id="verifyForm" class="modal-content" method="POST" enctype="multipart/form-data">
@@ -238,7 +301,6 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="request_id" id="verify_req_id">
-
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
                         <div class="p-3 border rounded bg-light text-center">
@@ -348,12 +410,10 @@
             .then(response => response.text().then(text => ({response, text})))
             .then(({response, text}) => {
                 let data = {};
-                if (text.trim()) {
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('Server returned invalid response');
-                    }
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Server returned invalid response');
                 }
 
                 if (!response.ok) {

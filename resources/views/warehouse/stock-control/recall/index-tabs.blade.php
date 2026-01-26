@@ -12,22 +12,23 @@
             <small class="text-muted">Manage stock recalls, expiry, and damage reports</small>
         </div>
         <a href="{{ route('warehouse.stock-control.recall.create') }}" class="btn btn-primary">
-            <i class="mdi mdi-plus-circle me-1"></i> Initiate Recall
+            <i class="mdi mdi-plus-circle me-1"></i> Initiate Recall (My Request)
         </a>
     </div>
 
-    <!-- Tabs -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-light border-bottom">
             <ul class="nav nav-tabs card-header-tabs" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" href="#myRequests" data-bs-toggle="tab" role="tab">
                         <i class="mdi mdi-clipboard-list me-2"></i> My Requests
+                        <span class="badge bg-secondary ms-1">Outbound</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#storeRequests" data-bs-toggle="tab" role="tab">
                         <i class="mdi mdi-inbox me-2"></i> Store Requests
+                        <span class="badge bg-warning text-dark ms-1">Inbound</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -41,17 +42,14 @@
         <div class="card-body">
             <div class="tab-content">
 
-                <!-- TAB 1: MY REQUESTS -->
                 <div class="tab-pane fade show active" id="myRequests">
                     @include('warehouse.stock-control.recall.tabs.my-requests')
                 </div>
 
-                <!-- TAB 2: STORE REQUESTS -->
                 <div class="tab-pane fade" id="storeRequests">
                     @include('warehouse.stock-control.recall.tabs.store-requests')
                 </div>
 
-                <!-- TAB 3: EXPIRY & DAMAGE -->
                 <div class="tab-pane fade" id="expiryDamage">
                     @include('warehouse.stock-control.recall.tabs.expiry-damage')
                 </div>

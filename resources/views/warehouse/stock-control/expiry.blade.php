@@ -71,7 +71,7 @@
                         <th>Days Left</th>
                         <th>Qty Available</th>
                         <th>Damaged</th>
-                        <th>Cost Value (₹)</th>
+                        <th>Cost Value ($)</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -129,7 +129,7 @@ $(document).ready(function() {
             { data: 'days_left' },
             { data: 'remaining_quantity' },
             { data: 'damaged_quantity' },
-            { data: 'value', render: data => '₹ ' + (data || 0).toLocaleString('en-IN') },
+            { data: 'value', render: data => '$ ' + (data || 0).toLocaleString('en-IN') },
             { data: 'status' },
             { data: 'action', orderable: false, searchable: false }
         ],

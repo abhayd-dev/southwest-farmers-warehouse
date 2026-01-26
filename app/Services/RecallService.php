@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\RecallRequest;
 use App\Models\ProductBatch;
-use App\Models\StoreStock;
 use App\Models\ProductStock;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class RecallService
 {
+    // Create Warehouse-Initiated Request
     public function createRecall(array $data)
     {
         return DB::transaction(function () use ($data) {
@@ -22,65 +22,57 @@ class RecallService
                 'reason' => $data['reason'],
                 'reason_remarks' => $data['reason_remarks'] ?? null,
                 'initiated_by' => Auth::id(),
-                'status' => RecallRequest::STATUS_PENDING_STORE_APPROVAL,
+                'status' => RecallRequest::STATUS_PENDING_STORE_APPROVAL, // Warehouse asks Store
             ]);
         });
     }
 
-    public function processDispatch(RecallRequest $recall, array $batches)
+    // Approve a Store-Initiated Request
+    public function approveStoreRequest(RecallRequest $recall, int $approvedQty, ?string $remarks)
     {
-        DB::transaction(function () use ($recall, $batches) {
-            $total = 0;
-
-            foreach ($batches as $batch) {
-                ProductBatch::find($batch['batch_id'])->decrement('remaining_quantity', $batch['quantity']);
-                $total += $batch['quantity'];
-
-                StockTransaction::create([
-                    'product_id' => $recall->product_id,
-                    'product_batch_id' => $batch['batch_id'],
-                    'store_id' => $recall->store_id,
-                    'type' => 'recall_out',
-                    'quantity_change' => -$batch['quantity'],
-                    'running_balance' => StoreStock::where('store_id', $recall->store_id)->where('product_id', $recall->product_id)->first()->quantity,
-                    'reference_id' => 'RECALL-' . $recall->id,
-                ]);
-            }
-
-            StoreStock::where('store_id', $recall->store_id)
-                ->where('product_id', $recall->product_id)
-                ->decrement('quantity', $total);
-
+        return DB::transaction(function () use ($recall, $approvedQty, $remarks) {
             $recall->update([
-                'dispatched_quantity' => $total,
-                'status' => RecallRequest::STATUS_DISPATCHED,
+                'approved_quantity' => $approvedQty,
+                'warehouse_remarks' => $remarks,
+                'status' => RecallRequest::STATUS_APPROVED, // Only 'approved' as per requirement
             ]);
         });
     }
 
+    // Receive Stock into Warehouse (Final Step)
     public function processReceive(RecallRequest $recall, int $quantity, string $remarks = null)
     {
         DB::transaction(function () use ($recall, $quantity, $remarks) {
-            ProductStock::where('warehouse_id', 1)
-                ->where('product_id', $recall->product_id)
-                ->increment('quantity', $quantity);
+            
+            // 1. Add Stock to Warehouse Global Stock
+            ProductStock::updateOrCreate(
+                ['warehouse_id' => 1, 'product_id' => $recall->product_id],
+                ['quantity' => DB::raw("quantity + $quantity")]
+            );
 
+            // Note: Ideally, we should also increment a specific Warehouse Batch here.
+            // If the Store sent specific batch info (via dispatched batch logic), 
+            // we would map it back. For now, we update global stock.
+
+            // 2. Log Transaction
             StockTransaction::create([
                 'product_id' => $recall->product_id,
                 'store_id' => $recall->store_id,
-                'type' => 'recall_in',
+                'warehouse_id' => 1,
+                'type' => 'recall_in', // Stock In from Recall
                 'quantity_change' => $quantity,
-                'running_balance' => ProductStock::where('product_id', $recall->product_id)->first()->quantity,
+                'running_balance' => ProductStock::where('warehouse_id', 1)->where('product_id', $recall->product_id)->first()->quantity,
                 'ware_user_id' => Auth::id(),
                 'reference_id' => 'RECALL-' . $recall->id,
-                'remarks' => $remarks,
+                'remarks' => $remarks ?? 'Received from Store Recall',
             ]);
 
+            // 3. Update Status to Completed
             $recall->update([
                 'received_quantity' => $quantity,
                 'received_by_ware_user_id' => Auth::id(),
                 'warehouse_remarks' => $remarks,
-                'status' => $quantity >= $recall->dispatched_quantity ? RecallRequest::STATUS_COMPLETED : RecallRequest::STATUS_RECEIVED,
+                'status' => RecallRequest::STATUS_COMPLETED,
             ]);
         });
     }

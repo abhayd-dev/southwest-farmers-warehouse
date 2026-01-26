@@ -4,6 +4,7 @@
 
     @include('warehouse.partials.breadcrumb', ['title' => 'Recall Request #' . $recall->id])
 
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
@@ -11,296 +12,128 @@
                 Recall Request #{{ $recall->id }}
             </h4>
             <p class="text-muted mb-0">
-                {{ $recall->store->store_name }} → Warehouse | 
-                {{ $recall->product->product_name }} (SKU: {{ $recall->product->sku ?? 'N/A' }})
+                {{ $recall->store->store_name }} → Warehouse
             </p>
         </div>
-        <a href="{{ route('warehouse.stock-control.recall') }}" class="btn btn-outline-secondary">
-            <i class="mdi mdi-arrow-left me-1"></i> Back to List
-        </a>
+        <div>
+            <span class="badge bg-{{ $recall->getStatusColor() }} fs-6 px-3 py-2">
+                {{ $recall->getStatusLabel() }}
+            </span>
+            <a href="{{ route('warehouse.stock-control.recall') }}" class="btn btn-outline-secondary ms-2">Back</a>
+        </div>
     </div>
 
     <div class="row g-4">
-        <!-- Left: Summary & Status Timeline -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Request Timeline</h5>
-                </div>
+        {{-- DETAILS CARD --}}
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light"><h5 class="mb-0">Details</h5></div>
                 <div class="card-body">
-                    <ul class="timeline list-unstyled">
-                        <li class="timeline-item {{ $recall->status != 'pending_store_approval' ? 'completed' : '' }}">
-                            <div class="timeline-badge bg-warning"></div>
-                            <div class="timeline-panel">
-                                <h6 class="mb-0">Initiated</h6>
-                                <small>{{ $recall->created_at->format('d M Y H:i') }} by {{ $recall->initiator->name ?? 'System' }}</small>
-                            </div>
-                        </li>
-                        <li class="timeline-item {{ in_array($recall->status, ['approved_by_store', 'partial_approved', 'dispatched', 'received', 'completed']) ? 'completed' : '' }}">
-                            <div class="timeline-badge bg-info"></div>
-                            <div class="timeline-panel">
-                                <h6 class="mb-0">Store Approval</h6>
-                                <small>
-                                    @if($recall->approved_by_store_user_id)
-                                        {{ $recall->approved_at ? $recall->approved_at->format('d M Y H:i') : 'Approved' }}
-                                        by {{ $recall->storeApprover->name ?? 'Store Admin' }}
-                                    @else
-                                        Pending
-                                    @endif
-                                </small>
-                            </div>
-                        </li>
-                        <li class="timeline-item {{ in_array($recall->status, ['dispatched', 'received', 'completed']) ? 'completed' : '' }}">
-                            <div class="timeline-badge bg-primary"></div>
-                            <div class="timeline-panel">
-                                <h6 class="mb-0">Dispatched</h6>
-                                <small>
-                                    @if($recall->dispatched_quantity > 0)
-                                        {{ $recall->dispatched_quantity }} units
-                                    @else
-                                        Pending
-                                    @endif
-                                </small>
-                            </div>
-                        </li>
-                        <li class="timeline-item {{ $recall->status == 'completed' ? 'completed' : '' }}">
-                            <div class="timeline-badge bg-success"></div>
-                            <div class="timeline-panel">
-                                <h6 class="mb-0">Completed</h6>
-                                <small>
-                                    @if($recall->received_quantity > 0)
-                                        Received {{ $recall->received_quantity }} units
-                                    @else
-                                        Pending Receipt
-                                    @endif
-                                </small>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="mt-4">
-                        <h6>Summary</h6>
-                        <p><strong>Requested:</strong> {{ $recall->requested_quantity }}</p>
-                        <p><strong>Approved:</strong> {{ $recall->approved_quantity }}</p>
-                        <p><strong>Dispatched:</strong> {{ $recall->dispatched_quantity }}</p>
-                        <p><strong>Received:</strong> {{ $recall->received_quantity }}</p>
-                        <p><strong>Reason:</strong> {{ ucwords(str_replace('_', ' ', $recall->reason)) }}</p>
-                        @if($recall->reason_remarks)
-                            <p><strong>Remarks:</strong> {{ $recall->reason_remarks }}</p>
-                        @endif
+                    <div class="row mb-3">
+                        <div class="col-md-6"><strong>Product:</strong> {{ $recall->product->product_name }}</div>
+                        <div class="col-md-6"><strong>SKU:</strong> {{ $recall->product->sku }}</div>
                     </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><strong>Requested Qty:</strong> {{ $recall->requested_quantity }}</div>
+                        <div class="col-md-6"><strong>Reason:</strong> {{ ucwords(str_replace('_', ' ', $recall->reason)) }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><strong>Initiated By:</strong> {{ $recall->initiated_by == Auth::id() ? 'Warehouse (Me)' : 'Store' }}</div>
+                        <div class="col-md-6"><strong>Date:</strong> {{ $recall->created_at->format('d M Y') }}</div>
+                    </div>
+                    @if($recall->reason_remarks)
+                        <div class="alert alert-light border">{{ $recall->reason_remarks }}</div>
+                    @endif
                 </div>
             </div>
-        </div>
 
-        <!-- Right: Action Area -->
-        <div class="col-lg-8">
+            {{-- ACTIONS CARD --}}
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        @if($recall->status == 'pending_store_approval')
-                            Awaiting Store Approval
-                        @elseif(in_array($recall->status, ['approved_by_store', 'partial_approved']))
-                            Dispatch Stock from Store
-                        @elseif($recall->status == 'dispatched')
-                            Confirm Receipt in Warehouse
-                        @elseif($recall->status == 'completed')
-                            Request Completed
-                        @else
-                            Action Not Required
-                        @endif
-                    </h5>
-                </div>
+                <div class="card-header bg-white"><h5 class="mb-0 fw-bold text-primary">Actions</h5></div>
+                <div class="card-body p-4">
 
-                <div class="card-body">
-                    @if($recall->status == 'pending_store_approval')
-                        <div class="alert alert-info mb-0">
-                            <i class="mdi mdi-information-outline me-2"></i>
-                            This request is pending approval from the store. No action required from warehouse at this time.
+                    {{-- 1. STORE REQUESTED -> WAREHOUSE APPROVAL --}}
+                    @if($recall->status == 'pending_warehouse_approval')
+                        <div class="alert alert-warning border-warning">
+                            <i class="mdi mdi-alert-circle me-1"></i> <strong>Action Required:</strong> Store requested to return this stock.
                         </div>
-
-                    @elseif(in_array($recall->status, ['approved_by_store', 'partial_approved']))
-                        <div class="alert alert-warning mb-3">
-                            <i class="mdi mdi-alert-outline me-2"></i>
-                            Store has approved {{ $recall->approved_quantity }} units. Dispatch from store inventory.
-                        </div>
-
-                        <form action="{{ route('warehouse.stock-control.recall.dispatch', $recall) }}" method="POST" class="needs-validation" novalidate id="dispatchForm">
+                        <form action="{{ route('warehouse.stock-control.recall.approve', $recall->id) }}" method="POST">
                             @csrf
-
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-bold">Select Batches (FIFO - Oldest First)</label>
-                                    <div>
-                                        <small class="text-muted me-3">Total Selected: <span id="totalDispatched">0</span></small>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelection">Clear All</button>
-                                    </div>
-                                </div>
-
-                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                    <table class="table table-sm table-bordered mb-0">
-                                        <thead class="table-light sticky-top">
-                                            <tr>
-                                                <th style="width:40px"><input type="checkbox" id="selectAll"></th>
-                                                <th>Batch No</th>
-                                                <th>Mfg Date</th>
-                                                <th>Expiry Date</th>
-                                                <th>Days Left</th>
-                                                <th>Available</th>
-                                                <th>Dispatch Qty</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $batches = \App\Models\ProductBatch::where('product_id', $recall->product_id)
-                                                    ->where('warehouse_id', 1)
-                                                    ->where('quantity', '>', 0)  // ← FIXED: changed remaining_quantity → quantity
-                                                    ->orderBy('expiry_date', 'asc')
-                                                    ->get();
-                                            @endphp
-
-                                            @forelse($batches as $batch)
-                                                @php
-                                                    $daysLeft = $batch->expiry_date ? Carbon::parse($batch->expiry_date)->diffInDays(Carbon::today(), false) : null;
-                                                    $isExpired = $daysLeft !== null && $daysLeft <= 0;
-                                                    $isNearExpiry = $daysLeft !== null && $daysLeft > 0 && $daysLeft <= 30;
-                                                @endphp
-                                                <tr class="{{ $isExpired ? 'table-danger' : ($isNearExpiry ? 'table-warning' : '') }}">
-                                                    <td>
-                                                        <input type="checkbox" name="batches[{{ $batch->id }}][selected]" 
-                                                               class="batch-check" value="1" 
-                                                               data-batch-id="{{ $batch->id }}"
-                                                               data-qty-available="{{ $batch->quantity }}"  <!-- ← FIXED: use quantity -->
-                                                               data-expiry-days="{{ $daysLeft ?? 'N/A' }}">
-                                                    </td>
-                                                    <td>{{ $batch->batch_number }}</td>
-                                                    <td>{{ $batch->mfg_date ? $batch->mfg_date->format('d M Y') : '-' }}</td>
-                                                    <td>{{ $batch->expiry_date ? $batch->expiry_date->format('d M Y') : '-' }}</td>
-                                                    <td class="{{ $isExpired ? 'text-danger fw-bold' : ($isNearExpiry ? 'text-warning fw-bold' : '') }}">
-                                                        {{ $daysLeft === null ? 'N/A' : ($daysLeft <= 0 ? 'Expired' : $daysLeft . ' days') }}
-                                                    </td>
-                                                    <td class="text-center">{{ $batch->quantity }}</td>  <!-- ← FIXED: use quantity -->
-                                                    <td>
-                                                        <input type="number" name="batches[{{ $batch->id }}][quantity]" 
-                                                               class="form-control form-control-sm batch-qty-input" 
-                                                               min="0" max="{{ $batch->quantity }}" value="0" disabled>
-                                                        <div class="invalid-feedback d-block">Exceeds available</div>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="7" class="text-center py-3 text-muted">No available batches found</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="mb-3">
+                                <label class="fw-bold">Approve Quantity</label>
+                                <input type="number" name="approved_quantity" class="form-control" 
+                                       value="{{ $recall->requested_quantity }}" max="{{ $recall->requested_quantity }}" min="1" required>
                             </div>
-
-                            <div class="d-flex justify-content-end gap-3 mt-3">
-                                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancel</button>
-                                <button type="submit" class="btn btn-success" id="dispatchBtn" disabled>
-                                    <i class="mdi mdi-truck-fast me-1"></i> Dispatch Selected
-                                </button>
+                            <div class="mb-3">
+                                <label>Remarks (Optional)</label>
+                                <textarea name="warehouse_remarks" class="form-control" rows="2"></textarea>
                             </div>
+                            <button type="submit" class="btn btn-success px-4">Approve Request</button>
+                            <button type="button" class="btn btn-outline-danger px-4 ms-2" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
                         </form>
 
+                    {{-- 2. STORE DISPATCHED -> WAREHOUSE RECEIVE --}}
                     @elseif($recall->status == 'dispatched')
-                        <div class="alert alert-info mb-3">
-                            <i class="mdi mdi-truck-fast me-2"></i>
-                            Store dispatched {{ $recall->dispatched_quantity }} units. Confirm receipt in warehouse.
+                        <div class="alert alert-info border-info">
+                            <i class="mdi mdi-truck-fast me-1"></i> <strong>Incoming:</strong> Store has dispatched {{ $recall->dispatched_quantity }} units.
                         </div>
-
-                        <form action="{{ route('warehouse.stock-control.recall.receive', $recall) }}" method="POST" class="needs-validation" novalidate>
+                        <form action="{{ route('warehouse.stock-control.recall.receive', $recall->id) }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Received Quantity <span class="text-danger">*</span></label>
+                                <label class="fw-bold">Received Quantity</label>
                                 <input type="number" name="received_quantity" class="form-control" 
-                                       value="{{ $recall->dispatched_quantity }}" min="1" 
-                                       max="{{ $recall->dispatched_quantity }}" required>
-                                <div class="invalid-feedback">Enter valid quantity (1–{{ $recall->dispatched_quantity }}).</div>
+                                       value="{{ $recall->dispatched_quantity }}" min="1" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Warehouse Remarks (Optional)</label>
-                                <textarea name="warehouse_remarks" class="form-control" rows="3"></textarea>
+                                <label>Receipt Remarks</label>
+                                <textarea name="warehouse_remarks" class="form-control" rows="2"></textarea>
                             </div>
-                            <div class="d-flex justify-content-end gap-3">
-                                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancel</button>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="mdi mdi-check-circle me-1"></i> Confirm Receipt
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary px-4">Confirm Receipt</button>
                         </form>
 
+                    {{-- 3. WAITING STATES --}}
+                    @elseif($recall->status == 'approved')
+                        <div class="alert alert-primary">
+                            <i class="mdi mdi-clock me-1"></i> Approved. Waiting for Store to Dispatch.
+                        </div>
+                    @elseif($recall->status == 'pending_store_approval')
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-clock me-1"></i> Waiting for Store to Accept your request.
+                        </div>
                     @elseif($recall->status == 'completed')
-                        <div class="alert alert-success text-center py-5">
-                            <i class="mdi mdi-check-circle-outline fs-1 d-block mb-3"></i>
-                            <h5 class="mb-2">Recall Completed Successfully</h5>
-                            <p class="mb-0">Received {{ $recall->received_quantity }} units in warehouse.</p>
+                        <div class="alert alert-success">
+                            <i class="mdi mdi-check-circle me-1"></i> Process Completed. Stock Added to Warehouse.
+                        </div>
+                    @else
+                        <div class="alert alert-secondary">
+                            Status: {{ $recall->getStatusLabel() }}
                         </div>
                     @endif
+
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 
-@push('scripts')
-<script>
-// Batch selection logic with live total + validation
-$('.batch-check').on('change', function() {
-    let qtyInput = $(this).closest('tr').find('.batch-qty-input');
-    qtyInput.prop('disabled', !this.checked);
-    if (!this.checked) qtyInput.val(0);
-    updateTotal();
-});
-
-$('.batch-qty-input').on('input', function() {
-    let val = parseInt($(this).val()) || 0;
-    let max = parseInt($(this).attr('max')) || 0;
-    if (val > max) $(this).val(max);
-    if (val < 0) $(this).val(0);
-    updateTotal();
-});
-
-$('#selectAll').on('change', function() {
-    $('.batch-check').prop('checked', this.checked).trigger('change');
-});
-
-$('#clearSelection').on('click', function() {
-    $('.batch-check').prop('checked', false).trigger('change');
-});
-
-function updateTotal() {
-    let total = 0;
-    $('.batch-check:checked').each(function() {
-        let qty = parseInt($(this).closest('tr').find('.batch-qty-input').val()) || 0;
-        total += qty;
-    });
-    $('#totalSelectedQty').text(total);
-    $('#dispatchBtn').prop('disabled', total === 0);
-}
-
-// Form validation
-document.querySelectorAll('.needs-validation').forEach(form => {
-    form.addEventListener('submit', e => {
-        if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        form.classList.add('was-validated');
-    }, false);
-});
-</script>
-@endpush
-
-@push('styles')
-<style>
-    .batch-qty-input:invalid { border-color: #dc3545; }
-    .table-danger .batch-qty-input { background-color: #f8d7da; }
-    .table-warning .batch-qty-input { background-color: #fff3cd; }
-</style>
-@endpush
+{{-- REJECT MODAL --}}
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ route('warehouse.stock-control.recall.reject', $recall->id) }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Reject Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Reason <span class="text-danger">*</span></label>
+                <textarea name="warehouse_remarks" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 </x-app-layout>

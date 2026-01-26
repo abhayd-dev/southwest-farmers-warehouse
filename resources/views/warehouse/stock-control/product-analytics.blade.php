@@ -23,7 +23,7 @@
                 <div class="card border-0 shadow-sm h-100 bg-primary text-white">
                     <div class="card-body text-center p-4">
                         <h6 class="text-white-50 mb-1">Total System Value</h6>
-                        <h3 class="fw-bold">₹ {{ number_format($totalValue, 2) }}</h3>
+                        <h3 class="fw-bold">$ {{ number_format($totalValue, 2) }}</h3>
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
                     <div class="card-body text-center p-4">
                         <h6 class="text-muted mb-1">Warehouse Stock</h6>
                         <h3 class="fw-bold text-dark">{{ $warehouseQty }} <small class="fs-6 text-muted">{{ $product->unit }}</small></h3>
-                        <small class="text-success">Value: ₹ {{ number_format($warehouseValue, 2) }}</small>
+                        <small class="text-success">Value: $ {{ number_format($warehouseValue, 2) }}</small>
                     </div>
                 </div>
             </div>
@@ -41,7 +41,7 @@
                     <div class="card-body text-center p-4">
                         <h6 class="text-muted mb-1">Total Store Stock</h6>
                         <h3 class="fw-bold text-dark">{{ $storesQty }} <small class="fs-6 text-muted">{{ $product->unit }}</small></h3>
-                        <small class="text-info">Value: ₹ {{ number_format($storesValue, 2) }}</small>
+                        <small class="text-info">Value: $ {{ number_format($storesValue, 2) }}</small>
                     </div>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $sd->store_name }}</td>
                                             <td class="text-center">{{ $sd->quantity }}</td>
-                                            <td class="text-end pe-4">₹ {{ number_format($sd->value, 2) }}</td>
+                                            <td class="text-end pe-4">$ {{ number_format($sd->value, 2) }}</td>
                                         </tr>
                                     @empty
                                         <tr><td colspan="3" class="text-center py-4 text-muted">No stock in stores.</td></tr>

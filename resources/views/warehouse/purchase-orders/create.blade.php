@@ -70,7 +70,7 @@
                                     <tfoot>
                                         <tr>
                                             <td colspan="3" class="text-end fw-bold">Grand Total:</td>
-                                            <td colspan="2" class="fw-bold fs-5" id="grandTotalDisplay">₹ 0.00</td>
+                                            <td colspan="2" class="fw-bold fs-5" id="grandTotalDisplay">$ 0.00</td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -143,7 +143,7 @@
             $('.row-total').each(function() {
                 total += parseFloat($(this).text()) || 0;
             });
-            $('#grandTotalDisplay').text('₹ ' + total.toFixed(2));
+            $('#grandTotalDisplay').text('$ ' + total.toFixed(2));
         }
 
         // Init

@@ -34,7 +34,7 @@
                         </div>
 
                         <h3 class="fw-bold text-dark mb-1">
-                            ₹ {{ number_format($totalValue, 2) }}
+                            $ {{ number_format($totalValue, 2) }}
                         </h3>
 
                         <small class="text-muted">
@@ -57,7 +57,7 @@
                             </div>
                             <h6 class="text-muted text-uppercase fw-bold mb-0">Warehouse Value</h6>
                         </div>
-                        <h3 class="fw-bold text-dark mb-1">₹ {{ number_format($warehouseValue, 2) }}</h3>
+                        <h3 class="fw-bold text-dark mb-1">$ {{ number_format($warehouseValue, 2) }}</h3>
                         <small class="text-muted">Central Inventory</small>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                             </div>
                             <h6 class="text-muted text-uppercase fw-bold mb-0">Stores Value</h6>
                         </div>
-                        <h3 class="fw-bold text-dark mb-1">₹ {{ number_format($storesValue, 2) }}</h3>
+                        <h3 class="fw-bold text-dark mb-1">$ {{ number_format($storesValue, 2) }}</h3>
                         <small class="text-muted">Distributed Stock</small>
                     </div>
                 </div>
@@ -238,11 +238,11 @@
                                                             class="badge bg-light text-dark border">{{ number_format($storeQty, 0) }}</span>
                                                     </td>
                                                     <td>
-                                                        <span class="fw-bold text-primary">₹
+                                                        <span class="fw-bold text-primary">$
                                                             {{ number_format($storeValue, 2) }}</span>
                                                     </td>
                                                     <td>
-                                                        <span class="text-muted">₹
+                                                        <span class="text-muted">$
                                                             {{ number_format($avgValue, 2) }}</span>
                                                     </td>
                                                     <td class="text-center">

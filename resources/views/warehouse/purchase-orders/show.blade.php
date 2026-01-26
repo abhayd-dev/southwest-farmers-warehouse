@@ -51,7 +51,7 @@
                         </div>
                         <div class="d-flex justify-content-between mt-2">
                             <span>Total Amount:</span>
-                            <span class="fw-bold text-success fs-5">₹
+                            <span class="fw-bold text-success fs-5">$
                                 {{ number_format($purchaseOrder->total_amount, 2) }}</span>
                         </div>
                     </div>
@@ -149,13 +149,13 @@
                         @foreach ($purchaseOrder->items as $item)
                             <tr>
                                 <td class="px-4">{{ $item->product->product_name }}</td>
-                                <td>₹ {{ number_format($item->unit_cost, 2) }}</td>
+                                <td>$ {{ number_format($item->unit_cost, 2) }}</td>
                                 <td>{{ $item->requested_quantity }}</td>
                                 <td
                                     class="fw-bold {{ $item->received_quantity == $item->requested_quantity ? 'text-success' : 'text-warning' }}">
                                     {{ $item->received_quantity }}
                                 </td>
-                                <td>₹ {{ number_format($item->total_cost, 2) }}</td>
+                                <td>$ {{ number_format($item->total_cost, 2) }}</td>
                                 <td>
                                     @if ($item->received_quantity >= $item->requested_quantity)
                                         <span class="badge bg-success">Full</span>

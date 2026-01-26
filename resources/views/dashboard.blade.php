@@ -15,7 +15,7 @@
                 <div class="card">
                     <div class="card-body">
                         <p class="text-muted mb-1">Total Stock Value</p>
-                        <h3 class="fw-semibold text-success">₹ 12,45,000</h3>
+                        <h3 class="fw-semibold text-success">$ 12,45,000</h3>
                         <small class="text-muted">All warehouses</small>
                     </div>
                 </div>

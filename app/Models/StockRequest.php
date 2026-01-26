@@ -21,7 +21,8 @@ class StockRequest extends Model
         'warehouse_payment_proof',
         'warehouse_remarks',
         'verified_at',
-        'purchase_ref'
+        'purchase_ref',
+        'batch_details'
     ];
 
     const STATUS_PENDING = 'pending';
@@ -34,7 +35,8 @@ class StockRequest extends Model
     const STATUS_PARTIAL = 'partial'; 
 
     protected $casts = [
-        'verified_at' => 'datetime'
+        'verified_at' => 'datetime',
+        'batch_details' => 'array'
     ];
 
     public function store()

@@ -22,7 +22,7 @@
                 <div class="card border-0 shadow-sm border-start border-primary border-4">
                     <div class="card-body">
                         <h6 class="text-muted text-uppercase small fw-bold">Total Stock Value</h6>
-                        <h2 class="text-primary fw-bold mb-0">₹ {{ number_format($storeValue, 2) }}</h2>
+                        <h2 class="text-primary fw-bold mb-0">$ {{ number_format($storeValue, 2) }}</h2>
                     </div>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                                             <td class="ps-4 fw-bold">{{ $p->product_name }}</td>
                                             <td>{{ $p->sku }}</td>
                                             <td class="text-center">{{ $p->quantity }}</td>
-                                            <td class="text-end pe-4 fw-bold text-success">₹ {{ number_format($p->value, 2) }}</td>
+                                            <td class="text-end pe-4 fw-bold text-success">$ {{ number_format($p->value, 2) }}</td>
                                         </tr>
                                     @empty
                                         <tr>

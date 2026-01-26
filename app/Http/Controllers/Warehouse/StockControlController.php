@@ -128,9 +128,9 @@ class StockControlController extends Controller
         }
 
         return DataTables::of($query)
-            ->addColumn('warehouse_value_fmt', fn($row) => '₹ ' . number_format($row->warehouse_value, 2))
-            ->addColumn('stores_value_fmt', fn($row) => '₹ ' . number_format($row->stores_value, 2))
-            ->addColumn('total_value_fmt', fn($row) => '₹ ' . number_format($row->total_value, 2))
+            ->addColumn('warehouse_value_fmt', fn($row) => '$ ' . number_format($row->warehouse_value, 2))
+            ->addColumn('stores_value_fmt', fn($row) => '$ ' . number_format($row->stores_value, 2))
+            ->addColumn('total_value_fmt', fn($row) => '$ ' . number_format($row->total_value, 2))
             ->addColumn('action', fn($row) => '
                 <a href="' . route('warehouse.stock-control.valuation.product', $row->id) . '" 
                    class="btn btn-sm btn-outline-primary">

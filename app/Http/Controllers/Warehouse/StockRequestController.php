@@ -82,12 +82,17 @@ class StockRequestController extends Controller
             'request_id' => 'required|exists:stock_requests,id',
             'status' => 'required|in:dispatched,rejected',
             'dispatch_quantity' => 'required_if:status,dispatched|nullable|numeric|min:1',
-            'admin_note' => 'required_if:status,rejected|nullable|string'
+            'admin_note' => 'nullable|string'
         ]);
 
         try {
             $this->service->processStatusChange($request->all());
-            return response()->json(['success' => true, 'message' => 'Status updated successfully']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock Dispatched Successfully (FIFO Applied)',
+                'redirect' => route('warehouse.stock-requests.show', $request->request_id)
+            ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -128,7 +133,7 @@ class StockRequestController extends Controller
                 $batch = ProductBatch::create([
                     'product_id' => $request->product_id,
                     'warehouse_id' => 1,
-                    'store_id' => null, 
+                    'store_id' => null,
                     'batch_number' => $request->batch_number,
                     'manufacturing_date' => $request->mfg_date,
                     'expiry_date' => $request->expiry_date,
