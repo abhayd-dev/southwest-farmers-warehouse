@@ -18,7 +18,7 @@
                         {{-- Icon --}}
                         <div class="mb-4 text-center">
                             <label for="iconInput" class="position-relative d-inline-block cursor-pointer">
-                                <img id="iconPreview" src="{{ $subcategory->icon ? asset('storage/'.$subcategory->icon) : 'https://placehold.co/100?text=No+Icon' }}" 
+                                <img id="iconPreview" src="{{ $subcategory->icon ? Storage::url($subcategory->icon) : 'https://placehold.co/100?text=No+Icon' }}" 
                                      class="rounded-circle border shadow-sm object-fit-cover" width="100" height="100">
                                 <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border">
                                     <i class="mdi mdi-pencil text-primary"></i>

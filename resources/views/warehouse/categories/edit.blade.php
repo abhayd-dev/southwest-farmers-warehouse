@@ -20,7 +20,7 @@
                         <div class="mb-4 text-center">
                             <label for="iconInput" class="position-relative d-inline-block cursor-pointer">
                                 <img id="iconPreview" 
-                                     src="{{ $category->icon ? asset('storage/'.$category->icon) : 'https://placehold.co/100?text=No+Icon' }}" 
+                                     src="{{ $category->icon ?  Storage::url($category->icon) : 'https://placehold.co/100?text=No+Icon' }}" 
                                      class="rounded-circle border shadow-sm object-fit-cover" 
                                      width="100" height="100" alt="Icon Preview">
                                 <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border">

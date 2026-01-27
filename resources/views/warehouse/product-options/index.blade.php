@@ -138,7 +138,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $option->icon ? asset('storage/' . $option->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                            <img src="{{ $option->icon ? Storage::url( $option->icon) : 'https://placehold.co/40?text=IMG' }}"
                                                 class="rounded bg-light border object-fit-cover shadow-sm"
                                                 width="40" height="40" alt="{{ $option->option_name }}">
                                             <div>

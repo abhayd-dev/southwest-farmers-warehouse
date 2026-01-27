@@ -77,7 +77,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="bg-light rounded p-1 border">
                                             {{-- Product Icon --}}
-                                            <img src="{{ $stock->product->icon ? asset('storage/' . $stock->product->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                            <img src="{{ $stock->product->icon ? Storage::url( $stock->product->icon) : 'https://placehold.co/40?text=IMG' }}"
                                                 class="rounded bg-light border object-fit-cover" width="40"
                                                 height="40">
                                         </div>

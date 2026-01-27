@@ -206,7 +206,7 @@
                                         <div class="mb-2">
                                             <small class="d-block text-muted fw-bold">Store Proof:</small>
                                             @if ($stockRequest->store_payment_proof)
-                                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
+                                                <a href="{{ Storage::url($stockRequest->store_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
                                                     <i class="mdi mdi-file-document me-1"></i> View Store File
                                                 </a>
                                             @else
@@ -216,7 +216,7 @@
                                         <div>
                                             <small class="d-block text-muted fw-bold">Warehouse Proof:</small>
                                             @if ($stockRequest->warehouse_payment_proof)
-                                                <a href="{{ asset('storage/'.$stockRequest->warehouse_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
+                                                <a href="{{ Storage::url($stockRequest->warehouse_payment_proof) }}" target="_blank" class="text-primary text-decoration-none">
                                                     <i class="mdi mdi-file-check me-1"></i> View Warehouse File
                                                 </a>
                                             @else
@@ -305,7 +305,7 @@
                         <label class="form-label text-muted small fw-bold">STORE PAYMENT PROOF</label>
                         <div class="p-3 border rounded bg-light text-center">
                             @if ($stockRequest->store_payment_proof)
-                                <a href="{{ asset('storage/'.$stockRequest->store_payment_proof) }}" target="_blank"
+                                <a href="{{ Storage::url($stockRequest->store_payment_proof) }}" target="_blank"
                                     class="btn btn-sm btn-outline-info">
                                     <i class="mdi mdi-eye me-1"></i> View Store Proof
                                 </a>

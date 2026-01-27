@@ -75,7 +75,7 @@
                                     </td>
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ $sub->icon ? asset('storage/' . $sub->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                            <img src="{{ $sub->icon ? Storage::url( $sub->icon) : 'https://placehold.co/40?text=IMG' }}"
                                                 class="rounded bg-light border object-fit-cover" width="40"
                                                 height="40">
                                             <span>{{ $sub->name }}</span>

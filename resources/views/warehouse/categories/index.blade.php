@@ -62,7 +62,7 @@
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
                                             {{-- ICON DISPLAY --}}
-                                            <img src="{{ $category->icon ? asset('storage/'.$category->icon) : 'https://placehold.co/40?text=IMG' }}" 
+                                            <img src="{{ $category->icon ?  Storage::url($category->icon) : 'https://placehold.co/40?text=IMG' }}" 
                                                  class="rounded bg-light border object-fit-cover" 
                                                  width="40" height="40">
                                             <span>{{ $category->name }}</span>

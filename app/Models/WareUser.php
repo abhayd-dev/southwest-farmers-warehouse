@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class WareUser extends Authenticatable
 {
@@ -78,9 +79,12 @@ class WareUser extends Authenticatable
 
     public function getAvatarUrlAttribute()
     {
-        if ($this->profile_image && file_exists(public_path('storage/' . $this->profile_image))) {
-            return asset('storage/' . $this->profile_image);
+        if (!empty($this->profile_image)) {
+            return Storage::url($this->profile_image);
         }
-        return asset('assets/images/default-avatar.png');
+
+        $name = urlencode($this->name ?? 'User');
+        return "https://ui-avatars.com/api/?name={$name}&color=7F9CF5&background=EBF4FF&bold=true";
+        
     }
 }

@@ -197,7 +197,7 @@
                                                 Change Status
                                             </button>
                                         @elseif($req->status == 'dispatched')
-                                            @php $proof = $req->store_payment_proof ? asset('storage/'.$req->store_payment_proof) : ''; @endphp
+                                            @php $proof = $req->store_payment_proof ? Storage::url($req->store_payment_proof) : ''; @endphp
                                             <button class="btn btn-sm btn-outline-success ms-1"
                                                 onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
                                                 Verify Payment
