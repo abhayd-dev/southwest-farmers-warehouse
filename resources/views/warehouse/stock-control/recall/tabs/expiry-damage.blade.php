@@ -45,7 +45,6 @@
             <th>Qty</th>
             <th>Damaged</th>
             <th>Status</th>
-            <th>Actions</th>
         </tr>
     </thead>
 </table>
@@ -73,8 +72,7 @@ $(function() {
             { data: 'store_name', defaultContent: 'Warehouse' },
             { data: 'quantity', className: 'text-center' },
             { data: 'damaged_quantity', className: 'text-center' },
-            { data: 'status', searchable: false, orderable: false },
-            { data: 'action', searchable: false, orderable: false }
+            { data: 'status', searchable: false, orderable: false }
         ]
     });
 

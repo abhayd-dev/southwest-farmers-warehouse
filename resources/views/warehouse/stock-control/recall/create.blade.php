@@ -8,7 +8,7 @@
         <h4 class="fw-bold mb-0 text-dark">
             <i class="mdi mdi-undo-variant text-warning me-2"></i> Initiate Recall Request
         </h4>
-        <a href="{{ route('warehouse.stock-control.recall.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('warehouse.stock-control.recall') }}" class="btn btn-outline-secondary">
             <i class="mdi mdi-arrow-left me-1"></i> Back to List
         </a>
     </div>
@@ -70,7 +70,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-3 mt-4">
-                    <a href="{{ route('warehouse.stock-control.recall.index') }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('warehouse.stock-control.recall') }}" class="btn btn-outline-secondary">
                         Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">

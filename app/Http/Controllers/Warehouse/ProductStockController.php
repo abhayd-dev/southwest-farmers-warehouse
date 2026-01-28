@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Models\ProductCategory;
 use App\Models\ProductStock;
+use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use App\Models\WareUser;
 use Illuminate\Http\Request;
@@ -231,5 +233,44 @@ class ProductStockController extends Controller
             DB::rollBack();
             return back()->with('error', 'Adjustment Failed: ' . $e->getMessage());
         }
+    }
+
+    public function markAsDamaged(Request $request)
+    {
+        $request->validate([
+            'batch_id' => 'required|exists:product_batches,id',
+            'quantity' => 'required|numeric|min:1',
+            'reason'   => 'required|string'
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $batch = ProductBatch::where('id', $request->batch_id)
+                ->where('warehouse_id', 1)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($batch->quantity < $request->quantity) {
+                return back()->with('error', 'Insufficient Good Quantity to mark as damaged!');
+            }
+
+            $batch->decrement('quantity', $request->quantity);
+            $batch->increment('damaged_quantity', $request->quantity);
+
+            ProductStock::where('product_id', $batch->product_id)
+                ->where('warehouse_id', 1)
+                ->decrement('quantity', $request->quantity);
+
+            StockTransaction::create([
+                'warehouse_id' => 1,
+                'product_id'   => $batch->product_id,
+                'type'         => 'adjustment',
+                'quantity_change' => - ($request->quantity),
+                'running_balance' => ProductStock::where('product_id', $batch->product_id)->value('quantity'),
+                'ware_user_id' => Auth::id(),
+                'remarks'      => 'Marked as Damaged: ' . $request->reason . ' (Batch: ' . $batch->batch_number . ')'
+            ]);
+
+            return back()->with('success', 'Stock marked as damaged successfully.');
+        });
     }
 }

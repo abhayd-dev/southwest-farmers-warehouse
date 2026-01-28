@@ -35,7 +35,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', [WarehouseController::class, 'dashboard'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
             Route::get('stocks/{product}/history', 'history')->name('warehouse.stocks.history');
             Route::get('stocks/adjust', 'adjust')->name('warehouse.stocks.adjust');
             Route::post('stocks/adjust', 'storeAdjustment')->name('warehouse.stocks.store-adjustment');
+            Route::post('/stock/mark-damaged',  'markAsDamaged')->name('warehouse.stock.mark-damaged');
         });
 
         Route::resource('roles', RolePermissionController::class)->names('warehouse.roles');
@@ -159,4 +160,3 @@ Route::middleware('auth')->group(function () {
         });
     });
 });
-

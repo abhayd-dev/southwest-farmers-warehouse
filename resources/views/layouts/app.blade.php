@@ -128,7 +128,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Data Load Issue',
-                    text: 'Unable to fetch data right now. Please try again or check your connection.',
+                    text: 'Something went wrong.',
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,

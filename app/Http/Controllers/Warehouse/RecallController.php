@@ -111,6 +111,7 @@ class RecallController extends Controller
             'status' => RecallRequest::STATUS_PENDING_STORE_APPROVAL,
         ]);
 
+        
         return redirect()->route('warehouse.stock-control.recall')->with('success', 'Recall request sent to Store.');
     }
 

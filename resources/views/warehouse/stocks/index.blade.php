@@ -130,6 +130,7 @@
                                         <a href="{{ route('warehouse.stocks.create') }}"
                                             class="btn btn-primary btn-sm">Add First Stock</a>
                                     </div>
+                                    
                                 </td>
                             </tr>
                         @endforelse
