@@ -35,12 +35,12 @@
                             <option value="">All Subcategories</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    {{-- <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="lowStockFilter">
                             <label class="form-check-label">Show Low Stock Only (< 10)</label>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </form>
         </div>

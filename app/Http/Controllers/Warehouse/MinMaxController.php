@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Warehouse;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductMinMaxLevel;
-use App\Models\ProductStock;
-use App\Models\StoreStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +14,12 @@ class MinMaxController extends Controller
 {
     public function index()
     {
-        $products = Product::where('is_active', true)->where('store_id',null)->get();
+        // Get products for the dropdown
+        $products = Product::where('is_active', true)
+            ->whereNull('store_id')
+            ->select('id', 'product_name', 'sku')
+            ->get();
+            
         return view('warehouse.stock-control.minmax.index', compact('products'));
     }
 
@@ -25,51 +28,36 @@ class MinMaxController extends Controller
         $query = Product::query()
             ->leftJoin('product_min_max_levels', 'products.id', '=', 'product_min_max_levels.product_id')
             ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+            ->where('products.is_active', true)
+            ->whereNull('products.store_id')
             ->select([
-                'products.id',
+                'products.id', // This is the Product ID
                 'products.product_name',
                 'products.sku',
                 'product_categories.name as category_name',
                 DB::raw('COALESCE(product_min_max_levels.min_level, 5) as min_level'),
                 DB::raw('COALESCE(product_min_max_levels.max_level, 100) as max_level'),
                 DB::raw('COALESCE(product_min_max_levels.reorder_quantity, 20) as reorder_qty'),
-                DB::raw('
-                    (COALESCE((
-                        SELECT SUM(quantity - reserved_quantity - damaged_quantity)
-                        FROM product_stocks
-                        WHERE product_id = products.id
-                        AND warehouse_id = 1
-                    ), 0) +
-                    COALESCE((
-                        SELECT SUM(quantity - reserved_quantity)
-                        FROM store_stocks
-                        WHERE product_id = products.id
-                    ), 0)
-                ) as current_qty')
+                // Simplified Current Qty logic for performance
+                DB::raw('COALESCE((SELECT SUM(quantity) FROM product_stocks WHERE product_id = products.id), 0) as current_qty')
             ]);
 
         return DataTables::of($query)
             ->addColumn('status', function ($row) {
                 $qty = $row->current_qty;
-                $min = $row->min_level;
-                $max = $row->max_level;
-
-                if ($qty < $min) {
-                    return '<span class="badge bg-danger">Below Min</span>';
-                }
-                if ($qty > $max) {
-                    return '<span class="badge bg-warning">Above Max</span>';
-                }
-                return '<span class="badge bg-success">Normal</span>';
+                if ($qty < $row->min_level) return '<span class="badge bg-danger">Low Stock</span>';
+                if ($qty > $row->max_level) return '<span class="badge bg-warning">Overstocked</span>';
+                return '<span class="badge bg-success">Optimal</span>';
             })
             ->addColumn('action', function ($row) {
+                // Pass the Product ID as data-id
                 return '
                     <button class="btn btn-sm btn-outline-primary edit-minmax" 
-                            data-id="' . $row->id . '"
+                            data-id="' . $row->id . '" 
                             data-min="' . $row->min_level . '"
                             data-max="' . $row->max_level . '"
                             data-reorder="' . $row->reorder_qty . '">
-                        Edit
+                        <i class="mdi mdi-pencil"></i> Edit
                     </button>
                 ';
             })
@@ -94,7 +82,7 @@ class MinMaxController extends Controller
             'updated_by' => Auth::id(),
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Min-Max levels saved']);
+        return response()->json(['success' => true, 'message' => 'Min-Max levels saved successfully']);
     }
 
     public function update(Request $request, $id)
@@ -105,15 +93,18 @@ class MinMaxController extends Controller
             'reorder_quantity' => 'required|integer|min:1',
         ]);
 
-        $level = ProductMinMaxLevel::where('product_id', $id)->firstOrFail();
+        // Use updateOrCreate to handle cases where the user edits a product 
+        // that appeared in the list (via left join) but didn't have a rule yet.
+        ProductMinMaxLevel::updateOrCreate(
+            ['product_id' => $id],
+            [
+                'min_level' => $request->min_level,
+                'max_level' => $request->max_level,
+                'reorder_quantity' => $request->reorder_quantity,
+                'updated_by' => Auth::id(),
+            ]
+        );
 
-        $level->update([
-            'min_level' => $request->min_level,
-            'max_level' => $request->max_level,
-            'reorder_quantity' => $request->reorder_quantity,
-            'updated_by' => Auth::id(),
-        ]);
-
-        return response()->json(['success' => true, 'message' => 'Min-Max levels updated']);
+        return response()->json(['success' => true, 'message' => 'Min-Max levels updated successfully']);
     }
 }

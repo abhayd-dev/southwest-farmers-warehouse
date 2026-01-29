@@ -34,10 +34,8 @@
                 </li>
 
                 {{-- ================= INVENTORY & OPERATIONS ================= --}}
-                {{-- Visible to: Inventory Manager, VP Ops, Super Admin, Store Handler --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
                     <li class="menu-title mt-2">Inventory & Operations</li>
-
                     <li>
                         <a href="#sidebarWarehouse" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
@@ -53,21 +51,14 @@
                                         <i class="mdi mdi-package-variant-closed me-2"></i> Stock & Inventory
                                     </a>
                                 </li>
-                                {{-- Only those who can report damages --}}
-                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('report_damages'))
-                                {{-- Note: Usually linked from stock index, but if you have a direct page: --}}
-                                {{-- <li><a href="#"><i class="mdi mdi-alert-circle-outline me-2"></i> Damaged Stock</a></li> --}}
-                                @endif
                             </ul>
                         </div>
                     </li>
                 @endif
 
                 {{-- ================= PRODUCT CATALOG ================= --}}
-                {{-- Visible to: Brand Manager, Super Admin, Inventory Manager --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
                     <li class="menu-title mt-2">Product Catalog</li>
-
                     <li>
                         <a href="#sidebarProducts" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
@@ -115,18 +106,18 @@
                 @endif
 
                 {{-- ================= STORES ================= --}}
-                {{-- Visible to: Regional Manager, General Manager, Store Handler --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
                     <li class="menu-title mt-2">Stores</li>
-
                     <li>
                         <a href="#sidebarStores" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.stores.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:building-store"></iconify-icon>
-                            <span class="sidebar-text">Stores</span>
+                            <span class="sidebar-text">
+                                Stores
+                                
+                            </span>
                             <span class="menu-arrow"></span>
                         </a>
-
                         <div class="collapse {{ request()->routeIs('warehouse.stores.*') ? 'show' : '' }}" id="sidebarStores">
                             <ul class="nav-second-level">
                                 <li>
@@ -147,10 +138,8 @@
                 @endif
 
                 {{-- ================= PROCUREMENT ================= --}}
-                {{-- Visible to: Purchase Manager, VP Ops, CFO --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
                     <li class="menu-title mt-2">Procurement</li>
-
                     <li>
                         <a href="#sidebarProcurement" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
@@ -176,18 +165,19 @@
                     </li>
                 @endif
 
-
                 {{-- ================= FULFILLMENT & DISPATCH ================= --}}
-                {{-- Visible to: Store Handler, Regional Manager, General Manager --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_store_requests') || auth()->user()->hasPermission('manage_store_inventory'))
                     <li class="menu-title mt-2">Fulfillment & Dispatch</li>
-
                     <li>
                         <a href="#sidebarStoreOrders" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:truck-loading"></iconify-icon>
-                            <span class="sidebar-text">Store Orders</span>
-                            {{-- Optional: Badge for pending requests can be passed from AppServiceProvider --}}
+                            <span class="sidebar-text">
+                                Store Orders
+                                @if($pendingRequestsCount > 0)
+                                    <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
+                                @endif
+                            </span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'show' : '' }}"
@@ -196,6 +186,9 @@
                                 <li>
                                     <a href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">
                                         <i class="mdi mdi-clock-outline me-2"></i> Pending Requests
+                                        @if($pendingRequestsCount > 0)
+                                            <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
@@ -214,10 +207,8 @@
                 @endif
 
                 {{-- ================= STOCK CONTROL ================= --}}
-                {{-- Visible to: Inventory Manager, VP Ops, Super Admin --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_inventory'))
                     <li class="menu-title mt-2">Stock Control</li>
-
                     <li>
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.stock-control.*') ? 'active' : '' }}">
@@ -236,6 +227,9 @@
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.recall') }}">
                                         <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
+                                        @if($pendingRecallCount > 0)
+                                            <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRecallCount }}</span>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
@@ -248,22 +242,19 @@
                                         <i class="mdi mdi-sort-variant-lock me-2"></i> Min-Max Levels
                                     </a>
                                 </li>
-                                {{-- Rules: Future Feature --}}
-                                <li>
+                                {{-- <li>
                                     <a href="{{ route('warehouse.stock-control.rules') }}">
                                         <i class="mdi mdi-gavel me-2"></i> Rules
                                     </a>
-                                </li>
+                                </li> --}}
                             </ul>
                         </div>
                     </li>
                 @endif
 
                 {{-- ================= FINANCE & REPORTS ================= --}}
-                {{-- Visible to: CFO, Accountant, CEO --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
                     <li class="menu-title mt-2">Finance & Reports</li>
-
                     <li>
                         <a href="#sidebarFinance" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.finance.*') ? 'active' : '' }}">
@@ -290,10 +281,8 @@
                 @endif
 
                 {{-- ================= ADMINISTRATION ================= --}}
-                {{-- Visible to: Super Admin only --}}
                 @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_users'))
                     <li class="menu-title mt-2">Administration</li>
-
                     <li>
                         <a href="#sidebarStaff" data-bs-toggle="collapse"
                            class="{{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
@@ -322,24 +311,21 @@
                 @endif
 
                 {{-- ================= SUPPORT & SETTINGS ================= --}}
-                {{-- Visible to everyone --}}
                 <li class="menu-title mt-2">Support</li>
-
                 <li>
                     <a href="#">
                         <iconify-icon icon="tabler:headset"></iconify-icon>
                         <span class="sidebar-text">Support Tickets</span>
                     </a>
                 </li>
-                
-                {{-- Settings: Restricted to Admin/Managers if needed --}}
+
                 @if(auth()->user()->isSuperAdmin())
-                <li>
-                    <a href="#">
-                        <iconify-icon icon="tabler:settings"></iconify-icon>
-                        <span class="sidebar-text">Settings</span>
-                    </a>
-                </li>
+                    <li>
+                        <a href="#">
+                            <iconify-icon icon="tabler:settings"></iconify-icon>
+                            <span class="sidebar-text">Settings</span>
+                        </a>
+                    </li>
                 @endif
 
             </ul>

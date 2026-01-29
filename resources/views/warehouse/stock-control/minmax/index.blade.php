@@ -2,8 +2,6 @@
 
     <div class="container-fluid">
 
-        @include('warehouse.partials.breadcrumb', ['title' => 'Min-Max Stock Levels'])
-
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
@@ -19,25 +17,26 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
-                <table id="minMaxTable" class="table table-hover table-bordered align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Product</th>
-                            <th>SKU</th>
-                            <th>Category</th>
-                            <th>Min Level</th>
-                            <th>Max Level</th>
-                            <th>Reorder Qty</th>
-                            <th>Current Qty</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="table-responsive">
+                    <table id="minMaxTable" class="table table-hover table-bordered align-middle mb-0" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Min Level</th>
+                                <th>Max Level</th>
+                                <th>Reorder Qty</th>
+                                <th>Current Qty</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Modal -->
         <div class="modal fade" id="minMaxModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
@@ -48,7 +47,7 @@
 
                     <form id="minMaxForm" class="needs-validation" novalidate>
                         @csrf
-                        <input type="hidden" id="minmaxId">
+                        <input type="hidden" id="minmaxId" name="id">
 
                         <div class="modal-body">
                             <div class="mb-3">
@@ -66,19 +65,16 @@
 
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label">Minimum Level</label>
-                                    <input type="number" name="min_level" id="minLevel" class="form-control"
-                                        min="0" required>
+                                    <label class="form-label">Min Level</label>
+                                    <input type="number" name="min_level" id="minLevel" class="form-control" min="0" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Maximum Level</label>
-                                    <input type="number" name="max_level" id="maxLevel" class="form-control"
-                                        min="1" required>
+                                    <label class="form-label">Max Level</label>
+                                    <input type="number" name="max_level" id="maxLevel" class="form-control" min="1" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Reorder Quantity</label>
-                                    <input type="number" name="reorder_quantity" id="reorderQty" class="form-control"
-                                        min="1" required>
+                                    <label class="form-label">Reorder Qty</label>
+                                    <input type="number" name="reorder_quantity" id="reorderQty" class="form-control" min="1" required>
                                 </div>
                             </div>
                         </div>
@@ -86,7 +82,7 @@
                         <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary" id="saveBtn">
-                                <i class="mdi mdi-content-save"></i> Save
+                                <i class="mdi mdi-content-save"></i> Save Changes
                             </button>
                         </div>
                     </form>
@@ -105,66 +101,58 @@
                     processing: true,
                     serverSide: true,
                     ajax: '{{ route('warehouse.stock-control.minmax.data') }}',
-                    columns: [{
-                            data: 'product_name'
-                        },
-                        {
-                            data: 'sku'
-                        },
-                        {
-                            data: 'category_name'
-                        },
-                        {
-                            data: 'min_level'
-                        },
-                        {
-                            data: 'max_level'
-                        },
-                        {
-                            data: 'reorder_qty'
-                        },
-                        {
-                            data: 'current_qty'
-                        },
-                        {
-                            data: 'status'
-                        },
-                        {
-                            data: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
+                    columns: [
+                        { data: 'product_name' },
+                        { data: 'sku' },
+                        { data: 'category_name' },
+                        { data: 'min_level' },
+                        { data: 'max_level' },
+                        { data: 'reorder_qty' },
+                        { data: 'current_qty' },
+                        { data: 'status' },
+                        { data: 'action', orderable: false, searchable: false }
                     ]
                 });
 
-                // Add
+                // Open Modal for NEW Entry
                 $('#addNewBtn').click(() => {
                     $('#minMaxModalLabel').text('Add Min-Max Level');
-                    $('#minmaxId').val('');
-                    $('#productSelect').val('').prop('disabled', false);
+                    $('#minmaxId').val(''); // Clear ID
+                    $('#minMaxForm')[0].reset();
+                    
+                    // ENABLE product select for new entries
+                    $('#productSelect').prop('disabled', false).val('').trigger('change');
+                    
                     $('#minLevel').val(5);
                     $('#maxLevel').val(100);
                     $('#reorderQty').val(20);
                     $('#saveBtn').text('Save');
-                    $('#minMaxForm')[0].reset();
                 });
 
-                // Edit
+                // Open Modal for EDIT Entry
                 $('#minMaxTable').on('click', '.edit-minmax', function() {
-
                     $('#minMaxModalLabel').text('Edit Min-Max Level');
+                    
+                    // Get data attributes from the button
+                    let productId = $(this).data('id');
+                    let min = $(this).data('min');
+                    let max = $(this).data('max');
+                    let reorder = $(this).data('reorder');
 
-                    $('#minmaxId').val($(this).data('id'));
-                    $('#productSelect').val($(this).data('product-id')).prop('disabled', true);
-                    $('#minLevel').val($(this).data('min'));
-                    $('#maxLevel').val($(this).data('max'));
-                    $('#reorderQty').val($(this).data('reorder'));
+                    $('#minmaxId').val(productId);
+                    
+                    // DISABLE product select for edits (User shouldn't change product ID on edit)
+                    $('#productSelect').val(productId).prop('disabled', true).trigger('change');
+                    
+                    $('#minLevel').val(min);
+                    $('#maxLevel').val(max);
+                    $('#reorderQty').val(reorder);
 
                     $('#saveBtn').text('Update');
                     $('#minMaxModal').modal('show');
                 });
 
-                // Submit
+                // Submit Form
                 $('#minMaxForm').submit(function(e) {
                     e.preventDefault();
 
@@ -174,11 +162,12 @@
                     }
 
                     let id = $('#minmaxId').val();
-
-                    let url = id ?
-                        '{{ route('warehouse.stock-control.minmax.update', ':id') }}'.replace(':id', id) :
+                    
+                    // Determine route and method
+                    let url = id ? 
+                        '{{ route('warehouse.stock-control.minmax.update', ':id') }}'.replace(':id', id) : 
                         '{{ route('warehouse.stock-control.minmax.store') }}';
-
+                    
                     let method = id ? 'PUT' : 'POST';
 
                     $.ajax({
@@ -188,10 +177,16 @@
                         success: res => {
                             $('#minMaxModal').modal('hide');
                             table.ajax.reload();
-                            Swal.fire('Success', res.message ?? 'Saved', 'success');
+                            Swal.fire({
+                                title: 'Success',
+                                text: res.message ?? 'Saved Successfully',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
                         },
                         error: err => {
-                            Swal.fire('Error', err.responseJSON?.message ?? 'Failed', 'error');
+                            Swal.fire('Error', err.responseJSON?.message ?? 'Failed to save', 'error');
                         }
                     });
                 });
