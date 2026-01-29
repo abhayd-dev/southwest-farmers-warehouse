@@ -83,12 +83,13 @@ class StoreService
 
     public function getAnalyticsData($storeId, array $filters)
     {
-        // Base Query
+        // 1. Base Query
+        // CRITICAL FIX: Added 'sale' to the array to catch Store 6 transactions
         $query = StockTransaction::join('products', 'stock_transactions.product_id', '=', 'products.id')
             ->where('stock_transactions.store_id', $storeId)
-            ->where('stock_transactions.type', 'sale_out');
+            ->whereIn('stock_transactions.type', ['sale', 'sale_out']); 
 
-        // --- Filters ---
+        // 2. Date Range Filter
         if (!empty($filters['date_range'])) {
             $dates = explode(' to ', $filters['date_range']);
             if (count($dates) === 2) {
@@ -96,10 +97,17 @@ class StoreService
                     Carbon::parse($dates[0])->startOfDay(),
                     Carbon::parse($dates[1])->endOfDay(),
                 ]);
+            } else {
+                // Default: Last 30 Days if format is wrong
+                $query->whereBetween('stock_transactions.created_at', [
+                    Carbon::now()->subDays(30)->startOfDay(),
+                    Carbon::now()->endOfDay(),
+                ]);
             }
         }
 
-        if (!empty($filters['product_type'])) {
+        // 3. Product Type Filter
+        if (!empty($filters['product_type']) && $filters['product_type'] !== 'all') {
             if ($filters['product_type'] === 'warehouse') {
                 $query->whereNull('products.store_id');
             } elseif ($filters['product_type'] === 'store') {
@@ -107,21 +115,24 @@ class StoreService
             }
         }
 
-        if (!empty($filters['category_id'])) {
+        // 4. Category Filter (Numeric Check Prevents 500 Error)
+        if (!empty($filters['category_id']) && is_numeric($filters['category_id'])) {
             $query->where('products.category_id', $filters['category_id']);
         }
 
-        if (!empty($filters['subcategory_id'])) {
+        // 5. Subcategory Filter
+        if (!empty($filters['subcategory_id']) && is_numeric($filters['subcategory_id'])) {
             $query->where('products.subcategory_id', $filters['subcategory_id']);
         }
 
-        if (!empty($filters['product_id'])) {
+        // 6. Specific Product Filter
+        if (!empty($filters['product_id']) && is_numeric($filters['product_id'])) {
             $query->where('products.id', $filters['product_id']);
         }
 
         // --- Data Aggregation ---
 
-        // 1. Sales Trend
+        // A. Sales Trend (Line Chart)
         $trendQuery = clone $query;
         $trendData = $trendQuery
             ->select(
@@ -132,7 +143,7 @@ class StoreService
             ->orderBy('date')
             ->get();
 
-        // 2. Product Performance (Using correct column product_name)
+        // B. Product Performance (Bar Chart)
         $productQuery = clone $query;
         $productData = $productQuery
             ->select(
@@ -144,7 +155,7 @@ class StoreService
             ->limit(10)
             ->get();
 
-        // 3. Category Distribution
+        // C. Category Distribution (Pie Chart)
         $catQuery = clone $query;
         $catData = $catQuery
             ->join('product_categories', 'products.category_id', '=', 'product_categories.id')
@@ -158,7 +169,6 @@ class StoreService
 
         $totalSales = $trendData->sum('total_qty');
 
-        // **FIX**: Cast strings to floats for ApexCharts
         return [
             'sales_trend' => [
                 'labels' => $trendData->pluck('date'),

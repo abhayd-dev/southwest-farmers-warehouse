@@ -8,6 +8,7 @@ use App\Models\StoreUser;
 use App\Models\StoreRole;
 use App\Models\ProductCategory;
 use App\Models\Product;
+use App\Models\StoreStock;
 use App\Services\StoreService;
 use Illuminate\Http\Request;
 
@@ -82,6 +83,7 @@ class StoreController extends Controller
 
     public function show($id)
     {
+        set_time_limit(200);
         $store = StoreDetail::with('manager')->findOrFail($id);
         $stats = $this->storeService->getStoreStats($id);
 
@@ -93,15 +95,14 @@ class StoreController extends Controller
         $roles = StoreRole::where('guard_name', 'store_user')->get();
         $categories = ProductCategory::select('id', 'name')->get();
 
-        // FIX: Ensure correct column name for dropdown
         $products = Product::select('id', 'product_name', 'store_id')
             ->whereNull('store_id')
             ->orWhere('store_id', $id)
             ->get();
 
-        $storeInventory = \App\Models\StoreStock::with('product')
+        $storeInventory = StoreStock::with('product')
             ->where('store_id', $id)
-            ->where('quantity', '>', 0) // Only show items in stock
+            ->where('quantity', '>', 0)
             ->orderBy('quantity', 'desc')
             ->paginate(10);
 
@@ -118,6 +119,11 @@ class StoreController extends Controller
 
     public function analytics(Request $request, $id)
     {
+        set_time_limit(200);
+        $request->merge([
+            'date_range' => $request->date_range ?? now()->subDays(30)->format('Y-m-d') . ' to ' . now()->format('Y-m-d')
+        ]);
+
         $filters = $request->only([
             'date_range',
             'product_type',
