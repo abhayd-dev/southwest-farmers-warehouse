@@ -160,3 +160,11 @@ Route::middleware('auth')->group(function () {
         });
     });
 });
+
+Route::get('/offline', function () {
+    return view('errors.offline');
+})->name('offline.view');
+
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});

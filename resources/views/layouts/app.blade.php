@@ -137,7 +137,15 @@
             }
         };
     </script>
+    <script>
+        window.addEventListener('offline', function() {
+            window.location.href = "{{ route('offline.view') }}";
+        });
 
+        if (!navigator.onLine) {
+            window.location.href = "{{ route('offline.view') }}";
+        }
+    </script>
     @stack('scripts')
 
 </body>

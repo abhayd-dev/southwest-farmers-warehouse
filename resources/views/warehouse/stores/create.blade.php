@@ -84,7 +84,7 @@
                                     <div class="position-relative mb-2">
                                         <div class="input-group">
                                             <span class="input-group-text bg-white text-muted"><i class="mdi mdi-magnify"></i></span>
-                                            <input type="text" id="locationSearch" class="form-control" placeholder="Type to search location (e.g. Hazratganj, Lucknow)..." autocomplete="off">
+                                            <input type="text" id="locationSearch" class="form-control" placeholder="Fetching your location..." autocomplete="off">
                                         </div>
                                         {{-- Results Dropdown --}}
                                         <div id="searchResults" class="search-results d-none"></div>
@@ -97,7 +97,7 @@
                                     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
                                     <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
                                     
-                                    <small class="text-muted mt-1 d-block"><i class="mdi mdi-information-outline"></i> Search or click on the map to set the store location.</small>
+                                    <small class="text-muted mt-1 d-block"><i class="mdi mdi-crosshairs-gps me-1 text-primary"></i> Automatically detecting your location...</small>
                                 </div>
                             </div>
                         </div>
@@ -154,9 +154,10 @@
         document.addEventListener("DOMContentLoaded", function() {
             
             // --- MAP INITIALIZATION ---
+            // Default center (India) if geolocation fails or is denied
             var defaultLat = {{ old('latitude') ?? 20.5937 }};
             var defaultLng = {{ old('longitude') ?? 78.9629 }};
-            var zoomLevel = {{ old('latitude') ? 14 : 5 }};
+            var zoomLevel = {{ old('latitude') ? 16 : 5 }}; // Zoom in if old value exists
 
             var map = L.map('map').setView([defaultLat, defaultLng], zoomLevel);
 
@@ -165,10 +166,63 @@
             }).addTo(map);
 
             var marker;
+            var searchInput = document.getElementById('locationSearch');
 
-            // If old values exist, place marker
+            // --- FUNCTION TO UPDATE MARKER & INPUTS ---
+            function updateLocation(lat, lng, label = "") {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(map);
+                }
+                
+                // Update hidden inputs
+                document.getElementById('latitude').value = lat.toFixed(7);
+                document.getElementById('longitude').value = lng.toFixed(7);
+                
+                // Update search box label if address found
+                if(label) {
+                     searchInput.value = label;
+                }
+            }
+
+            // --- 1. CHECK OLD VALUES FIRST (Validation Errors) ---
             if ("{{ old('latitude') }}") {
-                marker = L.marker([defaultLat, defaultLng]).addTo(map);
+                updateLocation(defaultLat, defaultLng);
+            } 
+            // --- 2. AUTO-DETECT LOCATION (If no old value) ---
+            else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        var lat = position.coords.latitude;
+                        var lng = position.coords.longitude;
+                        
+                        // Zoom into user location
+                        map.setView([lat, lng], 16);
+                        
+                        // Place marker and fill inputs
+                        updateLocation(lat, lng);
+
+                        // Optional: Reverse Geocode to show address in search box
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data && data.display_name) {
+                                    searchInput.value = data.display_name;
+                                } else {
+                                    searchInput.value = "Current Location Detected";
+                                }
+                            })
+                            .catch(() => {
+                                searchInput.value = "Location Detected";
+                            });
+                    },
+                    function(error) {
+                        console.warn("Geolocation denied or failed:", error.message);
+                        searchInput.placeholder = "Location detection failed. Search manually...";
+                    },
+                    { enableHighAccuracy: true } // Request best possible accuracy
+                );
             }
 
             // --- CLICK TO SET MARKER ---
@@ -176,18 +230,7 @@
                 updateLocation(e.latlng.lat, e.latlng.lng);
             });
 
-            function updateLocation(lat, lng) {
-                if (marker) {
-                    marker.setLatLng([lat, lng]);
-                } else {
-                    marker = L.marker([lat, lng]).addTo(map);
-                }
-                document.getElementById('latitude').value = lat.toFixed(7);
-                document.getElementById('longitude').value = lng.toFixed(7);
-            }
-
             // --- DEBOUNCED SEARCH LOGIC ---
-            const searchInput = document.getElementById('locationSearch');
             const resultsBox = document.getElementById('searchResults');
             let debounceTimer;
 
@@ -218,10 +261,9 @@
                                         
                                         // Update Map
                                         map.setView([lat, lon], 16);
-                                        updateLocation(lat, lon);
+                                        updateLocation(lat, lon, place.display_name);
 
-                                        // Clear Search
-                                        searchInput.value = place.display_name;
+                                        // Close Dropdown
                                         resultsBox.classList.add('d-none');
                                     };
                                     resultsBox.appendChild(item);
@@ -231,7 +273,7 @@
                             }
                         })
                         .catch(err => console.error('Search Error:', err));
-                }, 500); // 500ms delay
+                }, 500); 
             });
 
             // Close search results if clicked outside
