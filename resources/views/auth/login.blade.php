@@ -12,7 +12,7 @@
                                 <div class="auth-brand mb-4">
                                     <a href="{{ url('/') }}" class="logo logo-light">
                                         <span class="logo-lg">
-                                            <img src="{{ asset('assets/images/logo.jpg') }}"
+                                            <img src="{{ Storage::url($settings['login_logo']) }}"
                                                  alt="Warehouse POS"
                                                  height="40"
                                                  class="d-inline-block">
@@ -21,7 +21,7 @@
 
                                     <a href="{{ url('/') }}" class="logo logo-dark">
                                         <span class="logo-lg">
-                                            <img src="{{ asset('assets/images/logo.jpg') }}"
+                                            <img src="{{ Storage::url($settings['main_logo']) }}"
                                                  alt="Warehouse POS"
                                                  height="40"
                                                  class="d-inline-block">

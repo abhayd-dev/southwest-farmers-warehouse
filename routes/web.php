@@ -20,7 +20,9 @@ use App\Http\Controllers\Warehouse\StaffController;
 use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
+use App\Http\Controllers\Warehouse\SupportTicketController;
 use App\Http\Controllers\Warehouse\VendorController;
+use App\Http\Controllers\Warehouse\WareSettingController;
 use App\Http\Controllers\WarehouseController;
 
 Route::middleware('guest')->group(function () {
@@ -158,6 +160,24 @@ Route::middleware('auth')->group(function () {
             Route::get('/finance/ledger', 'ledger')->name('warehouse.finance.ledger');
             Route::get('/finance/ledger/export', 'exportLedger')->name('warehouse.finance.ledger.export');
         });
+
+        Route::controller(SupportTicketController::class)
+            ->prefix('support')
+            ->name('warehouse.support.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{id}', 'show')->name('show');
+                Route::post('/{id}/reply', 'reply')->name('reply');
+                Route::put('/{id}/update', 'update')->name('update');
+            });
+
+        Route::controller(WareSettingController::class)
+            ->prefix('settings')
+            ->name('warehouse.settings.')
+            ->group(function () {
+                Route::get('/general', 'index')->name('general');
+                Route::post('/general', 'update')->name('update');
+            });
     });
 });
 

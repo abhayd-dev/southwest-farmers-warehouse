@@ -7,6 +7,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use App\Models\WareSetting;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,5 +32,19 @@ class AppServiceProvider extends ServiceProvider
         }
 
         View::composer('layouts.partials.sidebar', SidebarComposer::class);
+
+        try {
+            if (Schema::hasTable('ware_settings')) {
+                $settings = Cache::rememberForever('ware_settings', function () {
+                    return WareSetting::pluck('value', 'key')->toArray();
+                });
+
+                View::share('settings', $settings);
+            } else {
+                View::share('settings', []);
+            }
+        } catch (\Exception $e) {
+            View::share('settings', []);
+        }
     }
 }

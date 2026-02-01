@@ -6,18 +6,18 @@
             <div class="logo-box">
                 <a href="{{ route('dashboard') }}" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo.jpg') }}" height="22">
+                        <img src="{{ Storage::url($settings['main_logo']) }}" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo.jpg') }}" height="24">
+                        <img src="{{ Storage::url($settings['main_logo']) }}" height="24">
                     </span>
                 </a>
                 <a href="{{ route('dashboard') }}" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo.jpg') }}" height="22">
+                        <img src="{{ Storage::url($settings['main_logo']) }}" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo.jpg') }}" height="24">
+                        <img src="{{ Storage::url($settings['main_logo']) }}" height="24">
                     </span>
                 </a>
             </div>
@@ -27,27 +27,29 @@
                 {{-- ================= OVERVIEW ================= --}}
                 <li class="menu-title">Overview</li>
                 <li>
-                    <a href="{{ route('dashboard') }}" class="tp-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}"
+                        class="tp-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <iconify-icon icon="tabler:layout-dashboard"></iconify-icon>
                         <span class="sidebar-text">Dashboard</span>
                     </a>
                 </li>
 
                 {{-- ================= INVENTORY & OPERATIONS ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
                     <li class="menu-title mt-2">Inventory & Operations</li>
                     <li>
                         <a href="#sidebarWarehouse" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.stocks.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:building-warehouse"></iconify-icon>
                             <span class="sidebar-text">Warehouse</span>
                             <span class="menu-arrow"></span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('warehouse.stocks.*') ? 'show' : '' }}" id="sidebarWarehouse">
+                        <div class="collapse {{ request()->routeIs('warehouse.stocks.*') ? 'show' : '' }}"
+                            id="sidebarWarehouse">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.stocks.index') }}"
-                                       class="{{ request()->routeIs('warehouse.stocks.index') ? 'active' : '' }}">
+                                        class="{{ request()->routeIs('warehouse.stocks.index') ? 'active' : '' }}">
                                         <i class="mdi mdi-package-variant-closed me-2"></i> Stock & Inventory
                                     </a>
                                 </li>
@@ -57,38 +59,38 @@
                 @endif
 
                 {{-- ================= PRODUCT CATALOG ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
                     <li class="menu-title mt-2">Product Catalog</li>
                     <li>
                         <a href="#sidebarProducts" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                             <span class="sidebar-text">Products</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'show' : '' }}"
-                             id="sidebarProducts">
+                            id="sidebarProducts">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.products.index') }}">
                                         <i class="mdi mdi-format-list-bulleted me-2"></i> All Products
                                     </a>
                                 </li>
-                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
                                     <li>
                                         <a href="{{ route('warehouse.products.create') }}">
                                             <i class="mdi mdi-plus-circle-outline me-2"></i> Add New Product
                                         </a>
                                     </li>
                                 @endif
-                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
                                     <li>
                                         <a href="{{ route('warehouse.product-options.index') }}">
                                             <i class="mdi mdi-cogs me-2"></i> Product Options
                                         </a>
                                     </li>
                                 @endif
-                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
                                     <li>
                                         <a href="{{ route('warehouse.categories.index') }}">
                                             <i class="mdi mdi-shape-outline me-2"></i> Categories
@@ -106,26 +108,27 @@
                 @endif
 
                 {{-- ================= STORES ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
                     <li class="menu-title mt-2">Stores</li>
                     <li>
                         <a href="#sidebarStores" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.stores.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.stores.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:building-store"></iconify-icon>
                             <span class="sidebar-text">
                                 Stores
-                                
+
                             </span>
                             <span class="menu-arrow"></span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('warehouse.stores.*') ? 'show' : '' }}" id="sidebarStores">
+                        <div class="collapse {{ request()->routeIs('warehouse.stores.*') ? 'show' : '' }}"
+                            id="sidebarStores">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.stores.index') }}">
                                         <i class="mdi mdi-store-outline me-2"></i> All Stores List
                                     </a>
                                 </li>
-                                @if(auth()->user()->isSuperAdmin())
+                                @if (auth()->user()->isSuperAdmin())
                                     <li>
                                         <a href="{{ route('warehouse.stores.create') }}">
                                             <i class="mdi mdi-domain-plus me-2"></i> Register New Store
@@ -138,17 +141,17 @@
                 @endif
 
                 {{-- ================= PROCUREMENT ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
                     <li class="menu-title mt-2">Procurement</li>
                     <li>
                         <a href="#sidebarProcurement" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:truck-delivery"></iconify-icon>
                             <span class="sidebar-text">Purchases & Supply</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'show' : '' }}"
-                             id="sidebarProcurement">
+                            id="sidebarProcurement">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.vendors.index') }}">
@@ -166,28 +169,31 @@
                 @endif
 
                 {{-- ================= FULFILLMENT & DISPATCH ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_store_requests') || auth()->user()->hasPermission('manage_store_inventory'))
+                @if (auth()->user()->isSuperAdmin() ||
+                        auth()->user()->hasPermission('approve_store_requests') ||
+                        auth()->user()->hasPermission('manage_store_inventory'))
                     <li class="menu-title mt-2">Fulfillment & Dispatch</li>
                     <li>
                         <a href="#sidebarStoreOrders" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:truck-loading"></iconify-icon>
                             <span class="sidebar-text">
                                 Store Orders
-                                @if($pendingRequestsCount > 0)
+                                @if ($pendingRequestsCount > 0)
                                     <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
                                 @endif
                             </span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'show' : '' }}"
-                             id="sidebarStoreOrders">
+                            id="sidebarStoreOrders">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">
                                         <i class="mdi mdi-clock-outline me-2"></i> Pending Requests
-                                        @if($pendingRequestsCount > 0)
-                                            <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
+                                        @if ($pendingRequestsCount > 0)
+                                            <span
+                                                class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
                                         @endif
                                     </a>
                                 </li>
@@ -207,17 +213,17 @@
                 @endif
 
                 {{-- ================= STOCK CONTROL ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_inventory'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_inventory'))
                     <li class="menu-title mt-2">Stock Control</li>
                     <li>
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.stock-control.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.stock-control.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:chart-line"></iconify-icon>
                             <span class="sidebar-text">Stock Control</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.stock-control.*') ? 'show' : '' }}"
-                             id="sidebarStockControl">
+                            id="sidebarStockControl">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.overview') }}">
@@ -227,8 +233,9 @@
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.recall') }}">
                                         <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
-                                        @if($pendingRecallCount > 0)
-                                            <span class="badge bg-danger rounded-pill ms-2">{{ $pendingRecallCount }}</span>
+                                        @if ($pendingRecallCount > 0)
+                                            <span
+                                                class="badge bg-danger rounded-pill ms-2">{{ $pendingRecallCount }}</span>
                                         @endif
                                     </a>
                                 </li>
@@ -253,17 +260,17 @@
                 @endif
 
                 {{-- ================= FINANCE & REPORTS ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
                     <li class="menu-title mt-2">Finance & Reports</li>
                     <li>
                         <a href="#sidebarFinance" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.finance.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.finance.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:coin"></iconify-icon>
                             <span class="sidebar-text">Finance</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.finance.*') ? 'show' : '' }}"
-                             id="sidebarFinance">
+                            id="sidebarFinance">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.finance.index') }}">
@@ -281,24 +288,24 @@
                 @endif
 
                 {{-- ================= ADMINISTRATION ================= --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_users'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_users'))
                     <li class="menu-title mt-2">Administration</li>
                     <li>
                         <a href="#sidebarStaff" data-bs-toggle="collapse"
-                           class="{{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:users-group"></iconify-icon>
                             <span class="sidebar-text">User Management</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'show' : '' }}"
-                             id="sidebarStaff">
+                            id="sidebarStaff">
                             <ul class="nav-second-level">
                                 <li>
                                     <a href="{{ route('warehouse.staff.index') }}">
                                         <i class="mdi mdi-card-account-details-outline me-2"></i> Warehouse Staff
                                     </a>
                                 </li>
-                                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_roles'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_roles'))
                                     <li>
                                         <a href="{{ route('warehouse.roles.index') }}">
                                             <i class="mdi mdi-shield-account-outline me-2"></i> Roles & Permissions
@@ -310,24 +317,48 @@
                     </li>
                 @endif
 
-                {{-- ================= SUPPORT & SETTINGS ================= --}}
-                <li class="menu-title mt-2">Support</li>
-                <li>
-                    <a href="#">
-                        <iconify-icon icon="tabler:headset"></iconify-icon>
-                        <span class="sidebar-text">Support Tickets</span>
-                    </a>
-                </li>
 
-                @if(auth()->user()->isSuperAdmin())
+
+                {{-- Settings --}}
+                @if (auth()->user()->isSuperAdmin())
                     <li>
-                        <a href="#">
+                        <a href="#sidebarSettings" data-bs-toggle="collapse"
+                            class="{{ request()->routeIs('warehouse.settings.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:settings"></iconify-icon>
                             <span class="sidebar-text">Settings</span>
+                            <span class="menu-arrow"></span>
                         </a>
+                        <div class="collapse {{ request()->routeIs('warehouse.settings.*') ? 'show' : '' }}"
+                            id="sidebarSettings">
+                            <ul class="nav-second-level">
+                                <li>
+                                    <a href="{{ route('warehouse.settings.general') }}"
+                                        class="{{ request()->routeIs('warehouse.settings.general') ? 'active' : '' }}">
+                                        <i class="mdi mdi-cog-outline me-2"></i> General Settings
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                 @endif
 
+                @if (auth()->user()->hasPermission('view_all_tickets'))
+                    <li class="menu-title mt-2">Helpdesk</li>
+                    <li>
+                        <a href="{{ route('warehouse.support.index') }}"
+                            class="tp-link {{ request()->routeIs('warehouse.support.*') ? 'active' : '' }}">
+                            <iconify-icon icon="tabler:lifebuoy"></iconify-icon>
+                            <span class="sidebar-text">Support Tickets</span>
+                            {{-- Optional: Badge for Open Tickets --}}
+                            @php
+                                $openTickets = \App\Models\SupportTicket::where('status', 'open')->count();
+                            @endphp
+                            @if ($openTickets > 0)
+                                <span class="badge bg-danger rounded-pill ms-auto">{{ $openTickets }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
     </div>
