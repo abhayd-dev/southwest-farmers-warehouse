@@ -23,6 +23,12 @@ class Product extends Model
         'price',
         'cost_price',
         'icon',
+        'department_id',
+        'pack_size',
+        'box_weight',
+        'shelf_life_days',
+        'taxable',
+        'margin_percent',
         'is_active',
         'store_id',
     ];
@@ -68,7 +74,7 @@ class Product extends Model
     {
         return $this->hasMany(StockTransaction::class)->latest();
     }
-    
+
     public function user()
     {
         return $this->belongsTo(WareUser::class, 'ware_user_id');
@@ -138,7 +144,7 @@ class Product extends Model
     public function addStock($warehouseId, $qty, $type, $batchData = [], $userId = null, $remarks = null)
     {
         return DB::transaction(function () use ($warehouseId, $qty, $type, $batchData, $userId, $remarks) {
-            
+
             // 1. Create/Find Batch
             $batch = ProductBatch::create([
                 'product_id' => $this->id,
@@ -180,7 +186,7 @@ class Product extends Model
     public function removeStock($warehouseId, $qty, $type, $userId = null, $remarks = null)
     {
         return DB::transaction(function () use ($warehouseId, $qty, $type, $userId, $remarks) {
-            
+
             $stock = ProductStock::where('product_id', $this->id)
                 ->where('warehouse_id', $warehouseId)
                 ->first();
@@ -190,7 +196,7 @@ class Product extends Model
             }
 
             $remainingToDeduct = $qty;
-            
+
             $batches = $this->batches()
                 ->where('warehouse_id', $warehouseId)
                 ->lockForUpdate()
@@ -200,7 +206,7 @@ class Product extends Model
                 if ($remainingToDeduct <= 0) break;
 
                 $deduct = min($batch->quantity, $remainingToDeduct);
-                
+
                 $batch->decrement('quantity', $deduct);
                 $remainingToDeduct -= $deduct;
 
@@ -210,7 +216,7 @@ class Product extends Model
                     'product_batch_id' => $batch->id,
                     'ware_user_id' => $userId,
                     'type' => $type,
-                    'quantity_change' => -$deduct, 
+                    'quantity_change' => -$deduct,
                     'running_balance' => $stock->quantity - ($qty - $remainingToDeduct),
                     'remarks' => $remarks . " (Batch: {$batch->batch_number})"
                 ]);
@@ -299,5 +305,10 @@ class Product extends Model
     public function isLowStock($threshold = 10)
     {
         return $this->getTotalQuantity() < $threshold;
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 }

@@ -17,6 +17,9 @@ class Vendor extends Model
         'phone',
         'address',
         'lead_time_days',
+        'rating',
+        'on_time_delivery_rate',
+        'total_orders_count',
         'is_active',
     ];
 

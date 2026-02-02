@@ -17,6 +17,7 @@ use App\Http\Controllers\Warehouse\PurchaseOrderController;
 use App\Http\Controllers\Warehouse\RecallController;
 use App\Http\Controllers\Warehouse\RolePermissionController;
 use App\Http\Controllers\Warehouse\StaffController;
+use App\Http\Controllers\Warehouse\StockAuditController;
 use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
@@ -140,6 +141,15 @@ Route::middleware('auth')->group(function () {
 
             // Rules (placeholder for future expansion)
             Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
+
+            Route::controller(StockAuditController::class)->prefix('audit')->name('audit.')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/store', 'store')->name('store');
+                Route::get('/{id}', 'show')->name('show');
+                Route::post('/{id}/update-counts', 'updateCounts')->name('update-counts');
+                Route::post('/{id}/finalize', 'finalize')->name('finalize');
+            });
         });
 
         Route::resource('vendors', VendorController::class)->names('warehouse.vendors');

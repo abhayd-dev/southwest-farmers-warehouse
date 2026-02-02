@@ -249,6 +249,12 @@
                                         <i class="mdi mdi-sort-variant-lock me-2"></i> Min-Max Levels
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('warehouse.stock-control.audit.index') }}"
+                                        class="{{ request()->routeIs('warehouse.stock-control.audit.*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-clipboard-check-outline me-2"></i> Cycle Counts / Audits
+                                    </a>
+                                </li>
                                 {{-- <li>
                                     <a href="{{ route('warehouse.stock-control.rules') }}">
                                         <i class="mdi mdi-gavel me-2"></i> Rules
