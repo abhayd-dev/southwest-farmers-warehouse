@@ -1,6 +1,9 @@
 <x-app-layout title="Stock Valuation">
     <div class="container-fluid">
-        @include('warehouse.partials.breadcrumb', ['title' => 'Stock Valuation'])
+        @include('warehouse.partials.breadcrumb', [
+            'title' => 'Stock Valuation',
+            'items' => [['text' => 'Stock Control', 'url' => route('warehouse.stock-control.overview')]],
+        ])
 
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
             <div>
@@ -28,23 +31,17 @@
                                 class="avatar-sm rounded bg-danger bg-opacity-10 d-flex align-items-center justify-content-center me-3">
                                 <i class="mdi mdi-cash-multiple text-danger fs-4"></i>
                             </div>
-                            <h6 class="text-muted text-uppercase fw-bold mb-0">
-                                Total System Value
-                            </h6>
+                            <h6 class="text-muted text-uppercase fw-bold mb-0">Total System Value</h6>
                         </div>
 
-                        <h3 class="fw-bold text-dark mb-1">
-                            $ {{ number_format($totalValue, 2) }}
-                        </h3>
+                        <h3 class="fw-bold text-dark mb-1">$ {{ number_format($totalValue, 2) }}</h3>
 
                         <small class="text-muted">
-                            <i class="mdi mdi-warehouse me-1"></i>
-                            Warehouse + Stores
+                            <i class="mdi mdi-warehouse me-1"></i> Warehouse + Stores
                         </small>
                     </div>
                 </div>
             </div>
-
 
             {{-- Warehouse Value --}}
             <div class="col-lg-3 col-md-6">
@@ -119,9 +116,22 @@
 
                     <div class="card-body p-0">
                         <div class="tab-content">
+
+                            {{-- TAB 1: PRODUCT VALUATION --}}
                             <div class="tab-pane fade show active" id="productValuation">
                                 <div class="p-4 border-bottom bg-light bg-opacity-50">
                                     <div class="row g-3">
+                                        {{-- DEPARTMENT FILTER (Added) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label text-muted small fw-bold">DEPARTMENT</label>
+                                            <select id="departmentFilter" class="form-select shadow-none">
+                                                <option value="">All Departments</option>
+                                                @foreach ($departments as $dept)
+                                                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
                                         <div class="col-md-3">
                                             <label class="form-label text-muted small fw-bold">CATEGORY</label>
                                             <select id="categoryFilter" class="form-select shadow-none">
@@ -131,6 +141,7 @@
                                                 @endforeach
                                             </select>
                                         </div>
+
                                         <div class="col-md-3">
                                             <label class="form-label text-muted small fw-bold">STORE</label>
                                             <select id="storeFilter" class="form-select shadow-none">
@@ -141,7 +152,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
+
+                                        <div class="col-md-3 d-flex align-items-end">
                                             <button class="btn btn-dark w-100 shadow-sm" id="applyValuationFilters">
                                                 <i class="mdi mdi-filter me-1"></i> Filter Data
                                             </button>
@@ -156,14 +168,16 @@
                                             <tr>
                                                 <th class="ps-4 text-uppercase text-muted small fw-bold">Product</th>
                                                 <th class="text-uppercase text-muted small fw-bold">SKU</th>
-                                                <th class="text-center text-uppercase text-muted small fw-bold">Whse Qty
-                                                </th>
+                                                <th class="text-uppercase text-muted small fw-bold">Department</th>
+                                                {{-- Added --}}
+                                                <th class="text-center text-uppercase text-muted small fw-bold">Whse
+                                                    Qty</th>
                                                 <th class="text-uppercase text-muted small fw-bold">Whse Value</th>
                                                 <th class="text-center text-uppercase text-muted small fw-bold">Stores
                                                     Qty</th>
                                                 <th class="text-uppercase text-muted small fw-bold">Stores Value</th>
-                                                <th class="text-end text-uppercase text-muted small fw-bold">Total Value
-                                                </th>
+                                                <th class="text-end text-uppercase text-muted small fw-bold">Total
+                                                    Value</th>
                                                 <th class="text-end pe-4 text-uppercase text-muted small fw-bold">
                                                     Actions</th>
                                             </tr>
@@ -172,6 +186,7 @@
                                 </div>
                             </div>
 
+                            {{-- TAB 2: STORE VALUATION --}}
                             <div class="tab-pane fade" id="storeValuation">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
@@ -194,8 +209,6 @@
                                         <tbody>
                                             @forelse($stores as $store)
                                                 @php
-                                                    // Logic to prevent Ambiguous Column error
-                                                    // We use explicit table names in the query logic
                                                     $storeValue = \App\Models\StoreStock::where(
                                                         'store_stocks.store_id',
                                                         $store->id,
@@ -216,7 +229,6 @@
                                                         'store_stocks.store_id',
                                                         $store->id,
                                                     )->sum('quantity');
-
                                                     $avgValue = $storeQty > 0 ? $storeValue / $storeQty : 0;
                                                 @endphp
                                                 <tr>
@@ -230,21 +242,16 @@
                                                                 class="fw-bold text-dark">{{ $store->store_name }}</span>
                                                         </div>
                                                     </td>
-                                                    <td>
-                                                        <span class="text-muted">{{ $store->city ?? 'N/A' }}</span>
+                                                    <td><span class="text-muted">{{ $store->city ?? 'N/A' }}</span>
                                                     </td>
                                                     <td class="text-center">
                                                         <span
                                                             class="badge bg-light text-dark border">{{ number_format($storeQty, 0) }}</span>
                                                     </td>
-                                                    <td>
-                                                        <span class="fw-bold text-primary">$
-                                                            {{ number_format($storeValue, 2) }}</span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="text-muted">$
-                                                            {{ number_format($avgValue, 2) }}</span>
-                                                    </td>
+                                                    <td><span class="fw-bold text-primary">$
+                                                            {{ number_format($storeValue, 2) }}</span></td>
+                                                    <td><span class="text-muted">$
+                                                            {{ number_format($avgValue, 2) }}</span></td>
                                                     <td class="text-center">
                                                         <span
                                                             class="badge bg-success bg-opacity-10 text-success px-2 py-1">Active</span>
@@ -288,6 +295,7 @@
                     ajax: {
                         url: '{{ route('warehouse.stock-control.valuation.data') }}',
                         data: function(d) {
+                            d.department_id = $('#departmentFilter').val(); // Added Department param
                             d.category_id = $('#categoryFilter').val();
                             d.store_id = $('#storeFilter').val();
                         }
@@ -301,12 +309,17 @@
                             className: 'text-muted small'
                         },
                         {
+                            data: 'department_name',
+                            name: 'department.name',
+                            defaultContent: '-'
+                        }, // Added Department Column
+                        {
                             data: 'warehouse_qty',
                             className: 'text-center'
                         },
                         {
                             data: 'warehouse_value_fmt',
-                            className: 'text-muted'
+                            className: 'text-muted text-end'
                         },
                         {
                             data: 'stores_qty',
@@ -314,7 +327,7 @@
                         },
                         {
                             data: 'stores_value_fmt',
-                            className: 'text-muted'
+                            className: 'text-muted text-end'
                         },
                         {
                             data: 'total_value_fmt',
@@ -328,8 +341,8 @@
                         }
                     ],
                     order: [
-                        [6, 'desc']
-                    ], // Order by Total Value descending
+                        [7, 'desc']
+                    ], // Order by Total Value descending (Index adjusted for new column)
                     language: {
                         processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
                     }

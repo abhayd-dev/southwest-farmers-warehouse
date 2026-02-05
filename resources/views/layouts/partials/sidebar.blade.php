@@ -47,6 +47,13 @@
                         <div class="collapse {{ request()->routeIs('warehouse.stocks.*') ? 'show' : '' }}"
                             id="sidebarWarehouse">
                             <ul class="nav-second-level">
+                                {{-- warehouse.index --}}
+                                <li>
+                                    <a href="{{ route('warehouse.index') }}"
+                                        class="{{ request()->routeIs('warehouse.index') ? 'active' : '' }}">
+                                        <i class="mdi mdi-home me-2"></i> My Warehouse
+                                    </a>
+                                </li>
                                 <li>
                                     <a href="{{ route('warehouse.stocks.index') }}"
                                         class="{{ request()->routeIs('warehouse.stocks.index') ? 'active' : '' }}">
@@ -102,6 +109,11 @@
                                         </a>
                                     </li>
                                 @endif
+                                <li>
+                                    <a href="{{ route('warehouse.departments.index') }}">
+                                        <i class="mdi mdi-view-grid-plus-outline me-2"></i> Departments
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>

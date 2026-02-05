@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\DB;
 
 class ProductImport implements ToCollection
 {
+    protected $departmentId;
     protected $categoryId;
     protected $subcategoryId;
 
-    public function __construct($categoryId, $subcategoryId)
+    public function __construct($departmentId, $categoryId, $subcategoryId)
     {
+        $this->departmentId = $departmentId;
         $this->categoryId = $categoryId;
         $this->subcategoryId = $subcategoryId;
     }
@@ -39,7 +41,8 @@ class ProductImport implements ToCollection
                         'tax_percent' => $row[4],
                         'mrp'         => $row[6],
                         'barcode'     => $row[9] ?? null,
-                        'is_active'   => 1
+                        'is_active'   => 1,
+                        'department_id' => $this->departmentId ?? null
                     ]
                 );
 
@@ -54,6 +57,7 @@ class ProductImport implements ToCollection
                     'cost_price'        => $row[5],
                     'tax_percent'       => $row[4],
                     'barcode'           => $row[9] ?? null,
+                    'department_id'     => $this->departmentId ?? null,
                     'is_active'         => 1
                 ]);
 

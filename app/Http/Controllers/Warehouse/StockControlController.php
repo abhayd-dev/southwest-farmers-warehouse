@@ -11,6 +11,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
 use App\Models\StoreDetail;
 use App\Models\StockTransaction;
+use App\Models\Department; // Added
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
@@ -21,16 +22,21 @@ class StockControlController extends Controller
     // ===== STOCK OVERVIEW =====
     public function overview()
     {
+
+        set_time_limit(300);
         $categories = ProductCategory::where('is_active', true)->get();
         $subcategories = ProductSubcategory::where('is_active', true)->get();
-        return view('warehouse.stock-control.overview', compact('categories', 'subcategories'));
+        $departments = Department::where('is_active', true)->get();
+
+        return view('warehouse.stock-control.overview', compact('categories', 'subcategories', 'departments'));
     }
 
     public function overviewData(Request $request)
     {
+        set_time_limit(300);
         $query = Product::query()
-            ->whereNull('products.store_id') // FIXED: Specify table to avoid ambiguity
-            ->with(['category', 'subcategory'])
+            ->whereNull('products.store_id')
+            ->with(['category', 'subcategory', 'department'])
             ->select('products.*')
             ->addSelect([
                 'warehouse_qty' => ProductStock::selectRaw('COALESCE(SUM(quantity - reserved_quantity - damaged_quantity), 0)')
@@ -40,6 +46,10 @@ class StockControlController extends Controller
                 'total_stores_qty' => StoreStock::selectRaw('COALESCE(SUM(quantity - reserved_quantity), 0)')
                     ->whereColumn('product_id', 'products.id')
             ]);
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -64,21 +74,23 @@ class StockControlController extends Controller
         }
 
         return DataTables::of($query)
+            ->addColumn('department_name', fn($row) => $row->department->name ?? '-')
             ->addColumn('category_name', fn($row) => $row->category->name ?? '-')
             ->addColumn('subcategory_name', fn($row) => $row->subcategory->name ?? '-')
             ->addColumn('total_qty', fn($row) => (int)$row->warehouse_qty + (int)$row->total_stores_qty)
             ->addColumn('value', fn($row) => number_format(((int)$row->warehouse_qty + (int)$row->total_stores_qty) * ($row->cost_price ?? 0), 2))
-            ->rawColumns(['category_name', 'subcategory_name'])
+            ->rawColumns(['department_name', 'category_name', 'subcategory_name'])
             ->make(true);
     }
 
-    // ===== STOCK VALUATION - DASHBOARD =====
+    // ===== STOCK VALUATION =====
     public function valuation(Request $request)
     {
+        set_time_limit(300);
         $stores = StoreDetail::where('is_active', true)->get();
         $categories = ProductCategory::where('is_active', true)->get();
-        
-        // Get totals
+        $departments = Department::where('is_active', true)->get(); // Added
+
         $warehouseValue = ProductStock::where('warehouse_id', 1)
             ->join('products', 'product_stocks.product_id', '=', 'products.id')
             ->sum(DB::raw('product_stocks.quantity * products.cost_price'));
@@ -95,19 +107,22 @@ class StockControlController extends Controller
             'totalValue',
             'totalQty',
             'stores',
-            'categories'
+            'categories',
+            'departments' // Added
         ));
     }
 
     public function valuationData(Request $request)
     {
         $query = Product::query()
-            ->whereNull('products.store_id') // FIXED: Specify table to avoid ambiguity
+            ->whereNull('products.store_id')
+            ->with('department') // Eager load
             ->select([
                 'products.id',
                 'products.product_name',
                 'products.sku',
                 'products.cost_price',
+                'products.department_id', // Select for relation
                 DB::raw('COALESCE(SUM(product_stocks.quantity), 0) as warehouse_qty'),
                 DB::raw('COALESCE(SUM(product_stocks.quantity * products.cost_price), 0) as warehouse_value'),
                 DB::raw('COALESCE(SUM(store_stocks.quantity), 0) as stores_qty'),
@@ -116,18 +131,23 @@ class StockControlController extends Controller
             ])
             ->leftJoin('product_stocks', 'products.id', '=', 'product_stocks.product_id')
             ->leftJoin('store_stocks', 'products.id', '=', 'store_stocks.product_id')
-            ->groupBy('products.id', 'products.product_name', 'products.sku', 'products.cost_price');
+            ->groupBy('products.id', 'products.product_name', 'products.sku', 'products.cost_price', 'products.department_id');
+
+        // Added Department Filter
+        if ($request->filled('department_id')) {
+            $query->where('products.department_id', $request->department_id);
+        }
 
         if ($request->filled('category_id')) {
             $query->where('products.category_id', $request->category_id);
         }
 
         if ($request->filled('store_id')) {
-            // FIXED: Use correct relation name (storeStocks) and qualified column
             $query->whereHas('storeStocks', fn($q) => $q->where('store_stocks.store_id', $request->store_id));
         }
 
         return DataTables::of($query)
+            ->addColumn('department_name', fn($row) => $row->department->name ?? '-') // Added column
             ->addColumn('warehouse_value_fmt', fn($row) => '$ ' . number_format($row->warehouse_value, 2))
             ->addColumn('stores_value_fmt', fn($row) => '$ ' . number_format($row->stores_value, 2))
             ->addColumn('total_value_fmt', fn($row) => '$ ' . number_format($row->total_value, 2))
@@ -141,9 +161,10 @@ class StockControlController extends Controller
             ->make(true);
     }
 
-    // ===== STORE VALUATION =====
+    // ... (Keep storeValuation, storeAnalytics, productAnalytics, recallStructured, rules as they were) ...
     public function storeValuation(Request $request)
     {
+        set_time_limit(300);
         $stores = StoreDetail::where('is_active', true)
             ->with([
                 'stocks' => function ($q) {
@@ -157,16 +178,16 @@ class StockControlController extends Controller
         return view('warehouse.stock-control.valuation-stores', compact('stores'));
     }
 
-    // ===== STORE ANALYTICS PAGE =====
     public function storeAnalytics(Request $request, StoreDetail $store)
     {
-        $storeValue = StoreStock::where('store_stocks.store_id', $store->id) // FIXED: Qualified column
+        set_time_limit(300);
+        $storeValue = StoreStock::where('store_stocks.store_id', $store->id)
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
             ->sum(DB::raw('store_stocks.quantity * products.cost_price'));
 
-        $storeQty = StoreStock::where('store_stocks.store_id', $store->id)->sum('quantity'); // FIXED: Qualified column
+        $storeQty = StoreStock::where('store_stocks.store_id', $store->id)->sum('quantity');
 
-        $topProducts = StoreStock::where('store_stocks.store_id', $store->id) // FIXED: Qualified column
+        $topProducts = StoreStock::where('store_stocks.store_id', $store->id)
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
             ->select([
                 'products.product_name',
@@ -178,8 +199,7 @@ class StockControlController extends Controller
             ->limit(10)
             ->get();
 
-        // 30-day trend
-        $trend = StockTransaction::where('stock_transactions.store_id', $store->id) // FIXED: Qualified column (good practice)
+        $trend = StockTransaction::where('stock_transactions.store_id', $store->id)
             ->where('created_at', '>=', Carbon::today()->subDays(30))
             ->select(DB::raw('DATE(created_at) as date'))
             ->selectRaw('COUNT(*) as transactions')
@@ -187,30 +207,19 @@ class StockControlController extends Controller
             ->orderBy('date')
             ->get();
 
-        return view('warehouse.stock-control.store-analytics', compact(
-            'store',
-            'storeValue',
-            'storeQty',
-            'topProducts',
-            'trend'
-        ));
+        return view('warehouse.stock-control.store-analytics', compact('store', 'storeValue', 'storeQty', 'topProducts', 'trend'));
     }
 
-    // ===== PRODUCT ANALYTICS PAGE =====
     public function productAnalytics(Request $request, Product $product)
     {
-        $warehouseQty = ProductStock::where('product_id', $product->id)
-            ->where('warehouse_id', 1)
-            ->sum('quantity');
-
+        set_time_limit(300);
+        $warehouseQty = ProductStock::where('product_id', $product->id)->where('warehouse_id', 1)->sum('quantity');
         $storesQty = StoreStock::where('product_id', $product->id)->sum('quantity');
-
         $warehouseValue = $warehouseQty * $product->cost_price;
         $storesValue = $storesQty * $product->cost_price;
         $totalValue = $warehouseValue + $storesValue;
 
-        // Store-wise distribution
-        $storeDistribution = StoreStock::where('store_stocks.product_id', $product->id) // FIXED: Qualified column
+        $storeDistribution = StoreStock::where('store_stocks.product_id', $product->id)
             ->join('store_details', 'store_stocks.store_id', '=', 'store_details.id')
             ->select([
                 'store_details.store_name',
@@ -220,14 +229,12 @@ class StockControlController extends Controller
             ->orderByDesc('value')
             ->get();
 
-        // Batches at warehouse
         $batches = ProductBatch::where('product_id', $product->id)
             ->where('warehouse_id', 1)
             ->where('quantity', '>', 0)
             ->orderBy('expiry_date')
             ->get();
 
-        // Transaction history
         $transactions = StockTransaction::where('product_id', $product->id)
             ->with('user', 'store')
             ->latest()
@@ -247,13 +254,10 @@ class StockControlController extends Controller
         ));
     }
 
-    // ===== RECALL STOCK (RESTRUCTURED) =====
     public function recallStructured()
     {
         return view('warehouse.stock-control.recall.index');
     }
-
-    // ===== RULES PAGE =====
     public function rules()
     {
         return view('warehouse.stock-control.rules');

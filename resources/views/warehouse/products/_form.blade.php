@@ -60,7 +60,30 @@
                 <input type="file" name="icon" id="iconInput" class="d-none" accept="image/*" onchange="previewImage(event)">
             </label>
         </div>
+        
         <div class="row g-4">
+
+            {{-- DEPARTMENT DROPDOWN (Added) --}}
+            <div class="col-md-12">
+                <label class="form-label fw-semibold">
+                    Department <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="mdi mdi-domain text-muted"></i>
+                    </span>
+                    <select name="department_id" class="form-select border-start-0" required>
+                        <option value="">Select Department</option>
+                        @foreach ($departments as $dept)
+                            <option value="{{ $dept->id }}" 
+                                {{ isset($product) && $product->department_id == $dept->id ? 'selected' : '' }}>
+                                {{ $dept->name }} ({{ $dept->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="invalid-feedback">Please select a department.</div>
+            </div>
 
             <div class="col-md-6">
                 <label class="form-label fw-semibold">

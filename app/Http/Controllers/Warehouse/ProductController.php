@@ -8,6 +8,7 @@ use App\Models\ProductOption;
 use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
 use App\Models\ProductStock;
+use App\Models\Department; // Added
 use App\Imports\ProductImport;
 use App\Exports\ProductExport;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class ProductController extends Controller
         try {
             // FILTER: Only show Warehouse Products (store_id IS NULL)
             $products = Product::whereNull('store_id')
-                ->with(['category', 'subcategory', 'option'])
+                ->with(['category', 'subcategory', 'option', 'department']) // Added department
                 ->when($request->search, function ($q) use ($request) {
                     $s = $request->search;
                     $q->where(function($query) use ($s) {
@@ -52,9 +53,9 @@ class ProductController extends Controller
     {
         try {
             return view('warehouse.products.create', [
-                // Only Warehouse Options & Categories
                 'options' => ProductOption::where('is_active', 1)->get(),
                 'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
+                'departments' => Department::where('is_active', true)->get(), // Added
             ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Unable to open create page' . $e->getMessage());
@@ -65,6 +66,7 @@ class ProductController extends Controller
     {
         try {
             $request->validate([
+                'department_id' => 'required|exists:departments,id', // Added
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
                 'product_name' => 'required',
@@ -133,6 +135,7 @@ class ProductController extends Controller
             'options' => ProductOption::where('is_active', 1)->get(),
             'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
             'subcategories' => ProductSubcategory::whereNull('store_id')->where('category_id', $product->category_id)->get(),
+            'departments' => Department::where('is_active', true)->get(), // Added
         ]);
     }
 
@@ -142,6 +145,7 @@ class ProductController extends Controller
 
         try {
             $request->validate([
+                'department_id' => 'required|exists:departments,id', // Added
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
                 'product_name' => 'required',
@@ -216,10 +220,14 @@ class ProductController extends Controller
         try {
             $request->validate([
                 'file' => 'required|mimes:xlsx,csv',
+                'department_id' => 'required|exists:departments,id', // Added
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
             ]);
-            Excel::import(new ProductImport($request->category_id, $request->subcategory_id), $request->file);
+            
+            // Pass department_id to Import Class (Assuming Import Class constructor is updated)
+            Excel::import(new ProductImport($request->category_id, $request->subcategory_id, $request->department_id), $request->file);
+            
             return back()->with('success', 'Imported successfully');
         } catch (\Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());

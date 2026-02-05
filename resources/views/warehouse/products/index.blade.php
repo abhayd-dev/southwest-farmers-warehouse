@@ -6,21 +6,15 @@
         <div class="bg-white border-bottom shadow-sm mb-4">
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-
-                    {{-- LEFT: BREADCRUMB & TITLE --}}
                     <div class="d-flex flex-column gap-2">
                         @include('warehouse.products.partials.breadcrumb', ['title' => 'Products'])
                         <h4 class="fw-bold mb-0 text-dark">
-                            <i class="mdi mdi-cube-outline text-primary"></i>
-                            Products Management
+                            <i class="mdi mdi-cube-outline text-primary"></i> Products Management
                         </h4>
                     </div>
-
-                    {{-- RIGHT: SEARCH & ACTIONS --}}
                     <div class="flex-shrink-0">
                         @include('warehouse.products.partials.list-header-products')
                     </div>
-
                 </div>
             </div>
         </div>
@@ -32,8 +26,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-cube-outline text-primary fs-4"></i>
                                 </div>
                             </div>
@@ -51,15 +44,13 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-muted mb-1 small">Active</p>
-                                <h4 class="mb-0 fw-bold text-success">{{ $products->where('is_active', 1)->count() }}
-                                </h4>
+                                <h4 class="mb-0 fw-bold text-success">{{ $products->where('is_active', 1)->count() }}</h4>
                             </div>
                         </div>
                     </div>
@@ -71,15 +62,13 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-warning fs-4"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <p class="text-muted mb-1 small">Inactive</p>
-                                <h4 class="mb-0 fw-bold text-warning">{{ $products->where('is_active', 0)->count() }}
-                                </h4>
+                                <h4 class="mb-0 fw-bold text-warning">{{ $products->where('is_active', 0)->count() }}</h4>
                             </div>
                         </div>
                     </div>
@@ -91,8 +80,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-view-list text-info fs-4"></i>
                                 </div>
                             </div>
@@ -110,8 +98,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
                 <h5 class="mb-0 fw-semibold">
-                    <i class="mdi mdi-format-list-bulleted text-primary"></i>
-                    Products List
+                    <i class="mdi mdi-format-list-bulleted text-primary"></i> Products List
                 </h5>
             </div>
 
@@ -122,8 +109,8 @@
                             <tr>
                                 <th class="px-4 py-3 text-muted fw-semibold small">#</th>
                                 <th class="py-3 text-muted fw-semibold small">ICON & PRODUCT NAME</th>
+                                <th class="py-3 text-muted fw-semibold small">DEPARTMENT</th>
                                 <th class="py-3 text-muted fw-semibold small">CATEGORY</th>
-                                <th class="py-3 text-muted fw-semibold small">SUBCATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SKU</th>
                                 <th class="py-3 text-muted fw-semibold small">PRICE</th>
                                 <th class="py-3 text-muted fw-semibold small text-center">STATUS</th>
@@ -144,28 +131,28 @@
                                                 width="50" height="50" alt="{{ $product->product_name }}">
                                             <div>
                                                 <div class="fw-semibold text-dark">{{ $product->product_name }}</div>
-                                                <small class="text-muted">Option:
-                                                    {{ $product->productOption->option_name ?? '-' }}</small>
+                                                <small class="text-muted">Option: {{ $product->productOption->option_name ?? '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="py-3">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                                            {{ $product->category->name ?? '-' }}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10">
+                                            {{ $product->department->name ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="py-3">
-                                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
-                                            {{ $product->subcategory->name ?? '-' }}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            {{ $product->category->name ?? '-' }}
                                         </span>
+                                        <br>
+                                        <small class="text-muted">{{ $product->subcategory->name ?? '-' }}</small>
                                     </td>
                                     <td class="py-3">
                                         <code class="bg-light px-2 py-1 rounded">{{ $product->sku ?? '-' }}</code>
                                     </td>
                                     <td class="py-3">
                                         @if ($product->price)
-                                            <span
-                                                class="fw-semibold text-success">${{ number_format($product->price, 2) }}</span>
+                                            <span class="fw-semibold text-success">${{ number_format($product->price, 2) }}</span>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
@@ -173,12 +160,21 @@
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input status-toggle" type="checkbox" role="switch"
-                                                data-id="{{ $product->id }}"
-                                                {{ $product->is_active ? 'checked' : '' }}>
+                                                data-id="{{ $product->id }}" {{ $product->is_active ? 'checked' : '' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="btn-group btn-group-sm" role="group">
+                                            
+                                            {{-- PRINT LABEL BUTTON (New) --}}
+                                            <a href="{{ route('warehouse.print.pallet', ['product_id' => $product->id, 'qty' => 1]) }}" 
+                                               target="_blank" 
+                                               class="btn btn-outline-dark" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Print Label">
+                                                <i class="mdi mdi-printer"></i>
+                                            </a>
+
                                             <a href="{{ route('warehouse.products.edit', $product) }}"
                                                 class="btn btn-outline-primary" data-bs-toggle="tooltip"
                                                 title="Edit Product">

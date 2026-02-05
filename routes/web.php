@@ -5,8 +5,10 @@ use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Warehouse\DepartmentController;
 use App\Http\Controllers\Warehouse\DiscrepancyController;
 use App\Http\Controllers\Warehouse\FinanceReportController;
+use App\Http\Controllers\Warehouse\LabelController;
 use App\Http\Controllers\Warehouse\MinMaxController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
@@ -188,6 +190,16 @@ Route::middleware('auth')->group(function () {
                 Route::get('/general', 'index')->name('general');
                 Route::post('/general', 'update')->name('update');
             });
+
+        Route::resource('departments', DepartmentController::class)
+            ->names('warehouse.departments')
+            ->except(['show']);
+
+        Route::post('departments/status', [DepartmentController::class, 'changeStatus'])
+            ->name('warehouse.departments.status');
+
+        Route::get('/print-label/pallet', [LabelController::class, 'printPallet'])
+            ->name('warehouse.print.pallet');
     });
 });
 

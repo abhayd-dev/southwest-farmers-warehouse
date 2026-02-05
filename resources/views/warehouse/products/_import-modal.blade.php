@@ -11,11 +11,9 @@
                 {{-- HEADER --}}
                 <div class="modal-header bg-success text-white border-0">
                     <h5 class="modal-title fw-semibold" id="importModalLabel">
-                        <i class="mdi mdi-upload me-2"></i>
-                        Import Products
+                        <i class="mdi mdi-upload me-2"></i> Import Products
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 {{-- BODY --}}
@@ -25,8 +23,22 @@
                         <i class="mdi mdi-information-outline fs-5 me-2"></i>
                         <div class="small">
                             <strong>Important:</strong>
-                            Select Category and Subcategory here. They will be applied to all imported products.
+                            Select Department, Category, and Subcategory. They will be applied to all imported products.
                         </div>
+                    </div>
+
+                    {{-- DEPARTMENT (Added) --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Department <span class="text-danger">*</span>
+                        </label>
+                        <select name="department_id" class="form-select" required>
+                            <option value="">Select Department</option>
+                            @foreach (\App\Models\Department::where('is_active', true)->get() as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="invalid-feedback">Please select a department.</div>
                     </div>
 
                     {{-- CATEGORY --}}
@@ -74,9 +86,7 @@
 
                 {{-- FOOTER --}}
                 <div class="modal-footer bg-light border-0">
-                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
-                        Cancel
-                    </button>
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-success">
                         <i class="mdi mdi-check-circle-outline me-1"></i> Import
                     </button>

@@ -21,4 +21,9 @@ class StockAudit extends Model
     {
         return $this->belongsTo(WareUser::class, 'initiated_by');
     }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }
