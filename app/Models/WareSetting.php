@@ -17,4 +17,10 @@ class WareSetting extends Model
             Cache::forget('ware_settings');
         });
     }
+
+    public static function get_value($key, $default = null)
+    {
+        $setting = self::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
+    }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Warehouse\DepartmentController;
 use App\Http\Controllers\Warehouse\DiscrepancyController;
+use App\Http\Controllers\Warehouse\Reports\ExpiryReportController;
 use App\Http\Controllers\Warehouse\FinanceReportController;
 use App\Http\Controllers\Warehouse\LabelController;
 use App\Http\Controllers\Warehouse\MinMaxController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
 use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\Warehouse\SupportTicketController;
+use App\Http\Controllers\Warehouse\TransferMonitorController;
 use App\Http\Controllers\Warehouse\VendorController;
 use App\Http\Controllers\Warehouse\WareSettingController;
 use App\Http\Controllers\WarehouseController;
@@ -200,6 +202,17 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/print-label/pallet', [LabelController::class, 'printPallet'])
             ->name('warehouse.print.pallet');
+
+        // Expiry Report
+        Route::get('reports/expiry', [ExpiryReportController::class, 'index'])
+            ->name('warehouse.reports.expiry');
+
+        // Inter-Store Transfer Monitor
+        Route::get('/transfers/monitor', [TransferMonitorController::class, 'index'])
+            ->name('warehouse.transfers.monitor');
+
+        Route::get('/transfers/monitor/{id}', [TransferMonitorController::class, 'show'])
+            ->name('warehouse.transfers.show_details');
     });
 });
 

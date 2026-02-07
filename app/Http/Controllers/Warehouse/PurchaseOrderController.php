@@ -144,4 +144,6 @@ class PurchaseOrderController extends Controller
 
         return $pdf->stream('PO-'.$purchaseOrder->po_number.'-Labels.pdf');
     }
+
+    
 }

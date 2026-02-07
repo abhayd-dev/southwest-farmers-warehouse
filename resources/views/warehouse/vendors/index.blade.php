@@ -30,7 +30,8 @@
                                 <th class="px-4 py-3 small text-muted text-uppercase">#</th>
                                 <th class="py-3 small text-muted text-uppercase">Vendor Name</th>
                                 <th class="py-3 small text-muted text-uppercase">Contact Info</th>
-                                <th class="py-3 small text-muted text-uppercase">Lead Time</th>
+                                <th class="py-3 small text-muted text-uppercase text-center">On-Time %</th>
+                                <th class="py-3 small text-muted text-uppercase">Rating</th>
                                 <th class="py-3 small text-muted text-uppercase text-center">Status</th>
                                 <th class="px-4 py-3 small text-muted text-uppercase text-end">Actions</th>
                             </tr>
@@ -65,9 +66,33 @@
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'px-4 text-muted'},
                     {data: 'name', name: 'name', className: 'fw-semibold'},
                     {data: 'contact_info', name: 'contact_person'},
-                    {data: 'lead_time_days', name: 'lead_time_days', render: function(data){ return data + ' Days'; }},
+                    // New On-Time % Column (Corrected Name)
+                    {
+                        data: 'on_time_delivery_rate', 
+                        name: 'on_time_delivery_rate', 
+                        className: 'text-center',
+                        render: function(data) {
+                            let val = data ? data : 0;
+                            let color = val >= 90 ? 'success' : (val >= 70 ? 'warning' : 'danger');
+                            return `<span class="badge bg-${color}">${val}%</span>`;
+                        }
+                    },
+                    // Rating Column
+                    {
+                        data: 'rating', 
+                        name: 'rating',
+                        render: function(data) {
+                            let stars = '';
+                            let rating = Math.round(data ? data : 0);
+                            for(let i=1; i<=5; i++) {
+                                if(i <= rating) stars += '<i class="mdi mdi-star text-warning"></i>';
+                                else stars += '<i class="mdi mdi-star-outline text-muted opacity-25"></i>';
+                            }
+                            return `<div class="d-flex align-items-center">${stars} <span class="ms-1 small text-muted">(${data || 0})</span></div>`;
+                        }
+                    },
                     {data: 'status', name: 'is_active', className: 'text-center'},
-                    {data: 'action', name: 'action', orderable: false, searchable: false, className: 'px-4'}
+                    {data: 'action', name: 'action', orderable: false, searchable: false, className: 'px-4 text-end'}
                 ],
                 order: [[1, 'asc']],
                 language: {
@@ -93,28 +118,17 @@
                     confirmButtonText: `Yes, ${actionText}!`
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // User Confirmed: Send AJAX
                         $.post("{{ route('warehouse.vendors.status') }}", {
                             _token: "{{ csrf_token() }}",
                             id: id,
                             status: newStatus
                         }).done(function(res) {
-                            // Success Toast
-                            Toast.fire({ 
-                                icon: 'success', 
-                                title: res.message 
-                            });
+                            Toast.fire({ icon: 'success', title: res.message });
                         }).fail(function() {
-                            // Error: Revert Checkbox
                             checkbox.prop('checked', !isChecked);
-                            // Error Toast
-                            Toast.fire({ 
-                                icon: 'error', 
-                                title: 'Failed to update status' 
-                            });
+                            Toast.fire({ icon: 'error', title: 'Failed to update status' });
                         });
                     } else {
-                        // User Cancelled: Revert Checkbox
                         checkbox.prop('checked', !isChecked);
                     }
                 });

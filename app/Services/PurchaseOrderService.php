@@ -32,7 +32,7 @@ class PurchaseOrderService
 
             // 2. Create Items
             foreach ($data['items'] as $item) {
-                $lineTotal = ($item['quantity'] * $item['cost']); // Add tax logic if needed
+                $lineTotal = ($item['quantity'] * $item['cost']); 
 
                 PurchaseOrderItem::create([
                     'purchase_order_id' => $po->id,
@@ -61,12 +61,10 @@ class PurchaseOrderService
             foreach ($receivedItems as $itemId => $data) {
                 $qtyToReceive = intval($data['receive_qty']);
 
-                // Skip if quantity is 0
                 if ($qtyToReceive <= 0) continue;
 
                 $poItem = PurchaseOrderItem::findOrFail($itemId);
 
-                // 1. Create Product Batch
                 $batch = ProductBatch::create([
                     'product_id' => $poItem->product_id,
                     'warehouse_id' => 1,
@@ -78,15 +76,13 @@ class PurchaseOrderService
                     'is_active' => true
                 ]);
 
-                // 2. Update Warehouse Stock (Optimized)
-                // Use updateOrCreate instead of firstOrCreate + increment to save 1 query
                 $stock = ProductStock::where('product_id', $poItem->product_id)
                     ->where('warehouse_id', 1)
                     ->first();
 
                 if ($stock) {
                     $stock->quantity += $qtyToReceive;
-                    $stock->save(); // Saves 1 round-trip compared to increment()
+                    $stock->save(); 
                 } else {
                     $stock = ProductStock::create([
                         'product_id' => $poItem->product_id,
@@ -95,7 +91,6 @@ class PurchaseOrderService
                     ]);
                 }
 
-                // 3. Log Transaction
                 StockTransaction::create([
                     'product_id' => $poItem->product_id,
                     'warehouse_id' => 1,
@@ -108,19 +103,21 @@ class PurchaseOrderService
                     'remarks' => "Inv# " . ($invoiceNumber ?? 'N/A')
                 ]);
 
-                // 4. Update Line Item
                 $poItem->received_quantity += $qtyToReceive;
                 $poItem->save();
 
-                // Check if this item is fully received
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
                     $allCompleted = false;
                 }
             }
 
-            // 5. Update PO Status
             $po->status = $allCompleted ? PurchaseOrder::STATUS_COMPLETED : PurchaseOrder::STATUS_PARTIAL;
             $po->save();
+
+            if ($allCompleted && $po->vendor) {
+                $po->vendor->updateRating();
+            }
+          
 
             return $po;
         });

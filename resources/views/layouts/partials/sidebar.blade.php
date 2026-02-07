@@ -228,13 +228,14 @@
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_inventory'))
                     <li class="menu-title mt-2">Stock Control</li>
                     <li>
+                        {{-- Updated class to keep menu open for transfers.* routes --}}
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
-                            class="{{ request()->routeIs('warehouse.stock-control.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.stock-control.*') || request()->routeIs('warehouse.transfers.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:chart-line"></iconify-icon>
                             <span class="sidebar-text">Stock Control</span>
                             <span class="menu-arrow"></span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('warehouse.stock-control.*') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('warehouse.stock-control.*') || request()->routeIs('warehouse.transfers.*') ? 'show' : '' }}"
                             id="sidebarStockControl">
                             <ul class="nav-second-level">
                                 <li>
@@ -242,6 +243,15 @@
                                         <i class="mdi mdi-view-dashboard-outline me-2"></i> Stock Overview
                                     </a>
                                 </li>
+
+                                {{-- [NEW] Transfer Monitor Link --}}
+                                <li>
+                                    <a href="{{ route('warehouse.transfers.monitor') }}"
+                                        class="{{ request()->routeIs('warehouse.transfers.*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-truck-fast-outline me-2"></i> Transfer Monitor
+                                    </a>
+                                </li>
+
                                 <li>
                                     <a href="{{ route('warehouse.stock-control.recall') }}">
                                         <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
@@ -267,11 +277,6 @@
                                         <i class="mdi mdi-clipboard-check-outline me-2"></i> Cycle Counts / Audits
                                     </a>
                                 </li>
-                                {{-- <li>
-                                    <a href="{{ route('warehouse.stock-control.rules') }}">
-                                        <i class="mdi mdi-gavel me-2"></i> Rules
-                                    </a>
-                                </li> --}}
                             </ul>
                         </div>
                     </li>
@@ -300,6 +305,23 @@
                                         <i class="mdi mdi-book-open-page-variant me-2"></i> Transaction Ledger
                                     </a>
                                 </li>
+                            </ul>
+                        </div>
+                        <a href="#sidebarReports" data-bs-toggle="collapse"
+                            class="{{ request()->routeIs('warehouse.reports.*') ? 'active' : '' }}">
+                            <iconify-icon icon="tabler:report"></iconify-icon>
+                            <span class="sidebar-text">Reports</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse {{ request()->routeIs('warehouse.reports.*') ? 'show' : '' }}"
+                            id="sidebarReports">
+                            <ul class="nav-second-level">
+                                <li>
+                                    <a href="{{ route('warehouse.reports.expiry') }}">
+                                        <i class="mdi mdi-timer-alert me-2"></i> Expiry Report
+                                    </a>
+                                </li>
+
                             </ul>
                         </div>
                     </li>

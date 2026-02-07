@@ -28,9 +28,42 @@ class Vendor extends Model
         'lead_time_days' => 'integer',
     ];
 
-    // Scope to get only active vendors
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
+    public function updateRating()
+    {
+        $totalOrders = $this->purchaseOrders()
+            ->where('status', 'completed')
+            ->count();
+
+        if ($totalOrders == 0) {
+            $this->update(['rating' => 0, 'on_time_delivery_rate' => 0]);
+            return;
+        }
+
+        $onTimeOrders = $this->purchaseOrders()
+            ->where('status', 'completed')
+            ->where(function ($q) {
+                $q->whereRaw('DATE(updated_at) <= expected_delivery_date')
+                    ->orWhereNull('expected_delivery_date');
+            })
+            ->count();
+
+        $percentage = ($onTimeOrders / $totalOrders) * 100;
+
+        $stars = round(($percentage / 20), 1);
+
+        $this->update([
+            'rating' => $stars,
+            'on_time_delivery_rate' => round($percentage, 1)
+        ]);
     }
 }

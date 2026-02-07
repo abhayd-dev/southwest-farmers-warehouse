@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('po:check-delays')->hourly();
+
+Schedule::command('warehouse:automation')->dailyAt('09:00');
