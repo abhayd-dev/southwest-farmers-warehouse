@@ -11,11 +11,15 @@
                             <i class="mdi mdi-domain text-primary"></i> Vendor Management
                         </h4>
                     </div>
+                    
+                    {{-- ADD BUTTON (Protected) --}}
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_vendors'))
                     <div class="flex-shrink-0">
                         <a href="{{ route('warehouse.vendors.create') }}" class="btn btn-success">
                             <i class="mdi mdi-plus-circle me-1"></i> Add New Vendor
                         </a>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -66,7 +70,7 @@
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'px-4 text-muted'},
                     {data: 'name', name: 'name', className: 'fw-semibold'},
                     {data: 'contact_info', name: 'contact_person'},
-                    // New On-Time % Column (Corrected Name)
+                    // On-Time %
                     {
                         data: 'on_time_delivery_rate', 
                         name: 'on_time_delivery_rate', 
@@ -77,7 +81,7 @@
                             return `<span class="badge bg-${color}">${val}%</span>`;
                         }
                     },
-                    // Rating Column
+                    // Rating
                     {
                         data: 'rating', 
                         name: 'rating',
@@ -100,8 +104,9 @@
                 }
             });
 
-            // --- SweetAlert Confirmation Logic ---
+            // --- SweetAlert Confirmation Logic (Protected via backend too) ---
             $(document).on('change', '.status-toggle', function(e) {
+                // ... (existing logic) ...
                 let checkbox = $(this);
                 let id = checkbox.data('id');
                 let isChecked = checkbox.is(':checked');
@@ -126,7 +131,7 @@
                             Toast.fire({ icon: 'success', title: res.message });
                         }).fail(function() {
                             checkbox.prop('checked', !isChecked);
-                            Toast.fire({ icon: 'error', title: 'Failed to update status' });
+                            Toast.fire({ icon: 'error', title: 'Failed/Unauthorized' });
                         });
                     } else {
                         checkbox.prop('checked', !isChecked);

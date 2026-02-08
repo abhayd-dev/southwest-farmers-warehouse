@@ -27,12 +27,15 @@
                                     @endif
                                 </div>
                             </form>
-                            {{-- ACTIONS --}}
-                            <a href="{{ route('warehouse.categories.export') }}" class="btn btn-outline-primary"><i class="mdi mdi-download"></i> Export</a>
-                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importCategoryModal">
-                                <i class="mdi mdi-upload"></i> Import
-                            </button>
-                            <a href="{{ route('warehouse.categories.create') }}" class="btn btn-success"><i class="mdi mdi-plus-circle"></i> Add Category</a>
+
+                            {{-- ACTIONS (Protected) --}}
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                <a href="{{ route('warehouse.categories.export') }}" class="btn btn-outline-primary"><i class="mdi mdi-download"></i> Export</a>
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importCategoryModal">
+                                    <i class="mdi mdi-upload"></i> Import
+                                </button>
+                                <a href="{{ route('warehouse.categories.create') }}" class="btn btn-success"><i class="mdi mdi-plus-circle"></i> Add Category</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -61,7 +64,6 @@
                                     <td class="px-4 py-3 text-muted">{{ $loop->iteration + ($categories->currentPage()-1)*$categories->perPage() }}</td>
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
-                                            {{-- ICON DISPLAY --}}
                                             <img src="{{ $category->icon ?  Storage::url($category->icon) : 'https://placehold.co/40?text=IMG' }}" 
                                                  class="rounded bg-light border object-fit-cover" 
                                                  width="40" height="40">
@@ -73,20 +75,28 @@
                                     <td class="py-3 text-center"><span class="badge bg-info bg-opacity-10 text-info">{{ $category->subcategories_count }}</span></td>
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input status-toggle" type="checkbox" data-id="{{ $category->id }}" {{ $category->is_active ? 'checked' : '' }}>
+                                            <input class="form-check-input status-toggle" type="checkbox" 
+                                                data-id="{{ $category->id }}" 
+                                                {{ $category->is_active ? 'checked' : '' }}
+                                                {{-- Disable if no permission --}}
+                                                {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories')) ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
+                                        {{-- View is always visible --}}
                                         <button class="btn btn-sm btn-outline-info me-1 view-btn" data-data="{{ json_encode($category) }}" title="View"><i class="mdi mdi-eye"></i></button>
-                                        <a href="{{ route('warehouse.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                        <form method="POST" action="{{ route('warehouse.categories.destroy', $category) }}" class="d-inline delete-form">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger delete-form" title="Delete"><i class="mdi mdi-delete"></i></button>
-                                        </form>
+                                        
+                                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                            <a href="{{ route('warehouse.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                            <form method="POST" action="{{ route('warehouse.categories.destroy', $category) }}" class="d-inline delete-form">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger delete-form" title="Delete"><i class="mdi mdi-delete"></i></button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-center py-5 text-muted">No categories found.</td></tr>
+                                <tr><td colspan="7" class="text-center py-5 text-muted">No categories found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -143,8 +153,8 @@
                 });
             });
 
-            // STATUS TOGGLE
-            document.querySelectorAll('.status-toggle').forEach(checkbox => {
+            // STATUS TOGGLE (Only attach event if enabled)
+            document.querySelectorAll('.status-toggle:not(:disabled)').forEach(checkbox => {
                 checkbox.addEventListener('change', function(e) {
                     e.preventDefault();
                     const id = this.dataset.id;

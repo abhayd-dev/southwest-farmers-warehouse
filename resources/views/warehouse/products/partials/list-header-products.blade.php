@@ -28,24 +28,30 @@
     {{-- ACTION BUTTONS --}}
     <div class="d-flex align-items-center gap-2 ms-auto">
         {{-- EXPORT --}}
+        {{-- Export usually allowed for Viewers too, but let's keep it restricted to managers or creators --}}
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products') || auth()->user()->hasPermission('export_reports'))
         <a href="{{ route('warehouse.products.export') }}"
             class="btn btn-outline-primary d-flex align-items-center gap-1">
             <i class="mdi mdi-download"></i>
             <span class="d-none d-lg-inline">Export</span>
         </a>
+        @endif
 
         {{-- IMPORT BUTTON --}}
-        {{-- Fixed: Using standard Bootstrap 5 Data Attributes. No JS required to open. --}}
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
         <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1"
             data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="mdi mdi-upload"></i>
             <span class="d-none d-lg-inline">Import</span>
         </button>
+        @endif
 
         {{-- ADD --}}
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
         <a href="{{ route('warehouse.products.create') }}" class="btn btn-success d-flex align-items-center gap-1">
             <i class="mdi mdi-plus-circle"></i>
             <span class="d-none d-lg-inline">Add Product</span>
         </a>
+        @endif
     </div>
 </div>

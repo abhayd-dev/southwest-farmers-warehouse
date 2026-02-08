@@ -7,9 +7,12 @@
                         <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-cart-arrow-down text-primary"></i> Purchase Orders</h4>
                         <small class="text-muted">Manage procurement and receiving</small>
                     </div>
+                    
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_po'))
                     <a href="{{ route('warehouse.purchase-orders.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Create PO
                     </a>
+                    @endif
                 </div>
             </div>
         </div>

@@ -11,9 +11,13 @@
             </h4>
             <small class="text-muted">Manage stock recalls, expiry, and damage reports</small>
         </div>
+        
+        {{-- INITIATE BUTTON (Protected) --}}
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_recalls'))
         <a href="{{ route('warehouse.stock-control.recall.create') }}" class="btn btn-primary">
             <i class="mdi mdi-plus-circle me-1"></i> Initiate Recall (My Request)
         </a>
+        @endif
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -41,23 +45,18 @@
 
         <div class="card-body">
             <div class="tab-content">
-
                 <div class="tab-pane fade show active" id="myRequests">
                     @include('warehouse.stock-control.recall.tabs.my-requests')
                 </div>
-
                 <div class="tab-pane fade" id="storeRequests">
                     @include('warehouse.stock-control.recall.tabs.store-requests')
                 </div>
-
                 <div class="tab-pane fade" id="expiryDamage">
                     @include('warehouse.stock-control.recall.tabs.expiry-damage')
                 </div>
-
             </div>
         </div>
     </div>
-
 </div>
 
 </x-app-layout>

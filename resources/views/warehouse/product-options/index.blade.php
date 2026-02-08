@@ -26,14 +26,14 @@
         </div>
 
         {{-- STATS CARDS --}}
+        {{-- ... (Stats HTML remains unchanged) ... --}}
         <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
+             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-package-variant text-primary fs-4"></i>
                                 </div>
                             </div>
@@ -45,14 +45,13 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
                                 </div>
                             </div>
@@ -66,13 +65,12 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-warning fs-4"></i>
                                 </div>
                             </div>
@@ -89,10 +87,9 @@
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-view-list text-info fs-4"></i>
                                 </div>
                             </div>
@@ -165,11 +162,13 @@
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input status-toggle" type="checkbox" role="switch"
                                                 data-id="{{ $option->id }}"
-                                                {{ $option->is_active ? 'checked' : '' }}>
+                                                {{ $option->is_active ? 'checked' : '' }}
+                                                {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options')) ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="btn-group btn-group-sm" role="group">
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
                                             <a href="{{ route('warehouse.product-options.edit', $option) }}"
                                                 class="btn btn-outline-primary" data-bs-toggle="tooltip"
                                                 title="Edit Option">
@@ -180,11 +179,12 @@
                                                 action="{{ route('warehouse.product-options.destroy', $option) }}"
                                                 class="d-inline delete-form">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger" data-bs-toggle="tooltip"
-                                                    title="Delete Option">
+                                                <button class="btn btn-outline-danger delete-form"
+                                                    data-bs-toggle="tooltip" title="Delete Option">
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -195,10 +195,13 @@
                                             <i class="mdi mdi-package-variant-closed text-muted"
                                                 style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No product options found.</p>
+                                            
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
                                             <a href="{{ route('warehouse.product-options.create') }}"
                                                 class="btn btn-sm btn-primary mt-3">
                                                 <i class="mdi mdi-plus"></i> Add First Option
                                             </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -225,7 +228,10 @@
 
     </div>
 
-    @includeIf('warehouse.product-options._import-modal')
+    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+        @includeIf('warehouse.product-options._import-modal')
+    @endif
+    
     @include('warehouse.product-options._scripts')
 
 </x-app-layout>

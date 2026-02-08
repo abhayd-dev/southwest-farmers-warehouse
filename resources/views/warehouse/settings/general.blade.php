@@ -16,7 +16,7 @@
                                 Settings
                             </a>
                         </li>
-                        <li class="breadcrumb-item active" aria-current="page">General Configuration</li> 
+                        <li class="breadcrumb-item active" aria-current="page">General Configuration</li>
                     </ol>
                 </nav>
             </div>
@@ -24,7 +24,8 @@
 
         <div class="row">
             <div class="col-12">
-                <form action="{{ route('warehouse.settings.update') }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <form action="{{ route('warehouse.settings.update') }}" method="POST" enctype="multipart/form-data"
+                    class="needs-validation" novalidate>
                     @csrf
 
                     {{-- 1. BRANDING SECTION --}}
@@ -37,7 +38,8 @@
                         </div>
 
                         <div class="card-body p-4">
-                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Logos & Identity</h6>
+                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Logos & Identity
+                            </h6>
                             <div class="row g-4 mb-3">
                                 {{-- Main Logo --}}
                                 <div class="col-md-4">
@@ -46,7 +48,8 @@
                                         <img src="{{ isset($settings['main_logo']) ? Storage::url($settings['main_logo']) : 'https://placehold.co/150x50?text=Logo' }}"
                                             id="preview_main_logo" class="img-fluid mb-2" style="max-height: 50px;">
                                         <input type="file" name="main_logo" class="form-control form-control-sm mt-2"
-                                            accept="image/png, image/jpeg" onchange="previewImage(this, 'preview_main_logo')">
+                                            accept="image/png, image/jpeg"
+                                            onchange="previewImage(this, 'preview_main_logo')">
                                     </div>
                                 </div>
 
@@ -56,8 +59,9 @@
                                     <div class="border p-3 rounded text-center bg-light">
                                         <img src="{{ isset($settings['login_logo']) ? Storage::url($settings['login_logo']) : 'https://placehold.co/150x50?text=Login+Logo' }}"
                                             id="preview_login_logo" class="img-fluid mb-2" style="max-height: 60px;">
-                                        <input type="file" name="login_logo" class="form-control form-control-sm mt-2" 
-                                            accept="image/png, image/jpeg" onchange="previewImage(this, 'preview_login_logo')">
+                                        <input type="file" name="login_logo"
+                                            class="form-control form-control-sm mt-2" accept="image/png, image/jpeg"
+                                            onchange="previewImage(this, 'preview_login_logo')">
                                     </div>
                                 </div>
 
@@ -65,17 +69,20 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small text-muted">Favicon</label>
                                     <div class="border p-3 rounded text-center bg-light">
-                                        <img src="{{ isset($settings['favicon']) ? Storage::url($settings['favicon']) : 'https://placehold.co/32x32?text=Icon' }}" 
-                                            id="preview_favicon" class="img-fluid mb-2" style="width: 32px; height: 32px;">
+                                        <img src="{{ isset($settings['favicon']) ? Storage::url($settings['favicon']) : 'https://placehold.co/32x32?text=Icon' }}"
+                                            id="preview_favicon" class="img-fluid mb-2"
+                                            style="width: 32px; height: 32px;">
                                         <input type="file" name="favicon" class="form-control form-control-sm mt-2"
-                                            accept="image/x-icon, image/png" onchange="previewImage(this, 'preview_favicon')">
+                                            accept="image/x-icon, image/png"
+                                            onchange="previewImage(this, 'preview_favicon')">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">App Name <span class="text-danger">*</span></label>
+                                    <label class="form-label fw-bold">App Name <span
+                                            class="text-danger">*</span></label>
                                     <input type="text" name="app_name" class="form-control"
                                         value="{{ $settings['app_name'] ?? '' }}" required>
                                 </div>
@@ -101,8 +108,9 @@
                             <h5 class="mb-0 fw-bold text-dark">Automation & Alerts</h5>
                         </div>
                         <div class="card-body p-4">
-                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Inventory Thresholds</h6>
-                            
+                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Inventory
+                                Thresholds</h6>
+
                             <div class="row g-4 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Low Stock Threshold</label>
@@ -111,45 +119,59 @@
                                             value="{{ $settings['low_stock_threshold'] ?? 10 }}" min="1">
                                         <span class="input-group-text bg-light text-muted">Units</span>
                                     </div>
-                                    <div class="form-text">System sends alerts when combined stock (Warehouse + Stores) falls below this number.</div>
+                                    <div class="form-text">System sends alerts when combined stock (Warehouse + Stores)
+                                        falls below this number.</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Alert Recipients</label>
                                     <input type="text" name="alert_emails" class="form-control"
-                                        value="{{ $settings['alert_emails'] ?? '' }}" placeholder="admin@example.com, manager@example.com">
+                                        value="{{ $settings['alert_emails'] ?? '' }}"
+                                        placeholder="admin@example.com, manager@example.com">
                                     <div class="form-text">Separate multiple email addresses with commas.</div>
                                 </div>
                             </div>
 
-                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Email Triggers</h6>
+                            <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">Email Triggers
+                            </h6>
                             <div class="d-flex gap-5">
                                 {{-- Low Stock Toggle --}}
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="enableLowStock" 
+                                    <input class="form-check-input" type="checkbox" id="enableLowStock"
                                         name="enable_low_stock_email" value="1"
                                         {{ isset($settings['enable_low_stock_email']) && $settings['enable_low_stock_email'] == 1 ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="enableLowStock">Enable Low Stock Emails</label>
+                                    <label class="form-check-label fw-bold" for="enableLowStock">Enable Low Stock
+                                        Emails</label>
                                     <div class="small text-muted">Send daily report at 9:00 AM</div>
                                 </div>
 
                                 {{-- Late PO Toggle --}}
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="enableLatePO" 
+                                    <input class="form-check-input" type="checkbox" id="enableLatePO"
                                         name="enable_late_po_email" value="1"
                                         {{ isset($settings['enable_late_po_email']) && $settings['enable_late_po_email'] == 1 ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="enableLatePO">Enable Late Delivery Alerts</label>
-                                    <div class="small text-muted">Notify when Vendor misses Expected Delivery Date</div>
+                                    <label class="form-check-label fw-bold" for="enableLatePO">Enable Late Delivery
+                                        Alerts</label>
+                                    <div class="small text-muted">Notify when Vendor misses Expected Delivery Date
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="card-footer bg-white py-3 border-top">
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                                    <i class="mdi mdi-content-save-outline me-1"></i> Save Changes
-                                </button>
-                            </div>
+                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_settings'))
+                                <div class="card border-0 shadow-sm mt-4">
+                                    <div class="card-body text-end">
+                                        <button type="submit" class="btn btn-success px-5 btn-lg">
+                                            <i class="mdi mdi-content-save me-1"></i> Save Changes
+                                        </button>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="alert alert-warning mt-4">
+                                    <i class="mdi mdi-lock"></i> You do not have permission to modify settings.
+                                </div>
+                                @endif
                         </div>
                     </div>
 

@@ -13,14 +13,19 @@
                         </h4>
                     </div>
                     <div class="flex-shrink-0">
-                        @include('warehouse.products.partials.list-header-products')
+                         {{-- Only Show Header Actions (Import/Export/Create) if user has permission --}}
+                         @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products') || auth()->user()->hasPermission('manage_products'))
+                            @include('warehouse.products.partials.list-header-products')
+                         @endif
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- STATS CARDS --}}
+        {{-- Visible to anyone with 'view_products' --}}
         <div class="row g-3 mb-4">
+            {{-- ... (Stats HTML remains same) ... --}}
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -38,11 +43,11 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
                                 <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
@@ -56,11 +61,11 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
                                 <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-warning fs-4"></i>
@@ -75,10 +80,10 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
+                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
                                 <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-view-list text-info fs-4"></i>
@@ -160,13 +165,15 @@
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input status-toggle" type="checkbox" role="switch"
-                                                data-id="{{ $product->id }}" {{ $product->is_active ? 'checked' : '' }}>
+                                                data-id="{{ $product->id }}" {{ $product->is_active ? 'checked' : '' }}
+                                                {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products')) ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                         <div class="btn-group btn-group-sm" role="group">
                                             
-                                            {{-- PRINT LABEL BUTTON (New) --}}
+                                            {{-- Print Label: Permission 'print_labels' OR 'view_products' --}}
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('print_labels') || auth()->user()->hasPermission('view_products'))
                                             <a href="{{ route('warehouse.print.pallet', ['product_id' => $product->id, 'qty' => 1]) }}" 
                                                target="_blank" 
                                                class="btn btn-outline-dark" 
@@ -174,13 +181,19 @@
                                                title="Print Label">
                                                 <i class="mdi mdi-printer"></i>
                                             </a>
+                                            @endif
 
+                                            {{-- Edit: 'edit_products' --}}
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('edit_products'))
                                             <a href="{{ route('warehouse.products.edit', $product) }}"
                                                 class="btn btn-outline-primary" data-bs-toggle="tooltip"
                                                 title="Edit Product">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
+                                            @endif
 
+                                            {{-- Delete: 'delete_products' --}}
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products'))
                                             <form method="POST"
                                                 action="{{ route('warehouse.products.destroy', $product) }}"
                                                 class="d-inline delete-form">
@@ -190,6 +203,7 @@
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -199,10 +213,12 @@
                                         <div class="py-5">
                                             <i class="mdi mdi-cube-outline text-muted" style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No products found.</p>
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
                                             <a href="{{ route('warehouse.products.create') }}"
                                                 class="btn btn-sm btn-primary mt-3">
                                                 <i class="mdi mdi-plus"></i> Add First Product
                                             </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -230,7 +246,10 @@
     </div>
 
     {{-- IMPORT MODAL --}}
-    @include('warehouse.products._import-modal')
+    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+        @include('warehouse.products._import-modal')
+    @endif
+    
     @include('warehouse.products._scripts')
 
 </x-app-layout>

@@ -10,11 +10,14 @@
             ]
         ])
 
+        {{-- START BUTTON (Protected) --}}
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits'))
         <div class="d-flex justify-content-end mb-3">
             <a href="{{ route('warehouse.stock-control.audit.create') }}" class="btn btn-primary shadow-sm">
                 <i class="mdi mdi-plus-circle me-1"></i> Start New Audit
             </a>
         </div>
+        @endif
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
@@ -22,7 +25,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th>Audit #</th>
-                            <th>Scope / Department</th> {{-- Renamed Column --}}
+                            <th>Scope / Department</th> 
                             <th>Status</th>
                             <th>Initiated By</th>
                             <th>Date</th>
@@ -44,7 +47,7 @@
                 ajax: "{{ route('warehouse.stock-control.audit.index') }}",
                 columns: [
                     { data: 'audit_no', name: 'audit_number', className: 'fw-bold text-primary' },
-                    { data: 'type_label', name: 'type' }, // Uses the HTML column from Controller
+                    { data: 'type_label', name: 'type' }, 
                     { data: 'status_badge', name: 'status' },
                     { data: 'initiator.name', name: 'initiator.name', defaultContent: 'System' },
                     { data: 'date', name: 'created_at' },

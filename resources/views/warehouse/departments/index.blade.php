@@ -11,9 +11,12 @@
                     <div class="card-header bg-white py-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 text-dark fw-bold">Department List</h5>
+                            
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
                             <a href="{{ route('warehouse.departments.create') }}" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-plus me-1"></i>Add New
                             </a>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body">
@@ -41,10 +44,12 @@
                                         <td>
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input status-toggle" type="checkbox" 
-                                                    data-id="{{ $dept->id }}" {{ $dept->is_active ? 'checked' : '' }}>
+                                                    data-id="{{ $dept->id }}" {{ $dept->is_active ? 'checked' : '' }}
+                                                    {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories')) ? '' : 'disabled' }}>
                                             </div>
                                         </td>
                                         <td class="text-end">
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
                                             <a href="{{ route('warehouse.departments.edit', $dept->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
@@ -54,6 +59,7 @@
                                                     <i class="mdi mdi-delete"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -68,11 +74,11 @@
             </div>
         </div>
     </div>
-
+    {{-- Scripts block remains same, logic for status toggle is inside JS which will respect disabled attribute --}}
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const toggles = document.querySelectorAll('.status-toggle');
+            const toggles = document.querySelectorAll('.status-toggle:not(:disabled)'); // Only active for enabled
             
             toggles.forEach(toggle => {
                 toggle.addEventListener('change', function() {

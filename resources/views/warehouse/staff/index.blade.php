@@ -1,10 +1,8 @@
 <x-app-layout title="Warehouse Staff">
     <div class="container-fluid">
 
-        {{-- PAGE HEADER & SEARCH BAR --}}
+        {{-- PAGE HEADER --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
-            
-            {{-- Title --}}
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-account-group text-primary"></i> Staff Management
@@ -12,15 +10,13 @@
                 <small class="text-muted">Manage warehouse employees and roles</small>
             </div>
 
-            {{-- Actions: Search + Add --}}
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                
-                {{-- Search Form --}}
+                {{-- Search Form (Visible to anyone with view_staff) --}}
                 <form method="GET" action="{{ route('warehouse.staff.index') }}" class="d-flex">
                     <div class="input-group">
                         <input type="text" name="search" value="{{ request('search') }}" 
                                class="form-control" 
-                               placeholder="Search Name, Email, Code..." 
+                               placeholder="Search..." 
                                style="max-width: 200px;">
                         
                         <select name="role_id" class="form-select" style="max-width: 150px;">
@@ -32,29 +28,23 @@
                             @endforeach
                         </select>
                         
-                        <button class="btn btn-primary" type="submit">
-                            <i class="mdi mdi-magnify"></i>
-                        </button>
-                        
-                        @if(request('search') || request('role_id'))
-                            <a href="{{ route('warehouse.staff.index') }}" class="btn btn-outline-secondary" title="Clear">
-                                <i class="mdi mdi-close"></i>
-                            </a>
-                        @endif
+                        <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
                     </div>
                 </form>
 
+                {{-- ADD BUTTON (Protected) --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
                 <a href="{{ route('warehouse.staff.create') }}" class="btn btn-success text-nowrap">
                     <i class="mdi mdi-account-plus me-1"></i> Add Staff
                 </a>
+                @endif
             </div>
         </div>
 
         {{-- STAFF TABLE --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-light py-3">
-                <h6 class="mb-0 fw-bold text-muted"><i class="mdi mdi-badge-account-horizontal"></i> Active Employees
-                </h6>
+                <h6 class="mb-0 fw-bold text-muted"><i class="mdi mdi-badge-account-horizontal"></i> Active Employees</h6>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -72,9 +62,7 @@
                             <tr>
                                 <td class="px-4">
                                     <div class="d-flex align-items-center gap-3">
-
-                                        <img src="{{ $user->avatar_url }}" class="rounded-circle border" width="45"
-                                            height="45" style="object-fit: cover;" alt="User Avatar">
+                                        <img src="{{ $user->avatar_url }}" class="rounded-circle border" width="45" height="45" style="object-fit: cover;">
                                         <div>
                                             <div class="fw-bold text-dark">{{ $user->name }}</div>
                                             <div class="small text-muted">ID: {{ $user->emp_code ?? 'N/A' }}</div>
@@ -82,10 +70,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="small"><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}
-                                    </div>
-                                    <div class="small text-muted"><i class="mdi mdi-phone-outline me-1"></i>
-                                        {{ $user->phone ?? '-' }}</div>
+                                    <div class="small"><i class="mdi mdi-email-outline me-1"></i> {{ $user->email }}</div>
+                                    <div class="small text-muted"><i class="mdi mdi-phone-outline me-1"></i> {{ $user->phone ?? '-' }}</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-primary bg-opacity-10 text-primary mb-1">
@@ -94,113 +80,74 @@
                                     <div class="small text-muted">{{ $user->designation ?? 'Staff' }}</div>
                                 </td>
                                 <td class="text-center">
-                                    {{-- STATUS TOGGLE SWITCH --}}
+                                    {{-- Status Toggle (Protected) --}}
                                     <div class="form-check form-switch d-inline-block">
                                         <input class="form-check-input status-toggle" 
-                                               type="checkbox" 
-                                               role="switch"
-                                               data-id="{{ $user->id }}"
-                                               {{ $user->is_active ? 'checked' : '' }}
-                                               {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                                            type="checkbox" 
+                                            role="switch"
+                                            data-id="{{ $user->id }}"
+                                            {{ $user->is_active ? 'checked' : '' }}
+                                            {{-- Disable if self or no permission --}}
+                                            {{ ($user->id === auth()->id() || !(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))) ? 'disabled' : '' }}>
                                     </div>
                                 </td>
                                 <td class="text-end px-4">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('warehouse.staff.edit', $user->id) }}"
-                                            class="btn btn-sm btn-outline-warning" title="Edit">
-                                            <i class="mdi mdi-pencil"></i>
-                                        </a>
-                                        @if ($user->id !== auth()->id())
-                                            <form action="{{ route('warehouse.staff.destroy', $user->id) }}"
-                                                method="POST" class="d-inline delete-form" title="Delete Staff">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i
-                                                        class="mdi mdi-delete"></i></button>
-                                            </form>
+                                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
+                                            <a href="{{ route('warehouse.staff.edit', $user->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </a>
+                                            
+                                            @if ($user->id !== auth()->id())
+                                                <form action="{{ route('warehouse.staff.destroy', $user->id) }}" method="POST" class="d-inline delete-form">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
+                                                </form>
+                                            @endif
+                                        @else
+                                            <span class="text-muted small">Read Only</span>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-4">No staff members found matching your search.</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center py-4">No staff members found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-white border-top">
-                {{ $staff->withQueryString()->links() }}
-            </div>
+            <div class="card-footer bg-white border-top">{{ $staff->withQueryString()->links() }}</div>
         </div>
     </div>
-
-    {{-- SCRIPTS FOR STATUS TOGGLE --}}
+    
+    {{-- Scripts remain same, just the toggle logic is secured by backend too --}}
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.status-toggle').forEach(function(toggle) {
+            // Only attach listener to enabled inputs
+            document.querySelectorAll('.status-toggle:not(:disabled)').forEach(function(toggle) {
                 toggle.addEventListener('change', function(e) {
                     e.preventDefault();
-                    
                     const id = this.dataset.id;
                     const newStatus = this.checked ? 1 : 0;
-                    const originalState = !this.checked; // To revert if failed
+                    const originalState = !this.checked;
 
-                    // Confirmation Dialog
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: "Do you want to change this user's status?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, change it!'
+                        title: 'Are you sure?', text: "Change user status?", icon: 'warning',
+                        showCancelButton: true, confirmButtonText: 'Yes'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // API Request
                             fetch("{{ route('warehouse.staff.status') }}", {
                                 method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    id: id,
-                                    status: newStatus
-                                })
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    if(response.status === 403) throw new Error('Action not allowed');
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                Swal.mixin({
-                                    toast: true,
-                                    position: 'top-end',
-                                    showConfirmButton: false,
-                                    timer: 3000
-                                }).fire({
-                                    icon: 'success',
-                                    title: data.message
-                                });
-                            })
-                            .catch(error => {
-                                // Revert toggle on error
+                                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: id, status: newStatus })
+                            }).then(res => res.json()).then(data => {
+                                Swal.fire({ icon: 'success', title: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                            }).catch(err => {
                                 toggle.checked = originalState;
-                                Swal.fire(
-                                    'Error!',
-                                    error.message || 'Failed to update status.',
-                                    'error'
-                                );
+                                Swal.fire('Error', 'Failed to update status', 'error');
                             });
-                        } else {
-                            // Revert toggle if cancelled
-                            toggle.checked = originalState;
-                        }
+                        } else { toggle.checked = originalState; }
                     });
                 });
             });

@@ -10,26 +10,33 @@
             </div>
             <div class="d-flex gap-2">
 
-                {{-- NEW: Print Labels Button (Visible if items received) --}}
+                {{-- PRINT LABELS (Visible if items received) --}}
                 @if ($purchaseOrder->items->sum('received_quantity') > 0)
+                    {{-- Check if user can view POs (Basic check) --}}
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
                     <a href="{{ route('warehouse.purchase-orders.labels', $purchaseOrder->id) }}" class="btn btn-dark"
                         target="_blank">
                         <i class="mdi mdi-barcode-scan me-1"></i> Print Labels
                     </a>
+                    @endif
                 @endif
 
+                {{-- MARK AS ORDERED (Draft -> Ordered) --}}
                 @if ($purchaseOrder->status === 'draft')
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
                     <form action="{{ route('warehouse.purchase-orders.mark-ordered', $purchaseOrder->id) }}"
                         method="POST">
                         @csrf
                         <button class="btn btn-info text-white"><i class="mdi mdi-send"></i> Mark as Ordered</button>
                     </form>
+                    @endif
                 @endif
+
                 <a href="{{ route('warehouse.purchase-orders.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>
 
-        {{-- INFO CARDS --}}
+        {{-- INFO CARDS (Read Only) --}}
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
@@ -59,11 +66,13 @@
             </div>
         </div>
 
-        {{-- RECEIVE SECTION --}}
+        {{-- RECEIVE SECTION (Protected) --}}
         @if (
             $purchaseOrder->status !== 'draft' &&
                 $purchaseOrder->status !== 'completed' &&
                 $purchaseOrder->status !== 'cancelled')
+            
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('receive_po'))
             <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
                 <div class="card-body">
                     <h5 class="fw-bold text-primary mb-3"><i class="mdi mdi-truck-delivery"></i> Receive Items</h5>
@@ -128,6 +137,11 @@
                     </form>
                 </div>
             </div>
+            @else
+            <div class="alert alert-info">
+                <i class="mdi mdi-lock"></i> Only Inventory Managers can receive stock.
+            </div>
+            @endif
         @endif
 
         {{-- ITEMS LIST (READ ONLY) --}}

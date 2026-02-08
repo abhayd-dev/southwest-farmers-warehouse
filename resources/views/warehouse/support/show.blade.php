@@ -134,8 +134,9 @@
                         @endforeach
                     </div>
 
-                    {{-- Reply Form --}}
+                    {{-- Reply Form (Protected) --}}
                     @if ($ticket->status !== 'closed')
+                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
                         <div class="card-footer bg-white p-3">
                             <form action="{{ route('warehouse.support.reply', $ticket->id) }}" method="POST"
                                 enctype="multipart/form-data">
@@ -173,6 +174,11 @@
                                 </div>
                             </form>
                         </div>
+                        @else
+                        <div class="card-footer bg-light text-center py-3">
+                            <span class="text-muted"><i class="mdi mdi-lock me-1"></i> You do not have permission to reply.</span>
+                        </div>
+                        @endif
                     @else
                         <div class="card-footer bg-light text-center py-3">
                             <span class="text-muted"><i class="mdi mdi-lock me-1"></i> This ticket is closed. No further
@@ -185,7 +191,8 @@
             {{-- Right Column: Actions --}}
             <div class="col-lg-4">
 
-                {{-- Action Card --}}
+                {{-- Action Card (Protected) --}}
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h6 class="fw-bold mb-0">Ticket Actions</h6>
@@ -222,13 +229,14 @@
                                     @foreach ($staff as $u)
                                         <option value="{{ $u->id }}"
                                             {{ $ticket->assigned_to_id == $u->id ? 'selected' : '' }}>{{ $u->name }}
-                                        </option>
+                                        option>
                                     @endforeach
                                 </select>
                             </div>
                         </form>
                     </div>
                 </div>
+                @endif
 
                 {{-- SLA Info Card --}}
                 <div class="card border-0 shadow-sm">
@@ -274,41 +282,42 @@
                 const selects = document.querySelectorAll('.action-select');
                 const form = document.getElementById('ticketUpdateForm');
 
-                selects.forEach(select => {
-                    // Store initial value
-                    select.dataset.original = select.value;
+                if(selects.length > 0) {
+                    selects.forEach(select => {
+                        // Store initial value
+                        select.dataset.original = select.value;
 
-                    select.addEventListener('change', function() {
-                        const type = this.dataset.type;
-                        const newValueText = this.options[this.selectedIndex].text;
-                        const originalValue = this.dataset.original;
-                        const element = this;
+                        select.addEventListener('change', function() {
+                            const type = this.dataset.type;
+                            const newValueText = this.options[this.selectedIndex].text;
+                            const originalValue = this.dataset.original;
+                            const element = this;
 
-                        let title = type === 'status' ? 'Update Status?' : 'Assign Staff?';
-                        let text = type === 'status' ?
-                            `Are you sure you want to change the status to "${newValueText}"?` :
-                            `Are you sure you want to assign this ticket to "${newValueText}"?`;
+                            let title = type === 'status' ? 'Update Status?' : 'Assign Staff?';
+                            let text = type === 'status' ?
+                                `Are you sure you want to change the status to "${newValueText}"?` :
+                                `Are you sure you want to assign this ticket to "${newValueText}"?`;
 
-                        Swal.fire({
-                            title: title,
-                            text: text,
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Yes, update it!'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // If user confirmed, submit the form
-                                form.submit();
-                            } else {
-                                // If cancelled, revert the select to original value
-                                element.value = originalValue;
-                            }
+                            Swal.fire({
+                                title: title,
+                                text: text,
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Yes, update it!'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // If user confirmed, submit the form
+                                    form.submit();
+                                } else {
+                                    // If cancelled, revert the select to original value
+                                    element.value = originalValue;
+                                }
+                            });
                         });
                     });
-                });
-
+                }
             });
         </script>
     @endpush

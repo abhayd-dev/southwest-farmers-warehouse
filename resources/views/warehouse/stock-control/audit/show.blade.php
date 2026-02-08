@@ -18,18 +18,20 @@
                 <a href="{{ route('warehouse.stock-control.audit.index') }}" class="btn btn-light border shadow-sm">Back</a>
                 
                 @if($audit->status != 'completed')
-                    {{-- Save Draft Button --}}
-                    <button type="submit" form="auditForm" class="btn btn-primary shadow-sm">
-                        <i class="mdi mdi-content-save me-1"></i> Save Progress
-                    </button>
-
-                    {{-- Finalize Button --}}
-                    <form action="{{ route('warehouse.stock-control.audit.finalize', $audit->id) }}" method="POST" class="d-inline" id="finalizeForm">
-                        @csrf
-                        <button type="button" onclick="confirmFinalize()" class="btn btn-success shadow-sm text-white">
-                            <i class="mdi mdi-check-circle me-1"></i> Finalize & Adjust Stock
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits'))
+                        {{-- Save Draft Button --}}
+                        <button type="submit" form="auditForm" class="btn btn-primary shadow-sm">
+                            <i class="mdi mdi-content-save me-1"></i> Save Progress
                         </button>
-                    </form>
+
+                        {{-- Finalize Button --}}
+                        <form action="{{ route('warehouse.stock-control.audit.finalize', $audit->id) }}" method="POST" class="d-inline" id="finalizeForm">
+                            @csrf
+                            <button type="button" onclick="confirmFinalize()" class="btn btn-success shadow-sm text-white">
+                                <i class="mdi mdi-check-circle me-1"></i> Finalize & Adjust Stock
+                            </button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>
@@ -56,6 +58,8 @@
                                     $variance = $item->physical_qty !== null ? ($item->physical_qty - $item->system_qty) : 0;
                                     $varianceClass = $variance == 0 ? 'text-muted' : ($variance < 0 ? 'text-danger fw-bold' : 'text-success fw-bold');
                                     $varianceIcon = $variance == 0 ? 'mdi-check' : ($variance < 0 ? 'mdi-arrow-down' : 'mdi-arrow-up');
+                                    // Check permission for input
+                                    $canEdit = (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits')) && $audit->status != 'completed';
                                 @endphp
                                 <tr>
                                     <td class="ps-4 fw-semibold">{{ $item->product->product_name }}</td>
@@ -66,7 +70,7 @@
                                         {{ number_format($item->system_qty) }}
                                     </td>
 
-                                    {{-- Input Physical Qty --}}
+                                    {{-- Input Physical Qty (Protected) --}}
                                     <td class="p-2">
                                         <input type="number" step="1" 
                                             name="items[{{ $item->id }}]" 
@@ -74,7 +78,7 @@
                                             class="form-control text-center fw-bold physical-input"
                                             data-system="{{ $item->system_qty }}"
                                             placeholder="Enter Qty"
-                                            {{ $audit->status == 'completed' ? 'disabled' : '' }}>
+                                            {{ $canEdit ? '' : 'disabled' }}>
                                     </td>
 
                                     {{-- Variance (Live Calc) --}}

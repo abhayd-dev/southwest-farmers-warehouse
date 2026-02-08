@@ -5,214 +5,171 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\WareRole;
 use App\Models\WarePermission;
+use App\Models\WareUser;
 use Illuminate\Support\Facades\DB;
 
 class WareRolePermissionSeeder extends Seeder
 {
     public function run()
     {
-        // ---------------------------------------
-        // 1. Clear Existing Data (Postgres Safe)
-        // ---------------------------------------
-        DB::statement('TRUNCATE TABLE 
-            ware_role_has_permissions,
-            ware_model_has_roles,
-            ware_model_has_permissions,
-            ware_roles,
-            ware_permissions
-            RESTART IDENTITY CASCADE
-        ');
+        // ----------------------------------------------------
+        // 0. FIX POSTGRES SEQUENCE (Important for Imports)
+        // ----------------------------------------------------
+        if (DB::getDriverName() == 'pgsql') {
+            $tables = ['ware_permissions', 'ware_roles'];
+            foreach ($tables as $table) {
+                // Check if table has data
+                if (DB::table($table)->exists()) {
+                    DB::statement("SELECT setval('{$table}_id_seq', (SELECT MAX(id) FROM {$table}))");
+                }
+            }
+        }
 
-        // ---------------------------------------
-        // 2. Permission Master List (FINAL)
-        // ---------------------------------------
+        // ====================================================
+        // 1. DEFINE ALL PERMISSIONS (Old + New)
+        // ====================================================
         $permissions = [
-
-            // Dashboard & Analytics
+            // --- Dashboard ---
             'view_dashboard',
             'view_analytics',
 
-            // Warehouse & Inventory
-            'view_inventory',
-            'manage_inventory',
-            'adjust_stock',
-            'transfer_stock',
-            'receive_stock',
-            'view_stock_movement',
-            'report_damages',
+            // --- Warehouse & Inventory ---
+            'view_inventory',       // View Stock Levels
+            'manage_inventory',     // Add/Edit Stock manually
+            'adjust_stock',         // Adjustment Page
+            'view_stock_movement',  // History
 
-            // Products & Catalog
+            // --- Product Catalog ---
             'view_products',
-            'manage_products',
-            'manage_categories',
-            'manage_subcategories',
-            'manage_product_options',
-            'upload_images',
+            'create_products',
+            'edit_products',
+            'delete_products',
+            'manage_categories',    // Categories & Subcategories
+            'manage_product_options', // Variants/Options
+            
+            // --- Stores ---
+            'view_stores',
+            'create_stores',
+            'edit_stores',
+            'delete_stores',
 
-            // Purchase Orders (PO)
+            // --- Procurement (PO & Vendors) ---
+            'view_vendors',
+            'manage_vendors',
             'view_po',
             'create_po',
             'edit_po',
-            'approve_po',
-            'cancel_po',
-            'override_po_quantities',
-            'modify_approved_po',
-            'view_po_alerts',
+            'approve_po',           // Approve Draft PO
+            'receive_po',           // Receive Items
+            'delete_po',
 
-            // Finance & Accounts
-            'view_financial_reports',
-            'manage_invoices',
-            'manage_payments',
-            'view_margins',
-            'manage_pricing',
-            'view_compliance',
+            // --- Fulfillment (Store Orders) ---
+            'view_stock_requests',
+            'approve_store_requests', // Dispatch items to store
+            'view_discrepancies',     // Returns/Shortages
 
-            // Stores
-            'view_stores',
-            'manage_store_inventory',
-            'approve_store_requests',
+            // --- Stock Control (NEW SECTIONS) ---
+            'view_stock_control',     // Parent Menu Access
+            'view_stock_overview',    // Consolidated View
+            'view_transfers',         // Transfer Monitor
+            'manage_recalls',         // Recall Stock
+            'view_stock_valuation',   // Financial Value of Stock
+            'manage_min_max',         // Set Reorder Points
+            'view_audits',            // View Cycle Counts
+            'manage_audits',          // Start/Finalize Audits
 
-            // Users & System
-            'manage_users',
-            'manage_roles',
-            'view_audit_logs',
-            'view_staff_performance',
+            // --- Finance & Reports ---
+            'view_financial_reports', // Ledger & Revenue
+            'view_expiry_report',     // Expiry Dashboard
+            'export_reports',
 
-            // Marketing
-            'manage_marketing_assets',
+            // --- Administration ---
+            'view_staff',
+            'manage_staff',           // Create/Edit/Delete Users
+            'manage_roles',           // Permissions
+            'manage_settings',        // General Settings & Automation
 
-            // POS
-            'access_pos',
+            // --- Support ---
+            'view_all_tickets',       // Helpdesk Access
+            'manage_support',         // Reply/Close Tickets
         ];
 
+        // Create Permissions if they don't exist
         foreach ($permissions as $perm) {
-            WarePermission::create([
-                'name' => $perm,
-                'guard_name' => 'web'
-            ]);
+            WarePermission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
 
-        // ---------------------------------------
-        // 3. Roles + Permission Mapping
-        // ---------------------------------------
-        $roles = [
+        // ====================================================
+        // 2. DEFINE ROLES & ASSIGN PERMISSIONS
+        // ====================================================
 
-            'Super Admin' => $permissions,
+        // --- SUPER ADMIN (All Permissions) ---
+        $superAdmin = WareRole::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $superAdmin->permissions()->sync(WarePermission::all());
 
-            'CEO' => [
-                'view_dashboard',
-                'view_analytics',
-                'view_inventory',
-                'view_financial_reports',
-                'approve_po',
-                'view_audit_logs',
-                'view_staff_performance'
-            ],
+        // --- VP OPERATIONS (Head of Warehouse) ---
+        $vpOps = WareRole::firstOrCreate(['name' => 'VP Operations', 'guard_name' => 'web']);
+        $vpOps->permissions()->sync(WarePermission::whereIn('name', [
+            'view_dashboard', 'view_analytics',
+            'view_inventory', 'manage_inventory', 'adjust_stock',
+            'view_products', 'manage_categories',
+            'view_stores',
+            'view_vendors', 'view_po', 'approve_po',
+            'view_stock_requests', 'approve_store_requests', 'view_discrepancies',
+            'view_stock_control', 'view_stock_overview', 'view_transfers', 'manage_recalls', 'view_stock_valuation', 'manage_min_max', 'view_audits',
+            'view_financial_reports', 'view_expiry_report',
+            'view_staff', 'manage_staff',
+            'view_all_tickets'
+        ])->pluck('id'));
 
-            'CFO' => [
-                'approve_po',
-                'view_financial_reports',
-                'manage_payments',
-                'view_margins',
-                'view_compliance',
-                'view_audit_logs'
-            ],
+        // --- INVENTORY MANAGER (Focus on Stock & Audits) ---
+        $invManager = WareRole::firstOrCreate(['name' => 'Inventory Manager', 'guard_name' => 'web']);
+        $invManager->permissions()->sync(WarePermission::whereIn('name', [
+            'view_dashboard',
+            'view_inventory', 'adjust_stock', 'view_stock_movement',
+            'view_products', 'create_products', 'edit_products',
+            'view_stock_requests', 'approve_store_requests',
+            'view_stock_control', 'view_stock_overview', 'view_transfers', 'manage_recalls', 'manage_audits',
+            'view_expiry_report'
+        ])->pluck('id'));
 
-            'VP Operations' => [
-                'view_inventory',
-                'create_po',
-                'edit_po',
-                'approve_po',
-                'transfer_stock',
-                'override_po_quantities',
-                'modify_approved_po',
-                'view_po_alerts',
-                'view_audit_logs'
-            ],
+        // --- PURCHASE MANAGER (Focus on PO & Vendors) ---
+        $purManager = WareRole::firstOrCreate(['name' => 'Purchase Manager', 'guard_name' => 'web']);
+        $purManager->permissions()->sync(WarePermission::whereIn('name', [
+            'view_dashboard',
+            'view_inventory',
+            'view_vendors', 'manage_vendors',
+            'view_po', 'create_po', 'edit_po', 'receive_po',
+            'view_stock_valuation'
+        ])->pluck('id'));
 
-            'Purchase Manager' => [
-                'view_po',
-                'create_po',
-                'edit_po'
-            ],
+        // --- STAFF (Basic Access) ---
+        $staff = WareRole::firstOrCreate(['name' => 'General Staff', 'guard_name' => 'web']);
+        $staff->permissions()->sync(WarePermission::whereIn('name', [
+            'view_inventory',
+            'view_products',
+            'receive_po' // Can create GRN
+        ])->pluck('id'));
 
-            'Inventory Manager' => [
-                'view_inventory',
-                'receive_stock',
-                'manage_inventory',
-                'report_damages',
-                'view_stock_movement'
-            ],
+        // ====================================================
+        // 3. ASSIGN ROLES TO USERS (Safe Update)
+        // ====================================================
+        
+        $this->assignRoleToUser('admin@invoidea.com', 'Super Admin');
+        $this->assignRoleToUser('vp@warehouse.com', 'VP Operations');
+        $this->assignRoleToUser('inventory@warehouse.com', 'Inventory Manager');
+        $this->assignRoleToUser('purchase@warehouse.com', 'Purchase Manager');
+        $this->assignRoleToUser('staff@warehouse.com', 'General Staff');
+    }
 
-            'Accountant' => [
-                'manage_invoices',
-                'manage_payments',
-                'view_financial_reports'
-            ],
-
-            'Finance Assistant' => [
-                'manage_invoices',
-                'manage_payments'
-            ],
-
-            'Store Handler' => [
-                'view_stores',
-                'receive_stock',
-                'report_damages'
-            ],
-
-            'Brand Manager' => [
-                'upload_images',
-                'manage_marketing_assets',
-                'view_products'
-            ],
-
-            'Community Coordinator' => [
-                'view_stores',
-                'manage_marketing_assets'
-            ],
-
-            'Personal Assistant' => [
-                'view_dashboard',
-                'view_financial_reports'
-            ],
-
-            'Regional Manager' => [
-                'view_inventory',
-                'view_po_alerts',
-                'approve_store_requests',
-                'view_staff_performance'
-            ],
-
-            'General Manager' => [
-                'manage_store_inventory',
-                'approve_store_requests',
-                'view_analytics'
-            ],
-
-            'Supervisor' => [
-                'view_inventory',
-                'view_staff_performance'
-            ],
-
-            'Cashier' => [
-                'access_pos'
-            ],
-
-            'General Staff' => [
-                // Intentionally minimal
-            ],
-        ];
-
-        foreach ($roles as $roleName => $perms) {
-            $role = WareRole::create([
-                'name' => $roleName,
-                'guard_name' => 'web'
-            ]);
-
-            if (!empty($perms)) {
-                $permissionIds = WarePermission::whereIn('name', $perms)->pluck('id');
-                $role->permissions()->sync($permissionIds);
+    private function assignRoleToUser($email, $roleName)
+    {
+        $user = WareUser::where('email', $email)->first();
+        if ($user) {
+            $role = WareRole::where('name', $roleName)->first();
+            if ($role && !$user->roles->contains($role->id)) {
+                $user->roles()->sync([$role->id]);
+                $this->command->info("Assigned '$roleName' to $email");
             }
         }
     }
