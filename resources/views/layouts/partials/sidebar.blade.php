@@ -393,7 +393,7 @@
                     </li>
                 @endif
 
-                {{-- @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audit_logs'))
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audit_logs'))
                     <li>
                         <a href="{{ route('warehouse.activity-logs.index') }}"
                            class="{{ request()->routeIs('warehouse.activity-logs.*') ? 'active' : '' }}">
@@ -401,7 +401,7 @@
                             <span class="sidebar-text">Audit Logs</span>
                         </a>
                     </li>
-                @endif --}}
+                @endif
 
                 {{-- ================= SETTINGS ================= --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_settings'))
