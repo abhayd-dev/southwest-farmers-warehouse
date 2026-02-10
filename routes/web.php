@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
+use App\Http\Controllers\Warehouse\ActivityLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Warehouse\DepartmentController;
 use App\Http\Controllers\Warehouse\DiscrepancyController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Warehouse\Reports\ExpiryReportController;
 use App\Http\Controllers\Warehouse\FinanceReportController;
 use App\Http\Controllers\Warehouse\LabelController;
 use App\Http\Controllers\Warehouse\MinMaxController;
+use App\Http\Controllers\Warehouse\NotificationController;
 use App\Http\Controllers\Warehouse\ProductController;
 use App\Http\Controllers\Warehouse\ProductOptionController;
 use App\Http\Controllers\Warehouse\ProductCategoryController;
@@ -213,6 +215,19 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/transfers/monitor/{id}', [TransferMonitorController::class, 'show'])
             ->name('warehouse.transfers.show_details');
+
+        // Activity Logs
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+            ->name('warehouse.activity-logs.index');
+
+        // Notifications
+        Route::controller(NotificationController::class)->group(function () {
+            Route::get('/notifications', 'index')->name('warehouse.notifications.index');
+            Route::get('/notifications/fetch', 'fetchLatest')->name('warehouse.notifications.fetch');
+            Route::post('/notifications/{id}/read', 'markRead')->name('warehouse.notifications.read');
+            Route::post('/notifications/read-all', 'markAllRead')->name('warehouse.notifications.readAll');
+            Route::delete('/notifications/{id}', 'destroy')->name('warehouse.notifications.destroy');
+        });
     });
 });
 

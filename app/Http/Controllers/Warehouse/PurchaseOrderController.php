@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use App\Models\Product;
+use App\Services\NotificationService;
 use App\Services\PurchaseOrderService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
@@ -85,6 +86,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $po = $this->poService->createPO($request->all());
+
+            NotificationService::sendToAdmins(
+                'New PO Created', 
+                "PO #{$po->po_number} created by " . auth()->user()->name, 
+                'info', 
+                route('warehouse.purchase-orders.show', $po->id)
+            );
             return redirect()->route('warehouse.purchase-orders.show', $po->id)
                 ->with('success', 'Purchase Order created successfully!');
         } catch (\Exception $e) {
@@ -103,6 +111,13 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrder->status !== 'draft') abort(403);
         
         $purchaseOrder->update(['status' => 'ordered']);
+
+        NotificationService::sendToAdmins(
+            'PO Ordered', 
+            "PO #{$purchaseOrder->po_number} marked as ordered.", 
+            'success', 
+            route('warehouse.purchase-orders.show', $purchaseOrder->id)
+        );
         return back()->with('success', 'PO marked as Ordered. Sent to Vendor.');
     }
 
@@ -117,6 +132,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $this->poService->receiveItems($purchaseOrder->id, $request->items, $request->invoice_number);
+
+            NotificationService::sendToAdmins(
+                'Stock Received', 
+                "Received items for PO #{$purchaseOrder->po_number}. Status: " . ucfirst($purchaseOrder->status), 
+                'success', 
+                route('warehouse.purchase-orders.show', $purchaseOrder->id)
+            );
             return back()->with('success', 'Stock received successfully!');
         } catch (\Exception $e) {
             return back()->with('error', 'Receive failed: ' . $e->getMessage());

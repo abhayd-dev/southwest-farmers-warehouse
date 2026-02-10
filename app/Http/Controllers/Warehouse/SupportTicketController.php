@@ -9,6 +9,7 @@ use App\Models\SupportStatusLog;
 use App\Models\WareUser;
 use App\Mail\SupportTicketReplied;
 use App\Mail\SupportTicketStatusChanged;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -89,10 +90,23 @@ class SupportTicketController extends Controller
             // Assuming store user has email
             $recipient = $ticket->createdBy->email ?? $ticket->store->email;
             Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
-            
+
             // Auto-update status if open
             if ($ticket->status === 'open') {
                 $ticket->update(['status' => 'in_progress']);
+            }
+        }
+
+        if (!$request->has('is_internal')) {
+            // If replying to a user's ticket, notify them
+            if ($ticket->created_by && $ticket->created_by != auth()->id()) {
+                NotificationService::send(
+                    $ticket->created_by,
+                    'Ticket Reply',
+                    "New reply on ticket #{$ticket->ticket_number}",
+                    'success',
+                    route('warehouse.support.show', $ticket->id)
+                );
             }
         }
 
@@ -103,11 +117,11 @@ class SupportTicketController extends Controller
     public function update(Request $request, $id)
     {
         $ticket = SupportTicket::findOrFail($id);
-        
+
         if ($request->has('status')) {
             $oldStatus = $ticket->status;
             $ticket->update(['status' => $request->status]);
-            
+
             // Log Status Change
             SupportStatusLog::create([
                 'ticket_id' => $ticket->id,
@@ -120,6 +134,16 @@ class SupportTicketController extends Controller
             // Notify Store
             $recipient = $ticket->createdBy->email ?? $ticket->store->email;
             Mail::to($recipient)->send(new SupportTicketStatusChanged($ticket));
+
+            if ($ticket->created_by && $ticket->created_by != auth()->id()) {
+                NotificationService::send(
+                    $ticket->created_by,
+                    'Ticket Updated',
+                    "Your ticket #{$ticket->ticket_number} status is now: " . ucfirst($ticket->status),
+                    'info',
+                    route('warehouse.support.show', $ticket->id)
+                );
+            }
         }
 
         if ($request->has('assigned_to_id')) {

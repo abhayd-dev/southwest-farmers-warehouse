@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\PurchaseOrder;
 use App\Models\WareUser;
 use App\Mail\PODelayedMail;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
@@ -32,7 +33,7 @@ class CheckPODelays extends Command
 
             // We need positive hours *after* deadline passed.
             // If hoursLate is -2, it means 2 hours passed since deadline.
-            $hoursPassed = abs($hoursLate); 
+            $hoursPassed = abs($hoursLate);
 
             // Only proceed if deadline has passed (hoursLate is negative)
             if ($hoursLate >= 0) continue;
@@ -60,7 +61,7 @@ class CheckPODelays extends Command
     {
         // Find users with these roles
         // Note: Ensure your WareRole names match exactly (e.g., 'General Manager')
-        $users = WareUser::whereHas('roles', function($q) use ($roles) {
+        $users = WareUser::whereHas('roles', function ($q) use ($roles) {
             $q->whereIn('name', $roles);
         })->get();
 
@@ -73,6 +74,14 @@ class CheckPODelays extends Command
                     Mail::to($user->email)->send(new PODelayedMail($po, $level));
                     $this->info("Email sent to {$user->name} ({$user->email})");
                 }
+                $hoursPassed = now()->diffInHours(Carbon::parse($po->expected_delivery_date)->endOfDay(), false) * -1;
+
+                NotificationService::sendToAdmins(
+                    '🚨 Late Delivery Alert',
+                    "PO #{$po->po_number} from {$po->vendor->name} is delayed by {$hoursPassed} hours.",
+                    'danger',
+                    route('warehouse.purchase-orders.show', $po->id)
+                );
             }
         }
 

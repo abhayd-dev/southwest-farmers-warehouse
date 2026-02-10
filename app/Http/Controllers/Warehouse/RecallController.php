@@ -9,6 +9,7 @@ use App\Models\ProductStock;
 use App\Models\StockTransaction;
 use App\Models\StoreDetail;
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -101,7 +102,7 @@ class RecallController extends Controller
             'reason' => 'required'
         ]);
 
-        RecallRequest::create([
+        $recall = RecallRequest::create([
             'store_id' => $request->store_id,
             'product_id' => $request->product_id,
             'requested_quantity' => $request->requested_quantity,
@@ -110,6 +111,13 @@ class RecallController extends Controller
             'initiated_by' => Auth::id(),
             'status' => RecallRequest::STATUS_PENDING_STORE_APPROVAL,
         ]);
+
+        NotificationService::sendToAdmins(
+            'Recall Initiated',
+            "New recall #{$recall->id} started for {$recall->store->store_name}",
+            'info',
+            route('warehouse.stock-control.recall.show', $recall->id)
+        );
 
         
         return redirect()->route('warehouse.stock-control.recall')->with('success', 'Recall request sent to Store.');
@@ -137,6 +145,13 @@ class RecallController extends Controller
             'status' => RecallRequest::STATUS_APPROVED, // Matches your requirement
         ]);
 
+        NotificationService::sendToAdmins(
+            'Recall Approved',
+            "Recall request #{$recall->id} approved by " . auth()->user()->name,
+            'success',
+            route('warehouse.stock-control.recall.show', $recall->id)
+        );
+
         return back()->with('success', 'Request Approved. Waiting for Store to Dispatch.');
     }
 
@@ -149,6 +164,13 @@ class RecallController extends Controller
             'warehouse_remarks' => $request->warehouse_remarks,
             'status' => RecallRequest::STATUS_REJECTED,
         ]);
+
+        NotificationService::sendToAdmins(
+            'Recall Rejected',
+            "Recall request #{$recall->id} rejected by " . auth()->user()->name,
+            'danger',
+            route('warehouse.stock-control.recall.show', $recall->id)
+        );
 
         return back()->with('success', 'Request Rejected.');
     }

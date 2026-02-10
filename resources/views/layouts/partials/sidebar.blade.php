@@ -296,7 +296,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.audit.index') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.audit.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-clipboard-check-outline me-2"></i> Cycle Counts / Audits
+                                            <i class="mdi mdi-clipboard-check-outline me-2"></i> Cycle Counts
                                         </a>
                                     </li>
                                 @endif
@@ -392,6 +392,16 @@
                         </div>
                     </li>
                 @endif
+
+                {{-- @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audit_logs'))
+                    <li>
+                        <a href="{{ route('warehouse.activity-logs.index') }}"
+                           class="{{ request()->routeIs('warehouse.activity-logs.*') ? 'active' : '' }}">
+                            <iconify-icon icon="tabler:shield-check"></iconify-icon>
+                            <span class="sidebar-text">Audit Logs</span>
+                        </a>
+                    </li>
+                @endif --}}
 
                 {{-- ================= SETTINGS ================= --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_settings'))

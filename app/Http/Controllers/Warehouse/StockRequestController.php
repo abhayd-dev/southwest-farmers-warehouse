@@ -9,6 +9,7 @@ use App\Models\ProductStock;
 use App\Services\StockRequestService;
 use App\Models\StockRequest;
 use App\Models\StockTransaction;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -88,6 +89,17 @@ class StockRequestController extends Controller
         try {
             $this->service->processStatusChange($request->all());
 
+            $req = StockRequest::find($request->request_id);
+            $action = $request->status == 'dispatched' ? 'Dispatched' : 'Rejected';
+            $type = $request->status == 'dispatched' ? 'success' : 'danger';
+            
+            NotificationService::sendToAdmins(
+                "Request {$action}", 
+                "Stock Request #{$req->id} for {$req->store->store_name} was {$action} by " . auth()->user()->name, 
+                $type, 
+                route('warehouse.stock-requests.show', $req->id)
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Stock Dispatched Successfully (FIFO Applied)',
@@ -108,6 +120,13 @@ class StockRequestController extends Controller
 
         try {
             $this->service->verifyPayment($request);
+
+            NotificationService::sendToAdmins(
+                "Payment Verified", 
+                "Payment for Request #{$request->request_id} verified by " . auth()->user()->name, 
+                'success',
+                route('warehouse.stock-requests.show', $request->request_id)
+            );
             return response()->json(['success' => true, 'message' => 'Payment verified & Stock Completed']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -161,6 +180,13 @@ class StockRequestController extends Controller
                     'remarks' => $request->remarks ?? 'Purchase received',
                 ]);
             });
+
+            NotificationService::sendToAdmins(
+                "Direct Stock Added", 
+                "Added {$request->quantity} units of Product ID: {$request->product_id}", 
+                'info',
+                route('warehouse.stocks.index')
+            );
 
             return response()->json(['success' => true, 'message' => 'Batch created & stock added to warehouse']);
         } catch (\Exception $e) {

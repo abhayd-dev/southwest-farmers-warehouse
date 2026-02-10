@@ -10,6 +10,7 @@ use App\Models\PurchaseOrder; // Added
 use App\Models\WareSetting;
 use App\Mail\LowStockAlert;
 use App\Mail\LateDeliveryAlert; // Added
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -25,7 +26,7 @@ class RunWarehouseAutomation extends Command
 
         // 1. Get Settings
         $emailString = WareSetting::get_value('alert_emails', '');
-        
+
         if (empty($emailString)) {
             $this->error('No email addresses configured in Settings.');
             return;
@@ -73,6 +74,15 @@ class RunWarehouseAutomation extends Command
             } catch (\Exception $e) {
                 Log::error('Low Stock Mail Error: ' . $e->getMessage());
             }
+        }
+
+        if ($products->count() > 0) {
+            NotificationService::sendToAdmins(
+                '⚠️ Low Stock Alert',
+                $products->count() . " products are below minimum level.",
+                'warning',
+                route('warehouse.stock-control.minmax.index') // Link to report
+            );
         }
     }
 

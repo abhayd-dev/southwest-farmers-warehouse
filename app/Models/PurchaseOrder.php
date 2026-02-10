@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Vendor;
+use App\Models\PurchaseOrderItem;
+use App\Models\WareUser;
+use App\Traits\LogsActivity;
 
 class PurchaseOrder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'po_number', 'vendor_id', 'warehouse_id', 'order_date', 'expected_delivery_date',

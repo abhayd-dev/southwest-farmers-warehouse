@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class ProductOption extends Model
 {
+    use LogsActivity;
+    
     protected $fillable = [
         'category_id',
         'subcategory_id',

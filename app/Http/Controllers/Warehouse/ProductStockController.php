@@ -10,6 +10,7 @@ use App\Models\ProductStock;
 use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use App\Models\WareUser;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -227,6 +228,15 @@ class ProductStockController extends Controller
             }
 
             DB::commit();
+
+            $prodName = Product::find($request->product_id)->product_name;
+            NotificationService::sendToAdmins(
+                'Stock Adjusted',
+                "Manual adjustment of {$request->quantity} for {$prodName} by " . auth()->user()->name,
+                'warning',
+                route('warehouse.stocks.history', $request->product_id)
+            );
+
             return redirect()->route('warehouse.stocks.index')
                 ->with('success', 'Stock adjusted successfully.');
         } catch (\Exception $e) {
