@@ -18663,3 +18663,17 @@ body {
     color: #dc3545 !important;
     font-weight: 700;
 }
+#sidebar-menu .menuitem-active>a, #sidebar-menu .menuitem-active .active {
+    background-color: #019934 !important; /* Bootstrap Primary Green */
+    color: white !important;
+    border-radius: 5px;
+}
+.nav-second-level li a.active {
+    background-color: #019934 !important; /* Bootstrap Primary Blue */
+    color: white !important;
+    border-radius: 5px;
+}
+
+.nav-second-level li a.active i {
+    color: white !important;
+}

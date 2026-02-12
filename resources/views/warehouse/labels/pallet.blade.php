@@ -91,6 +91,23 @@
             font-weight: 900;
         }
 
+        .barcode-section {
+            text-align: center;
+            margin: 10px 0;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+        }
+
+        .barcode-section svg {
+            width: 80%;
+            height: 40px;
+        }
+        
+        .barcode-text {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
         .footer {
             text-align: center;
             border-top: 2px solid #000;
@@ -111,9 +128,9 @@
         }
 
         /* --- FIX: Barcode Constraint --- */
-        #barcode {
+        #pallet_barcode {
             max-width: 100%; /* Force barcode to fit within container width */
-            height: auto;    /* Maintain aspect ratio if width shrinks */
+            height: 50px;    /* Maintain aspect ratio if width shrinks */
             display: inline-block; /* Ensures it respects text-align: center */
         }
         /* ------------------------------- */
@@ -156,6 +173,14 @@
                 </div>
             </div>
 
+            {{-- Product Barcode Section --}}
+            @if(isset($data['product_barcode']))
+            <div class="barcode-section">
+                <svg id="product_barcode"></svg>
+                <div class="barcode-text">Product: {{ $data['product_barcode'] }}</div>
+            </div>
+            @endif
+
             <div class="row">
                 <div>
                     <div class="label">SKU</div>
@@ -190,24 +215,36 @@
             </div>
         </div>
 
-        {{-- Footer / Barcode --}}
+        {{-- Footer / Pallet Barcode --}}
         <div class="footer">
             {{-- Added title attribute so full ID is visible on hover if truncated --}}
             <div class="pallet-id" title="{{ $data['pallet_id'] }}">{{ $data['pallet_id'] }}</div>
-            <svg id="barcode"></svg>
+            <svg id="pallet_barcode"></svg>
         </div>
     </div>
 
     <script>
-        // Generate Barcode
-        JsBarcode("#barcode", "{{ $data['pallet_id'] }}", {
+        // Generate Pallet Barcode
+        JsBarcode("#pallet_barcode", "{{ $data['pallet_id'] }}", {
             format: "CODE128",
             lineColor: "#000",
-            width: 2, // If barcode is still too wide, try reducing this to 1.5 or 1
+            width: 2, 
             height: 50,
             displayValue: false,
-            margin: 0 // Ensure no extra margin around SVG itself
+            margin: 0
         });
+
+        // Generate Product Barcode (if exists)
+        @if(isset($data['product_barcode']))
+        JsBarcode("#product_barcode", "{{ $data['product_barcode'] }}", {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 1.5,
+            height: 40,
+            displayValue: false,
+            margin: 0
+        });
+        @endif
 
         // Auto print logic (optional)
         // window.onload = function() { window.print(); }

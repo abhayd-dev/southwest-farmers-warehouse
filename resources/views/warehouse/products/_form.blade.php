@@ -1,45 +1,4 @@
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white border-bottom py-3">
-        <h5 class="mb-0 fw-semibold">
-            <i class="mdi mdi-layers text-primary"></i>
-            Product Option (Optional)
-        </h5>
-    </div>
-    <div class="card-body p-4">
-        <div class="alert alert-info d-flex align-items-start mb-3 border-0">
-            <i class="mdi mdi-information-outline fs-5 me-2"></i>
-            <div class="small">
-                <strong>Tip:</strong> Select a product option to auto-fill the fields below, or click "Add New" for
-                manual entry.
-            </div>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label fw-semibold">Select Product Option</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">
-                        <i class="mdi mdi-package-variant text-muted"></i>
-                    </span>
-                    <select name="product_option_id" id="productOptionSelect" class="form-select border-start-0">
-                        <option value="">-- Select Option --</option>
-                        @foreach ($options as $o)
-                            <option value="{{ $o->id }}"
-                                {{ isset($product) && $product->product_option_id == $o->id ? 'selected' : '' }}>
-                                {{ $o->option_name }} ({{ $o->sku }})
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="button" class="btn btn-outline-primary" id="toggleManualEntry">
-                        <i class="mdi mdi-plus-circle-outline"></i> Add New
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm mb-4" id="productDetailsCard" style="display: none;">
+<div class="card border-0 shadow-sm mb-4" id="productDetailsCard" style="display: block;"> {{-- Ensure visible --}}
     <div class="card-header bg-white border-bottom py-3">
         <h5 class="mb-0 fw-semibold">
             <i class="mdi mdi-information text-primary"></i>
@@ -63,7 +22,7 @@
         
         <div class="row g-4">
 
-            {{-- DEPARTMENT DROPDOWN (Added) --}}
+            {{-- DEPARTMENT DROPDOWN --}}
             <div class="col-md-12">
                 <label class="form-label fw-semibold">
                     Department <span class="text-danger">*</span>
@@ -156,14 +115,21 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Barcode</label>
+                <label class="form-label fw-semibold">Barcode <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
                         <i class="mdi mdi-barcode-scan text-muted"></i>
                     </span>
-                    <input type="text" name="barcode" class="form-control border-start-0"
-                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Scan or enter barcode">
+                    <input type="text" name="barcode" id="barcodeInput" class="form-control border-start-0"
+                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Scan or generate barcode" required>
+                    <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn" title="Generate Barcode">
+                        <i class="mdi mdi-refresh"></i>
+                    </button>
                 </div>
+                <div class="mt-2" style="height: 50px;">
+                    <svg id="barcodeDisplay"></svg>
+                </div>
+                <div class="invalid-feedback">Please provide a barcode.</div>
             </div>
 
             <div class="col-md-6">
@@ -219,3 +185,4 @@
         </div>
     </div>
 </div>
+

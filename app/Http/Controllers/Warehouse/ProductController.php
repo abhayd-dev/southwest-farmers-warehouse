@@ -8,14 +8,16 @@ use App\Models\ProductOption;
 use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
 use App\Models\ProductStock;
-use App\Models\Department; // Added
+use App\Models\Department;
 use App\Imports\ProductImport;
 use App\Exports\ProductExport;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -24,7 +26,7 @@ class ProductController extends Controller
         try {
             // FILTER: Only show Warehouse Products (store_id IS NULL)
             $products = Product::whereNull('store_id')
-                ->with(['category', 'subcategory', 'option', 'department']) // Added department
+                ->with(['category', 'subcategory', 'option', 'department'])
                 ->when($request->search, function ($q) use ($request) {
                     $s = $request->search;
                     $q->where(function($query) use ($s) {
@@ -55,7 +57,7 @@ class ProductController extends Controller
             return view('warehouse.products.create', [
                 'options' => ProductOption::where('is_active', 1)->get(),
                 'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
-                'departments' => Department::where('is_active', true)->get(), // Added
+                'departments' => Department::where('is_active', true)->get(),
             ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Unable to open create page' . $e->getMessage());
@@ -66,13 +68,13 @@ class ProductController extends Controller
     {
         try {
             $request->validate([
-                'department_id' => 'required|exists:departments,id', // Added
+                'department_id' => 'required|exists:departments,id',
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
-                'barcode' => 'nullable|string|max:255',
+                'barcode' => 'required|string|unique:products,barcode|max:255', // Changed to required and unique
                 'icon' => 'nullable|image|max:2048',
             ]);
 
@@ -135,7 +137,7 @@ class ProductController extends Controller
             'options' => ProductOption::where('is_active', 1)->get(),
             'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
             'subcategories' => ProductSubcategory::whereNull('store_id')->where('category_id', $product->category_id)->get(),
-            'departments' => Department::where('is_active', true)->get(), // Added
+            'departments' => Department::where('is_active', true)->get(),
         ]);
     }
 
@@ -145,13 +147,13 @@ class ProductController extends Controller
 
         try {
             $request->validate([
-                'department_id' => 'required|exists:departments,id', // Added
+                'department_id' => 'required|exists:departments,id',
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
-                'barcode' => 'nullable|string|max:255',
+                'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id, // Added unique check ignoring current id
                 'icon' => 'nullable|image|max:2048',
             ]);
 
@@ -220,7 +222,7 @@ class ProductController extends Controller
         try {
             $request->validate([
                 'file' => 'required|mimes:xlsx,csv',
-                'department_id' => 'required|exists:departments,id', // Added
+                'department_id' => 'required|exists:departments,id',
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
             ]);
@@ -242,5 +244,66 @@ class ProductController extends Controller
     public function sample()
     {
         return response()->download(storage_path('app/samples/products-sample.xlsx'));
+    }
+
+    public function generateBarcode()
+    {
+        // Generate a random 13 digit number or unique string
+        // Checking for uniqueness
+        do {
+            $barcode = mt_rand(1000000000000, 9999999999999);
+        } while (Product::where('barcode', $barcode)->exists());
+
+        return response()->json(['barcode' => $barcode]);
+    }
+
+    public function bulkPriceUpdate(Request $request)
+    {
+        set_time_limit(300); 
+        $request->validate([
+            'category_id' => 'required|exists:product_categories,id',
+            'subcategory_id' => 'nullable|exists:product_subcategories,id',
+            'percentage' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $query = Product::whereNull('store_id')
+                ->where('category_id', $request->category_id);
+
+            if ($request->subcategory_id) {
+                $query->where('subcategory_id', $request->subcategory_id);
+            }
+
+            $count = $query->count();
+            if ($count === 0) {
+                return back()->with('error', 'No products found matching the selection.');
+            }
+
+            // Calculate Factor (e.g., 10% -> 1.10)
+            $factor = 1 + ($request->percentage / 100);
+            
+            // PostgreSQL Raw Update
+            $query->update(['price' => DB::raw("price * $factor")]);
+
+            // Optional: Notification
+            $catName = ProductCategory::find($request->category_id)->name;
+            $msg = "Bulk Price Update: Increased by {$request->percentage}% for Category: $catName";
+            if($request->subcategory_id) {
+                $subName = ProductSubcategory::find($request->subcategory_id)->name;
+                $msg .= ", Subcategory: $subName";
+            }
+            
+            NotificationService::sendToAdmins('Price Update', $msg, 'info');
+
+            DB::commit();
+
+            return back()->with('success', "Updated prices for $count products successfully.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update prices: ' . $e->getMessage());
+        }
     }
 }

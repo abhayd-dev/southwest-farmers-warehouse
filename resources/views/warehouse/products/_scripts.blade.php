@@ -1,4 +1,50 @@
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const barcodeInput = document.getElementById('barcodeInput');
+            const generateBtn = document.getElementById('generateBarcodeBtn');
+
+            function renderBarcode(value) {
+                if (value) {
+                    try {
+                        JsBarcode("#barcodeDisplay", value, {
+                            format: "CODE128",
+                            lineColor: "#000",
+                            width: 2,
+                            height: 40,
+                            displayValue: false
+                        });
+                    } catch (e) {
+                        console.error("Invalid barcode format");
+                        document.getElementById('barcodeDisplay').style.display = 'none';
+                    }
+                    document.getElementById('barcodeDisplay').style.display = 'block';
+                } else {
+                    document.getElementById('barcodeDisplay').style.display = 'none';
+                }
+            }
+
+            // Generate Barcode via Ajax
+            generateBtn.addEventListener('click', function() {
+                fetch("{{ route('warehouse.products.generate-barcode') }}")
+                    .then(response => response.json())
+                    .then(data => {
+                        barcodeInput.value = data.barcode;
+                        renderBarcode(data.barcode);
+                    })
+                    .catch(err => console.error(err));
+            });
+
+            // Render on input change
+            barcodeInput.addEventListener('input', function() {
+                renderBarcode(this.value);
+            });
+
+            // Initial Render
+            renderBarcode(barcodeInput.value);
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -85,7 +131,7 @@
                             if (o.category_id && catSelect) {
                                 catSelect.value = o.category_id;
                                 fetchSubcategories(o.category_id, 'subcategorySelect', o
-                                .subcategory_id);
+                                    .subcategory_id);
                             }
                         })
                         .catch(err => {

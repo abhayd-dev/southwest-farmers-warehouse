@@ -11,15 +11,18 @@ use App\Models\StoreRole;
 
 class StoreStaffSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $now = Carbon::now();
         $password = Hash::make('12345678');
 
         /*
         |--------------------------------------------------------------------------
-        | Parent User (Store Owner / Admin)
-        | Using first active user – NO Spatie dependency
+        | Parent User (Super Admin / Store Owner)
+        |--------------------------------------------------------------------------
+        | Assumption:
+        | - Super Admin already exists
+        | - store_role_id mapped correctly
         |--------------------------------------------------------------------------
         */
         $parentUser = StoreUser::where('is_active', true)
@@ -27,41 +30,64 @@ class StoreStaffSeeder extends Seeder
             ->first();
 
         if (!$parentUser) {
-            $this->command->error('No active parent user found.');
+            $this->command->error('No active parent user found. Please seed store_users first.');
             return;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Staff as per Uploaded Image (Store Operations)
+        | Staff Data (STRICTLY based on Permission Seeder Roles)
         |--------------------------------------------------------------------------
         */
         $staffData = [
-            ['name' => 'Regional Manager', 'email' => 'rm@store.com', 'role' => 'Regional Manager'],
-            ['name' => 'General Manager',  'email' => 'gm@store.com', 'role' => 'General Manager'],
-            ['name' => 'Store Manager',    'email' => 'manager@store.com', 'role' => 'Manager'],
-            ['name' => 'Supervisor',       'email' => 'supervisor@store.com', 'role' => 'Supervisor'],
-            ['name' => 'Cashier',          'email' => 'cashier@store.com', 'role' => 'Cashier'],
-            ['name' => 'General Staff',    'email' => 'staff@store.com', 'role' => 'General Staff'],
-            ['name' => 'Receptionist',     'email' => 'reception@store.com', 'role' => 'Receptionist'],
+            [
+                'name'  => 'Store Manager',
+                'email' => 'manager@store.com',
+                'role'  => 'Store Manager',
+            ],
+            [
+                'name'  => 'Inventory Manager',
+                'email' => 'inventory@store.com',
+                'role'  => 'Inventory Manager',
+            ],
+            [
+                'name'  => 'Cashier',
+                'email' => 'cashier@store.com',
+                'role'  => 'Cashier',
+            ],
+            [
+                'name'  => 'Sales Staff',
+                'email' => 'sales@store.com',
+                'role'  => 'Sales Staff',
+            ],
         ];
 
         DB::beginTransaction();
 
         try {
+
             foreach ($staffData as $staff) {
 
-                // Skip if staff already exists
+                /*
+                |--------------------------------------------------------------------------
+                | Skip if user already exists
+                |--------------------------------------------------------------------------
+                */
                 if (StoreUser::where('email', $staff['email'])->exists()) {
                     continue;
                 }
 
-                // Get Role
+                /*
+                |--------------------------------------------------------------------------
+                | Get Role (STRICT match)
+                |--------------------------------------------------------------------------
+                */
                 $role = StoreRole::where('name', $staff['role'])
                     ->where('guard_name', 'store_user')
                     ->first();
 
                 if (!$role) {
+                    $this->command->warn("Role not found: {$staff['role']}");
                     continue;
                 }
 
@@ -78,38 +104,30 @@ class StoreStaffSeeder extends Seeder
                     'phone'         => null,
                     'password'      => $password,
                     'store_role_id' => $role->id,
-                    'is_active'     => 1,
+                    'is_active'     => true,
                     'created_at'    => $now,
                     'updated_at'    => $now,
                 ]);
 
                 /*
                 |--------------------------------------------------------------------------
-                | Attach Role (CUSTOM – NO SPATIE)
-                | store_model_has_roles requires model_type
+                | Attach Role (Custom RBAC – NO SPATIE)
                 |--------------------------------------------------------------------------
                 */
-                $alreadyAssigned = DB::table('store_model_has_roles')
-                    ->where('role_id', $role->id)
-                    ->where('model_id', $user->id)
-                    ->where('model_type', StoreUser::class)
-                    ->exists();
-
-                if (!$alreadyAssigned) {
-                    DB::table('store_model_has_roles')->insert([
-                        'role_id'    => $role->id,
-                        'model_id'   => $user->id,
-                        'model_type' => StoreUser::class,
-                    ]);
-                }
+                DB::table('store_model_has_roles')->insert([
+                    'role_id'    => $role->id,
+                    'model_id'   => $user->id,
+                    'model_type' => StoreUser::class,
+                ]);
             }
 
             DB::commit();
             $this->command->info('Store staff seeded successfully (password: 12345678)');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
             DB::rollBack();
-            $this->command->error('Staff Seeder Failed: ' . $e->getMessage());
+            $this->command->error('StoreStaffSeeder failed: ' . $e->getMessage());
         }
     }
 }

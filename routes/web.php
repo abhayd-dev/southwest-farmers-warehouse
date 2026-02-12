@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::get('products/export', [ProductController::class, 'export'])->name('warehouse.products.export');
         Route::get('products/sample', [ProductController::class, 'sample'])->name('warehouse.products.sample');
         Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])->name('warehouse.products.fetch-option');
+        Route::get('products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('warehouse.products.generate-barcode');
+        Route::post('products/bulk-price-update', [ProductController::class, 'bulkPriceUpdate'])->name('warehouse.products.bulk-price-update');
 
         Route::controller(ProductStockController::class)->group(function () {
             Route::get('stocks', 'index')->name('warehouse.stocks.index');

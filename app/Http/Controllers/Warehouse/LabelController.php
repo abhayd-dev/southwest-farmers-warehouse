@@ -31,7 +31,8 @@ class LabelController extends Controller
                 'date' => now()->format('d/m/Y H:i'),
                 'weight' => $transaction->product->box_weight 
                             ? ($transaction->product->box_weight * abs($transaction->quantity_change)) . ' kg' 
-                            : 'N/A'
+                            : 'N/A',
+                'product_barcode' => $transaction->product->barcode,            
             ];
         } 
         elseif ($request->has('product_id')) {
@@ -51,7 +52,8 @@ class LabelController extends Controller
                             ? Carbon::now()->addDays($product->shelf_life_days)->format('d M Y') 
                             : 'N/A',
                 'date' => now()->format('d/m/Y H:i'),
-                'weight' => $product->box_weight ? ($product->box_weight * $qty) . ' kg' : 'N/A'
+                'weight' => $product->box_weight ? ($product->box_weight * $qty) . ' kg' : 'N/A',
+                'product_barcode' => $product->barcode,
             ];
         }
         else {

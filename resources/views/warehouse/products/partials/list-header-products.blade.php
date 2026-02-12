@@ -27,6 +27,14 @@
 
     {{-- ACTION BUTTONS --}}
     <div class="d-flex align-items-center gap-2 ms-auto">
+        
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
+        <button type="button" class="btn btn-warning text-dark d-flex align-items-center gap-1"
+            data-bs-toggle="modal" data-bs-target="#pricingModal">
+            <i class="mdi mdi-currency-usd"></i>
+            <span class="d-none d-lg-inline">Set Pricing</span>
+        </button>
+        @endif
         {{-- EXPORT --}}
         {{-- Export usually allowed for Viewers too, but let's keep it restricted to managers or creators --}}
         @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products') || auth()->user()->hasPermission('export_reports'))
