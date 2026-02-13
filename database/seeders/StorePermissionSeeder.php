@@ -12,11 +12,14 @@ class StorePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Clean existing data (Tables ko khali karein)
-        // Order important hai taaki foreign key errors na aayein
-        DB::statement('TRUNCATE TABLE store_role_has_permissions CASCADE');
-        DB::statement('TRUNCATE TABLE store_roles RESTART IDENTITY CASCADE');
-        DB::statement('TRUNCATE TABLE store_permissions RESTART IDENTITY CASCADE');
+        DB::table('store_role_has_permissions')->delete();
+        DB::table('store_roles')->delete();
+        DB::table('store_permissions')->delete();
+
+        // Reset PostgreSQL sequences safely
+        DB::statement("ALTER SEQUENCE store_roles_id_seq RESTART WITH 1");
+        DB::statement("ALTER SEQUENCE store_permissions_id_seq RESTART WITH 1");
+
 
         $guard = 'store_user';
         $now = now();

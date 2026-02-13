@@ -286,7 +286,7 @@
                                         </span>
                                         <input type="text" id="latitudeDisplay" 
                                                class="form-control bg-light" 
-                                               value="{{ $warehouse->latitude ?? '28.6139' }}" 
+                                               value="{{ $warehouse->latitude ?? '' }}" 
                                                readonly>
                                     </div>
                                 </div>
@@ -300,7 +300,7 @@
                                         </span>
                                         <input type="text" id="longitudeDisplay" 
                                                class="form-control bg-light" 
-                                               value="{{ $warehouse->longitude ?? '77.2090' }}" 
+                                               value="{{ $warehouse->longitude ?? '' }}" 
                                                readonly>
                                     </div>
                                 </div>
@@ -372,9 +372,18 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 
-                // 1. Initial Coordinates
-                let lat = parseFloat("{{ $warehouse->latitude }}") || 28.6139;
-                let lng = parseFloat("{{ $warehouse->longitude }}") || 77.2090;
+                // 1. Initial Logic: Check if DB has coordinates
+                let dbLat = "{{ $warehouse->latitude }}";
+                let dbLng = "{{ $warehouse->longitude }}";
+                
+                // Default fallback (Delhi)
+                let defaultLat = 28.6139;
+                let defaultLng = 77.2090;
+
+                let hasSavedCoords = (dbLat && dbLng && dbLat != 0 && dbLng != 0);
+                
+                let lat = hasSavedCoords ? parseFloat(dbLat) : defaultLat;
+                let lng = hasSavedCoords ? parseFloat(dbLng) : defaultLng;
 
                 // 2. Initialize Map
                 const map = L.map('map').setView([lat, lng], 13);
@@ -386,8 +395,32 @@
                 // 3. Add Draggable Marker
                 let marker = L.marker([lat, lng], {draggable: true}).addTo(map);
 
-                // Helper to update inputs
-                const updateInputs = (lat, lng) => {
+                // ---------------------------------------------------------
+                // Function: Fetch Address (Reverse Geocoding)
+                // ---------------------------------------------------------
+                const fetchAddress = (lat, lng) => {
+                    const searchBox = document.getElementById('locationSearch');
+                    const loader = document.getElementById('searchLoader');
+                    
+                    // Show small loader inside input if you wish, currently just updating text
+                    searchBox.placeholder = "Fetching address...";
+                    
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data && data.display_name) {
+                                searchBox.value = data.display_name;
+                            } else {
+                                searchBox.value = "Unknown Location";
+                            }
+                        })
+                        .catch(err => console.error("Geocoding error:", err));
+                };
+
+                // ---------------------------------------------------------
+                // Function: Update Inputs & Display
+                // ---------------------------------------------------------
+                const updateInputs = (lat, lng, fetchAddr = true) => {
                     const latInput = document.getElementById('latitude');
                     const lngInput = document.getElementById('longitude');
                     const latDisplay = document.getElementById('latitudeDisplay');
@@ -400,18 +433,58 @@
                     if(lngInput) lngInput.value = lngFixed;
                     if(latDisplay) latDisplay.value = latFixed;
                     if(lngDisplay) lngDisplay.value = lngFixed;
+
+                    if(fetchAddr) {
+                        fetchAddress(lat, lng);
+                    }
                 };
 
-                // Update on marker drag
+                // ---------------------------------------------------------
+                // Logic: Current Location (If no saved data)
+                // ---------------------------------------------------------
+                if (!hasSavedCoords) {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const userLat = position.coords.latitude;
+                                const userLng = position.coords.longitude;
+                                
+                                // Update Map Center & Marker
+                                map.setView([userLat, userLng], 15);
+                                marker.setLatLng([userLat, userLng]);
+                                
+                                // Update Inputs & Fetch Address
+                                updateInputs(userLat, userLng, true);
+                            },
+                            (error) => {
+                                console.warn("Geolocation denied or failed:", error.message);
+                                // Stay on default (Delhi), maybe fetch address for default?
+                                updateInputs(lat, lng, true); 
+                            }
+                        );
+                    } else {
+                        // Geolocation not supported, just update with default
+                        updateInputs(lat, lng, true);
+                    }
+                } else {
+                    // We have saved coords, just fetch address for them to show in box
+                    updateInputs(lat, lng, true);
+                }
+
+                // ---------------------------------------------------------
+                // Event: Marker Drag
+                // ---------------------------------------------------------
                 marker.on('dragend', function(e) {
                     const pos = e.target.getLatLng();
-                    updateInputs(pos.lat, pos.lng);
+                    updateInputs(pos.lat, pos.lng, true);
                 });
 
-                // Update on map click
+                // ---------------------------------------------------------
+                // Event: Map Click
+                // ---------------------------------------------------------
                 map.on('click', function(e) {
                     marker.setLatLng(e.latlng);
-                    updateInputs(e.latlng.lat, e.latlng.lng);
+                    updateInputs(e.latlng.lat, e.latlng.lng, true);
                 });
 
                 /* ===============================
@@ -428,7 +501,6 @@
                         return;
                     }
 
-                    // Show loader
                     loader.classList.remove('d-none');
                     
                     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
@@ -447,7 +519,9 @@
                                         
                                         map.setView([newLat, newLon], 15);
                                         marker.setLatLng([newLat, newLon]);
-                                        updateInputs(newLat, newLon);
+                                        
+                                        // Update inputs, but DON'T fetch address again (we already have it in box)
+                                        updateInputs(newLat, newLon, false); 
                                         
                                         resultsBox.style.display = 'none';
                                         searchInput.value = place.display_name;
@@ -469,7 +543,7 @@
                         });
                 };
 
-                // Listen for Input with Debounce (Wait 800ms after typing stops)
+                // Listen for Input with Debounce
                 searchInput.addEventListener('input', function() {
                     clearTimeout(debounceTimer);
                     const query = this.value;
@@ -485,9 +559,6 @@
                         resultsBox.style.display = 'none';
                     }
                 });
-
-                // Initialize coordinates display
-                updateInputs(lat, lng);
 
             });
         </script>
