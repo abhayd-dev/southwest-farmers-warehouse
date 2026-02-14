@@ -23,6 +23,7 @@ class StockTransfer extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    
     public function creator()
     {
         return $this->belongsTo(StoreUser::class, 'created_by');

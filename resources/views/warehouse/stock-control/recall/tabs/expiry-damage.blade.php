@@ -20,7 +20,7 @@
             <label class="form-label">Store</label>
             <select class="form-select expiry-filter" data-filter="store_id">
                 <option value="">All Stores</option>
-                @foreach(\App\Models\StoreDetail::active()->get() as $store)
+                @foreach (\App\Models\StoreDetail::active()->get() as $store)
                     <option value="{{ $store->id }}">{{ $store->store_name }}</option>
                 @endforeach
             </select>
@@ -34,49 +34,73 @@
     </div>
 </div>
 
-<table id="expiryDamageTable" class="table table-hover table-bordered align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>Product</th>
-            <th>Batch</th>
-            <th>Expiry Date</th>
-            <th>Days Left</th>
-            <th>Location</th>
-            <th>Qty</th>
-            <th>Damaged</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-</table>
+<div class="table-responsive">
+    <table id="expiryDamageTable" class="table table-hover table-bordered align-middle w-100">
+        <thead class="table-light">
+            <tr>
+                <th>Product</th>
+                <th>Batch</th>
+                <th>Expiry Date</th>
+                <th>Days Left</th>
+                <th>Location</th>
+                <th>Qty</th>
+                <th>Damaged</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+    </table>
+</div>
 
 @push('scripts')
-<script>
-$(function() {
-    let table = $('#expiryDamageTable').DataTable({
-        serverSide: true,
-        processing: true,
-        ajax: {
-            url: '{{ route('warehouse.stock-control.recall.expiry-damage') }}',
-            data: function(d) {
-                d.date_from = $('input.expiry-date-filter[data-filter="date_from"]').val();
-                d.date_to = $('input.expiry-date-filter[data-filter="date_to"]').val();
-                d.report_type = $('select.expiry-filter[data-filter="report_type"]').val();
-                d.store_id = $('select.expiry-filter[data-filter="store_id"]').val();
-            }
-        },
-        columns: [
-            { data: 'product_name' },
-            { data: 'batch_number' },
-            { data: 'expiry_date', render: d => d ? new Date(d).toLocaleDateString() : '-' },
-            { data: 'days_left', className: 'text-center' },
-            { data: 'store_name', defaultContent: 'Warehouse' },
-            { data: 'quantity', className: 'text-center' },
-            { data: 'damaged_quantity', className: 'text-center' },
-            { data: 'status', searchable: false, orderable: false }
-        ]
-    });
+    <script>
+        $(function() {
+            let table = $('#expiryDamageTable').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: '{{ route('warehouse.stock-control.recall.expiry-damage') }}',
+                    data: function(d) {
+                        d.date_from = $('input.expiry-date-filter[data-filter="date_from"]').val();
+                        d.date_to = $('input.expiry-date-filter[data-filter="date_to"]').val();
+                        d.report_type = $('select.expiry-filter[data-filter="report_type"]').val();
+                        d.store_id = $('select.expiry-filter[data-filter="store_id"]').val();
+                    }
+                },
+                columns: [{
+                        data: 'product_name'
+                    },
+                    {
+                        data: 'batch_number'
+                    },
+                    {
+                        data: 'expiry_date',
+                        render: d => d ? new Date(d).toLocaleDateString() : '-'
+                    },
+                    {
+                        data: 'days_left',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'store_name',
+                        defaultContent: 'Warehouse'
+                    },
+                    {
+                        data: 'quantity',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'damaged_quantity',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'status',
+                        searchable: false,
+                        orderable: false
+                    }
+                ]
+            });
 
-    $('#applyExpiryFilters').click(() => table.draw());
-});
-</script>
+            $('#applyExpiryFilters').click(() => table.draw());
+        });
+    </script>
 @endpush

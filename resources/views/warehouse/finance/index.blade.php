@@ -2,31 +2,54 @@
     <div class="container-fluid">
         
         {{-- HEADER & FILTERS --}}
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-            <div>
-                <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-chart-line text-primary me-2"></i> Financial Overview</h4>
-                <small class="text-muted">Procurement Costs vs Inventory Valuation</small>
+        <div class="bg-white border-bottom shadow-sm mb-4">
+            <div class="py-3">
+                <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+                    {{-- Title --}}
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">
+                            <i class="mdi mdi-chart-line text-primary me-2"></i> Financial Overview
+                        </h4>
+                        <small class="text-muted">Procurement Costs vs Inventory Valuation</small>
+                    </div>
+                    
+                    {{-- Filter Form --}}
+                    <form method="GET" class="d-flex flex-column flex-md-row gap-2 bg-light p-2 rounded w-100 w-lg-auto">
+                        <div class="d-flex gap-2 align-items-center flex-grow-1">
+                            <input type="date" name="start_date" value="{{ $startDate }}" 
+                                class="form-control form-control-sm border-0 bg-white shadow-sm" 
+                                aria-label="Start Date">
+                            <span class="align-self-center text-muted fw-bold">-</span>
+                            <input type="date" name="end_date" value="{{ $endDate }}" 
+                                class="form-control form-control-sm border-0 bg-white shadow-sm" 
+                                aria-label="End Date">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-sm btn-dark shadow-sm fw-bold px-3 flex-grow-1 flex-md-grow-0">
+                                <i class="mdi mdi-filter me-1"></i> Apply
+                            </button>
+                            <a href="{{ request()->url() }}" class="btn btn-sm btn-outline-secondary shadow-sm" title="Reset Filters">
+                                <i class="mdi mdi-refresh"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
-            <form method="GET" class="d-flex gap-2 bg-light p-1 rounded">
-                <input type="date" name="start_date" value="{{ $startDate }}" class="form-control form-control-sm border-0 bg-white shadow-sm" style="width: 130px;">
-                <span class="align-self-center text-muted fw-bold">-</span>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="form-control form-control-sm border-0 bg-white shadow-sm" style="width: 130px;">
-                <button type="submit" class="btn btn-sm btn-dark px-3 shadow-sm fw-bold"><i class="mdi mdi-filter me-1"></i> Apply</button>
-            </form>
         </div>
 
         {{-- 1. KPI CARDS --}}
         <div class="row g-4 mb-4">
             {{-- Procurement --}}
-            <div class="col-md-4">
+            <div class="col-12 col-md-6 col-xl-4">
                 <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
                     <div class="card-body position-relative z-1">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <p class="text-muted fw-bold text-uppercase small mb-1">Total Procurement Cost</p>
                                 <h2 class="mb-0 fw-bold text-danger">${{ number_format($totalProcurement, 2) }}</h2>
-                                <small class="text-danger fw-bold"><i class="mdi mdi-arrow-down"></i> Outflow (Money Spent)</small>
+                                <small class="text-danger fw-bold d-flex align-items-center mt-1">
+                                    <i class="mdi mdi-arrow-down me-1"></i> Outflow (Money Spent)
+                                </small>
                             </div>
                             <div class="p-3 bg-danger bg-opacity-10 rounded-3">
                                 <i class="mdi mdi-cart-arrow-down text-danger fs-2"></i>
@@ -39,14 +62,16 @@
             </div>
 
             {{-- Dispatch --}}
-            <div class="col-md-4">
+            <div class="col-12 col-md-6 col-xl-4">
                 <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
                     <div class="card-body position-relative z-1">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <p class="text-muted fw-bold text-uppercase small mb-1">Dispatch Valuation</p>
                                 <h2 class="mb-0 fw-bold text-info">${{ number_format($totalDispatchValue, 2) }}</h2>
-                                <small class="text-info fw-bold"><i class="mdi mdi-arrow-up"></i> Inflow (Value to Stores)</small>
+                                <small class="text-info fw-bold d-flex align-items-center mt-1">
+                                    <i class="mdi mdi-arrow-up me-1"></i> Inflow (Value to Stores)
+                                </small>
                             </div>
                             <div class="p-3 bg-info bg-opacity-10 rounded-3">
                                 <i class="mdi mdi-truck-fast text-info fs-2"></i>
@@ -58,14 +83,16 @@
             </div>
 
             {{-- Net Inventory --}}
-            <div class="col-md-4">
+            <div class="col-12 col-md-12 col-xl-4">
                 <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden">
                     <div class="card-body position-relative z-1">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <p class="text-muted fw-bold text-uppercase small mb-1">Inventory Asset Value</p>
                                 <h2 class="mb-0 fw-bold text-success">${{ number_format($currentInventoryValue, 2) }}</h2>
-                                <small class="text-success fw-bold"><i class="mdi mdi-bank"></i> Current Assets</small>
+                                <small class="text-success fw-bold d-flex align-items-center mt-1">
+                                    <i class="mdi mdi-bank me-1"></i> Current Assets
+                                </small>
                             </div>
                             <div class="p-3 bg-success bg-opacity-10 rounded-3">
                                 <i class="mdi mdi-safe text-success fs-2"></i>
@@ -81,11 +108,11 @@
         <div class="row g-4">
             
             {{-- LINE CHART: TRENDS --}}
-            <div class="col-lg-8">
+            <div class="col-12 col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold text-dark">Cash Flow Analysis (Daily Trend)</h6>
-                        <small class="text-muted"><i class="mdi mdi-information-outline"></i> Daily comparison</small>
+                        <small class="text-muted d-none d-sm-inline"><i class="mdi mdi-information-outline"></i> Daily comparison</small>
                     </div>
                     <div class="card-body">
                         {{-- WRAPPER DIV IS CRITICAL FOR FIXING HEIGHT ISSUE --}}
@@ -97,7 +124,7 @@
             </div>
 
             {{-- DOUGHNUT CHART: CATEGORY DISTRIBUTION --}}
-            <div class="col-lg-4">
+            <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-bottom py-3">
                         <h6 class="mb-0 fw-bold text-dark">Value by Category</h6>

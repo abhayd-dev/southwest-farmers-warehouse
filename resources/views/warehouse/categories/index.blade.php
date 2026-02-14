@@ -11,30 +11,42 @@
                         </h4>
                     </div>
                     <div class="flex-shrink-0">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
                             {{-- SEARCH & FILTER --}}
                             <form method="GET" class="d-flex flex-grow-1" style="max-width: 500px;">
                                 <div class="input-group shadow-sm">
                                     <input type="text" name="search" value="{{ request('search') }}" class="form-control border-end-0" placeholder="Search categories...">
-                                    <select name="status" class="form-select border-start-0 border-end-0">
+                                    <select name="status" class="form-select border-start-0 border-end-0" style="max-width: 120px;">
                                         <option value="">All Status</option>
                                         <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
                                         <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
                                     </select>
-                                    <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
-                                    @if(request('search') || request('status') !== null)
-                                        <a href="{{ route('warehouse.categories.index') }}" class="btn btn-outline-secondary"><i class="mdi mdi-close"></i></a>
-                                    @endif
+                                    
+                                    {{-- Apply/Search Button --}}
+                                    <button class="btn btn-primary" type="submit" title="Apply Filter">
+                                        <i class="mdi mdi-magnify"></i>
+                                    </button>
+
+                                    {{-- Reset Button --}}
+                                    <a href="{{ route('warehouse.categories.index') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                                        <i class="mdi mdi-refresh"></i>
+                                    </a>
                                 </div>
                             </form>
 
                             {{-- ACTIONS (Protected) --}}
                             @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
-                                <a href="{{ route('warehouse.categories.export') }}" class="btn btn-outline-primary"><i class="mdi mdi-download"></i> Export</a>
-                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importCategoryModal">
-                                    <i class="mdi mdi-upload"></i> Import
-                                </button>
-                                <a href="{{ route('warehouse.categories.create') }}" class="btn btn-success"><i class="mdi mdi-plus-circle"></i> Add Category</a>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ route('warehouse.categories.export') }}" class="btn btn-outline-primary d-flex align-items-center gap-1">
+                                        <i class="mdi mdi-download"></i> <span class="d-none d-md-inline">Export</span>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importCategoryModal">
+                                        <i class="mdi mdi-upload"></i> <span class="d-none d-md-inline">Import</span>
+                                    </button>
+                                    <a href="{{ route('warehouse.categories.create') }}" class="btn btn-success d-flex align-items-center gap-1 text-nowrap">
+                                        <i class="mdi mdi-plus-circle"></i> Add Category
+                                    </a>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -67,7 +79,6 @@
                                             <img src="{{ $category->icon ?  Storage::url($category->icon) : 'https://placehold.co/40?text=IMG' }}" 
                                                  class="rounded bg-light border object-fit-cover" 
                                                  width="40" height="40">
-                                            <span>{{ $category->name }}</span>
                                         </div>
                                     </td>
                                     <td class="py-3 fw-semibold">{{ $category->name }}</td>
@@ -83,16 +94,18 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        {{-- View is always visible --}}
-                                        <button class="btn btn-sm btn-outline-info me-1 view-btn" data-data="{{ json_encode($category) }}" title="View"><i class="mdi mdi-eye"></i></button>
-                                        
-                                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
-                                            <a href="{{ route('warehouse.categories.edit', $category) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                            <form method="POST" action="{{ route('warehouse.categories.destroy', $category) }}" class="d-inline delete-form">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger delete-form" title="Delete"><i class="mdi mdi-delete"></i></button>
-                                            </form>
-                                        @endif
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {{-- View is always visible --}}
+                                            <button class="btn btn-outline-info view-btn" data-data="{{ json_encode($category) }}" title="View"><i class="mdi mdi-eye"></i></button>
+                                            
+                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                                <a href="{{ route('warehouse.categories.edit', $category) }}" class="btn btn-outline-primary" title="Edit"><i class="mdi mdi-pencil"></i></a>
+                                                <form method="POST" action="{{ route('warehouse.categories.destroy', $category) }}" class="d-inline delete-form">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn btn-outline-danger delete-form" title="Delete"><i class="mdi mdi-delete"></i></button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

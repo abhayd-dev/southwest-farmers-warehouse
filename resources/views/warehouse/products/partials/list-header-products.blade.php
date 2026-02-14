@@ -31,8 +31,8 @@
         @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
         <button type="button" class="btn btn-warning text-dark d-flex align-items-center gap-1"
             data-bs-toggle="modal" data-bs-target="#pricingModal">
-            <i class="mdi mdi-currency-usd"></i>
-            <span class="d-none d-lg-inline">Set Pricing</span>
+            <i class="mdi mdi-currency-usd text-white"></i>
+            <span class="d-none d-lg-inline text-white">Set Pricing</span>
         </button>
         @endif
         {{-- EXPORT --}}

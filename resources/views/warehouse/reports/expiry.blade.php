@@ -64,6 +64,7 @@
         {{-- Data Table --}}
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
+                <div class="table-responsive">
                 <table id="expiryTable" class="table table-hover align-middle w-100 mb-0">
                     <thead class="bg-light">
                         <tr>
@@ -77,6 +78,7 @@
                         </tr>
                     </thead>
                 </table>
+                </div>
             </div>
         </div>
     </div>

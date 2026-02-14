@@ -9,6 +9,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Artisan;
 use App\Models\WareSetting;
 
 class AppServiceProvider extends ServiceProvider
@@ -46,5 +47,6 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             View::share('settings', []);
         }
+     
     }
 }

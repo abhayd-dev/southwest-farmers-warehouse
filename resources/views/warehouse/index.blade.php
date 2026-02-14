@@ -202,7 +202,7 @@
                                     <td class="px-4 py-3 text-end">
                                         {{-- SHOW BUTTON (Added) --}}
                                         <button type="button" 
-                                                class="btn btn-sm btn-outline-info me-1 view-warehouse-btn"
+                                                class="btn btn-sm btn-outline-info view-warehouse-btn"
                                                 data-warehouse="{{ json_encode($warehouse) }}"
                                                 data-bs-toggle="tooltip" 
                                                 title="View Details">

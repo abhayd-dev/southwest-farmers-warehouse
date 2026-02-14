@@ -21,6 +21,7 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
+                <div class="table-responsive">
                 <table id="auditsTable" class="table table-hover align-middle" style="width:100%">
                     <thead class="bg-light">
                         <tr>
@@ -34,6 +35,7 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

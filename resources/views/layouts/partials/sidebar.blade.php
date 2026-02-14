@@ -81,14 +81,16 @@
                             id="sidebarProducts">
                             <ul class="nav-second-level">
                                 <li>
-                                    <a href="{{ route('warehouse.products.index') }}" class="{{ request()->routeIs('warehouse.products.index') ? 'active' : '' }}">
+                                    <a href="{{ route('warehouse.products.index') }}"
+                                        class="{{ request()->routeIs('warehouse.products.index') ? 'active' : '' }}">
                                         <i class="mdi mdi-format-list-bulleted me-2"></i> All Products
                                     </a>
                                 </li>
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
                                     <li>
-                                        <a href="{{ route('warehouse.products.create') }}" class="{{ request()->routeIs('warehouse.products.create') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.products.create') }}"
+                                            class="{{ request()->routeIs('warehouse.products.create') ? 'active' : '' }}">
                                             <i class="mdi mdi-plus-circle-outline me-2"></i> Add New Product
                                         </a>
                                     </li>
@@ -96,7 +98,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
                                     <li>
-                                        <a href="{{ route('warehouse.product-options.index') }}" class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.product-options.index') }}"
+                                            class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-cogs me-2"></i> Product Options
                                         </a>
                                     </li>
@@ -104,17 +107,20 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
                                     <li>
-                                        <a href="{{ route('warehouse.categories.index') }}" class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.categories.index') }}"
+                                            class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-shape-outline me-2"></i> Categories
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('warehouse.subcategories.index') }}" class="{{ request()->routeIs('warehouse.subcategories.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.subcategories.index') }}"
+                                            class="{{ request()->routeIs('warehouse.subcategories.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-shape-plus-outline me-2"></i> Subcategories
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('warehouse.departments.index') }}" class="{{ request()->routeIs('warehouse.departments.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.departments.index') }}"
+                                            class="{{ request()->routeIs('warehouse.departments.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-view-grid-plus-outline me-2"></i> Departments
                                         </a>
                                     </li>
@@ -138,13 +144,15 @@
                             id="sidebarStores">
                             <ul class="nav-second-level">
                                 <li>
-                                    <a href="{{ route('warehouse.stores.index') }}" class="{{ request()->routeIs('warehouse.stores.index') ? 'active' : '' }}">
+                                    <a href="{{ route('warehouse.stores.index') }}"
+                                        class="{{ request()->routeIs('warehouse.stores.index') ? 'active' : '' }}">
                                         <i class="mdi mdi-store-outline me-2"></i> All Stores List
                                     </a>
                                 </li>
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_stores'))
                                     <li>
-                                        <a href="{{ route('warehouse.stores.create') }}" class="{{ request()->routeIs('warehouse.stores.create') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.stores.create') }}"
+                                            class="{{ request()->routeIs('warehouse.stores.create') ? 'active' : '' }}">
                                             <i class="mdi mdi-domain-plus me-2"></i> Register New Store
                                         </a>
                                     </li>
@@ -171,7 +179,8 @@
                             <ul class="nav-second-level">
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_vendors'))
                                     <li>
-                                        <a href="{{ route('warehouse.vendors.index') }}" class="{{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.vendors.index') }}"
+                                            class="{{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-account-group-outline me-2"></i> Vendors
                                         </a>
                                     </li>
@@ -179,7 +188,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
                                     <li>
-                                        <a href="{{ route('warehouse.purchase-orders.index') }}" class="{{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.purchase-orders.index') }}"
+                                            class="{{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-file-document-outline me-2"></i> Purchase Orders
                                         </a>
                                     </li>
@@ -193,6 +203,7 @@
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_requests'))
                     <li class="menu-title mt-2">Fulfillment & Dispatch</li>
                     <li>
+                        {{-- Parent Menu Link --}}
                         <a href="#sidebarStoreOrders" data-bs-toggle="collapse"
                             class="{{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:truck-loading"></iconify-icon>
@@ -204,26 +215,30 @@
                             </span>
                             <span class="menu-arrow"></span>
                         </a>
+
+                        {{-- Submenu Container --}}
                         <div class="collapse {{ request()->routeIs('warehouse.stock-requests.*') || request()->routeIs('warehouse.discrepancy.*') ? 'show' : '' }}"
                             id="sidebarStoreOrders">
                             <ul class="nav-second-level">
+
+                               
+
+                                {{-- 2. All Orders History (Active if NOT 'pending') --}}
                                 <li>
-                                    <a href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}" class="{{ request()->routeIs('warehouse.stock-requests.*') && request('status') == 'pending' ? 'active' : '' }}">
-                                        <i class="mdi mdi-clock-outline me-2"></i> Pending Order
+                                    <a href="{{ route('warehouse.stock-requests.index') }}"
+                                        class="{{ request()->routeIs('warehouse.stock-requests.*') && request()->query('status') !== 'pending' ? 'active' : '' }}">
+                                        <i class="mdi mdi-history me-2"></i> All Orders
                                         @if (isset($pendingRequestsCount) && $pendingRequestsCount > 0)
                                             <span
                                                 class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
                                         @endif
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="{{ route('warehouse.stock-requests.index') }}" class="{{ request()->routeIs('warehouse.stock-requests.*') && !request('status') ? 'active' : '' }}">
-                                        <i class="mdi mdi-history me-2"></i> All Orders History
-                                    </a>
-                                </li>
+
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_discrepancies'))
                                     <li>
-                                        <a href="{{ route('warehouse.discrepancy.index') }}" class="{{ request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.discrepancy.index') }}"
+                                            class="{{ request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-alert-circle-outline me-2"></i> Discrepancy
                                         </a>
                                     </li>
@@ -249,7 +264,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_overview'))
                                     <li>
-                                        <a href="{{ route('warehouse.stock-control.overview') }}" class="{{ request()->routeIs('warehouse.stock-control.overview') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.stock-control.overview') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.overview') ? 'active' : '' }}">
                                             <i class="mdi mdi-view-dashboard-outline me-2"></i> Stock Overview
                                         </a>
                                     </li>
@@ -266,7 +282,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_recalls'))
                                     <li>
-                                        <a href="{{ route('warehouse.stock-control.recall') }}" class="{{ request()->routeIs('warehouse.stock-control.recall') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.stock-control.recall') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.recall') ? 'active' : '' }}">
                                             <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
                                             @if (isset($pendingRecallCount) && $pendingRecallCount > 0)
                                                 <span
@@ -278,7 +295,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_valuation'))
                                     <li>
-                                        <a href="{{ route('warehouse.stock-control.valuation') }}" class="{{ request()->routeIs('warehouse.stock-control.valuation') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.stock-control.valuation') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.valuation') ? 'active' : '' }}">
                                             <i class="mdi mdi-cash-multiple me-2"></i> Stock Valuations
                                         </a>
                                     </li>
@@ -286,7 +304,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_min_max'))
                                     <li>
-                                        <a href="{{ route('warehouse.stock-control.minmax.index') }}" class="{{ request()->routeIs('warehouse.stock-control.minmax.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.stock-control.minmax.index') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.minmax.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-sort-variant-lock me-2"></i> Min-Max Levels
                                         </a>
                                     </li>
@@ -310,7 +329,7 @@
                         auth()->user()->hasPermission('view_financial_reports') ||
                         auth()->user()->hasPermission('view_expiry_report'))
                     <li class="menu-title mt-2">Finance & Reports</li>
-                    
+
                     {{-- Finance Group --}}
                     @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
                         <li>
@@ -324,12 +343,14 @@
                                 id="sidebarFinance">
                                 <ul class="nav-second-level">
                                     <li>
-                                        <a href="{{ route('warehouse.finance.index') }}" class="{{ request()->routeIs('warehouse.finance.index') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.finance.index') }}"
+                                            class="{{ request()->routeIs('warehouse.finance.index') ? 'active' : '' }}">
                                             <i class="mdi mdi-chart-line me-2"></i> Total Revenue
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('warehouse.finance.ledger') }}" class="{{ request()->routeIs('warehouse.finance.ledger') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.finance.ledger') }}"
+                                            class="{{ request()->routeIs('warehouse.finance.ledger') ? 'active' : '' }}">
                                             <i class="mdi mdi-book-open-page-variant me-2"></i> Transaction Ledger
                                         </a>
                                     </li>
@@ -351,7 +372,8 @@
                                 id="sidebarReports">
                                 <ul class="nav-second-level">
                                     <li>
-                                        <a href="{{ route('warehouse.reports.expiry') }}" class="{{ request()->routeIs('warehouse.reports.expiry') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.reports.expiry') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.expiry') ? 'active' : '' }}">
                                             <i class="mdi mdi-timer-alert me-2"></i> Expiry Report
                                         </a>
                                     </li>
@@ -378,7 +400,8 @@
                             <ul class="nav-second-level">
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_staff'))
                                     <li>
-                                        <a href="{{ route('warehouse.staff.index') }}" class="{{ request()->routeIs('warehouse.staff.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.staff.index') }}"
+                                            class="{{ request()->routeIs('warehouse.staff.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-card-account-details-outline me-2"></i> Warehouse Staff
                                         </a>
                                     </li>
@@ -386,7 +409,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_roles'))
                                     <li>
-                                        <a href="{{ route('warehouse.roles.index') }}" class="{{ request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
+                                        <a href="{{ route('warehouse.roles.index') }}"
+                                            class="{{ request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-shield-account-outline me-2"></i> Roles & Permissions
                                         </a>
                                     </li>
@@ -399,7 +423,7 @@
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audit_logs'))
                     <li>
                         <a href="{{ route('warehouse.activity-logs.index') }}"
-                           class="{{ request()->routeIs('warehouse.activity-logs.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.activity-logs.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:shield-check"></iconify-icon>
                             <span class="sidebar-text">Audit Logs</span>
                         </a>

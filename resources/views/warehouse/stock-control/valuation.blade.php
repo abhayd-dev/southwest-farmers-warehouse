@@ -23,7 +23,6 @@
                 <div class="card border-0 shadow-sm h-100 overflow-hidden">
                     <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-danger">
                         <div class="position-absolute top-0 end-0 opacity-10 p-3">
-                            <i class="mdi mdi-cash-multiple text-danger" style="font-size: 4rem;"></i>
                         </div>
 
                         <div class="d-flex align-items-center mb-3">

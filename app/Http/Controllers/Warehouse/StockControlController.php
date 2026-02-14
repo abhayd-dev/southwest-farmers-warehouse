@@ -213,10 +213,15 @@ class StockControlController extends Controller
     public function productAnalytics(Request $request, Product $product)
     {
         set_time_limit(300);
+
+        // FIX: Ensure cost price is never null (default to 0)
+        $costPrice = $product->cost_price ?? 0;
+
         $warehouseQty = ProductStock::where('product_id', $product->id)->where('warehouse_id', 1)->sum('quantity');
         $storesQty = StoreStock::where('product_id', $product->id)->sum('quantity');
-        $warehouseValue = $warehouseQty * $product->cost_price;
-        $storesValue = $storesQty * $product->cost_price;
+
+        $warehouseValue = $warehouseQty * $costPrice;
+        $storesValue = $storesQty * $costPrice;
         $totalValue = $warehouseValue + $storesValue;
 
         $storeDistribution = StoreStock::where('store_stocks.product_id', $product->id)
@@ -224,7 +229,8 @@ class StockControlController extends Controller
             ->select([
                 'store_details.store_name',
                 'store_stocks.quantity',
-                DB::raw('store_stocks.quantity * ' . $product->cost_price . ' as value')
+                // FIX: Use the variable $costPrice (which is 0 if null)
+                DB::raw('store_stocks.quantity * ' . $costPrice . ' as value')
             ])
             ->orderByDesc('value')
             ->get();

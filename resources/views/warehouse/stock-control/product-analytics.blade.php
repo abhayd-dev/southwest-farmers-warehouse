@@ -20,10 +20,10 @@
 
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card border-0 shadow-sm h-100 text-danger">
                     <div class="card-body text-center p-4">
-                        <h6 class="text-white-50 mb-1">Total System Value</h6>
-                        <h3 class="fw-bold">$ {{ number_format($totalValue, 2) }}</h3>
+                        <h6 class="text-danger-50 mb-1">Total System Value</h6>
+                        <h3 class="text-danger fw-bold">$ {{ number_format($totalValue, 2) }}</h3>
                     </div>
                 </div>
             </div>

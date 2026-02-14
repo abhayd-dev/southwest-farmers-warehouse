@@ -12,17 +12,17 @@
                 <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
             </select>
 
-            <button class="btn btn-primary" type="submit">
+            {{-- Apply / Search Button --}}
+            <button class="btn btn-primary" type="submit" title="Apply Filter">
                 <i class="mdi mdi-magnify"></i>
             </button>
 
-            @if (request('search') || request()->has('status'))
-                <a href="{{ route('warehouse.product-options.index') }}" 
-                   class="btn btn-outline-secondary" 
-                   title="Clear Filters">
-                    <i class="mdi mdi-close"></i>
-                </a>
-            @endif
+            {{-- Reset Button --}}
+            <a href="{{ route('warehouse.product-options.index') }}" 
+               class="btn btn-outline-secondary" 
+               title="Reset Filters">
+                <i class="mdi mdi-refresh"></i>
+            </a>
         </div>
     </form>
 
