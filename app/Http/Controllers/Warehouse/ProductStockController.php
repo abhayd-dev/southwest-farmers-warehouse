@@ -39,6 +39,10 @@ class ProductStockController extends Controller
             ->when($request->filter == 'low_stock', function ($q) {
                 $q->whereColumn('quantity', '<=', 'min_stock_level');
             })
+            ->when($request->search, function ($q) use ($request) {
+                $s = $request->search;
+                $q->orWhere('bin_location', 'ilike', "%$s%");
+            })
             ->latest('updated_at')
             ->paginate(15);
 
@@ -75,7 +79,7 @@ class ProductStockController extends Controller
             'batch_number' => 'nullable|string|max:50',
             'expiry_date'  => 'nullable|date',
             'cost_price'   => 'nullable|numeric|min:0',
-
+            'bin_location' => 'nullable|string|max:50', // NEW
             'remarks'      => 'nullable|string|max:255',
         ]);
 
@@ -93,7 +97,7 @@ class ProductStockController extends Controller
             $batchData = [
                 'batch_number' => $request->batch_number,
                 'exp_date'     => $request->expiry_date,
-                'cost_price'   => $request->cost_price ?? $product->cost_price,
+                'cost_price'   => $request->cost_price ?? ($product->cost_price ?? 0),
             ];
 
             // 3. Call the Model Helper (The logic we wrote earlier)
@@ -105,6 +109,13 @@ class ProductStockController extends Controller
                 Auth::id(), // User
                 $request->remarks
             );
+
+            // 4. Update Bin Location if provided
+            if ($request->filled('bin_location')) {
+                ProductStock::where('product_id', $product->id)
+                    ->where('warehouse_id', $warehouseId)
+                    ->update(['bin_location' => $request->bin_location]);
+            }
 
             DB::commit();
             return redirect()->route('warehouse.stocks.index')

@@ -25,6 +25,13 @@ return new class extends Migration
             // Status
             $table->string('status')->default('draft');
             $table->string('payment_status')->default('unpaid');
+            
+            // Approval Workflow
+            $table->string('approval_email')->nullable();
+            $table->string('approval_status')->default('pending'); // pending, approved, rejected
+            $table->string('approved_by_email')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->text('approval_reason')->nullable();
             $table->text('notes')->nullable();
             
             $table->foreignId('created_by')->constrained('ware_users');

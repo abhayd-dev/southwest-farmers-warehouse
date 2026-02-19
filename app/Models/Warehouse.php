@@ -27,6 +27,14 @@ class Warehouse extends Model
     ];
 
     /**
+     * Accessor for 'name' attribute (maps to warehouse_name)
+     */
+    public function getNameAttribute()
+    {
+        return $this->warehouse_name;
+    }
+
+    /**
      * Get all stores associated with this warehouse.
      */
     public function stores()

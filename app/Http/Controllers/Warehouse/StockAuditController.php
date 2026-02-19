@@ -82,7 +82,8 @@ class StockAuditController extends Controller
                 });
             }
 
-            $stocks = $stockQuery->get();
+            // ORDER BY BIN LOCATION for optimized walking path
+            $stocks = $stockQuery->orderBy('bin_location')->get();
 
             if ($stocks->isEmpty()) {
                 throw new \Exception("No products found for this audit criteria.");
@@ -110,7 +111,8 @@ class StockAuditController extends Controller
 
     // ... (Show, UpdateCounts, Finalize methods remain unchanged) ...
     public function show($id) {
-        $audit = StockAudit::with(['items.product'])->findOrFail($id);
+        // Eager load product stock to get bin_location
+        $audit = StockAudit::with(['items.product.stock', 'initiator'])->findOrFail($id);
         return view('warehouse.stock-control.audit.show', compact('audit'));
     }
 

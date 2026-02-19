@@ -6,6 +6,7 @@ use App\Models\StoreDetail;
 use App\Models\StoreUser;
 use App\Models\StoreStock;
 use App\Models\StoreRole;
+use App\Models\StoreOrderSchedule;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -57,6 +58,19 @@ class StoreService
             $store->update($data);
             return $store;
         });
+    }
+
+    public function updateStoreSchedule($storeId, array $data)
+    {
+        return StoreOrderSchedule::updateOrCreate(
+            ['store_id' => $storeId],
+            [
+                'expected_day'      => $data['expected_day'],
+                'time_window_start' => $data['order_time'] ?? '09:00:00', // Mapping order_time to start window
+                'cutoff_time'       => '17:00:00', // Default cutoff
+                'is_active'         => isset($data['is_active']),
+            ]
+        );
     }
 
     public function createStoreStaff($storeId, array $data)

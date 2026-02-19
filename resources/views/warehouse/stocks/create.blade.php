@@ -110,6 +110,12 @@
                             </div>
 
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Bin Location</label>
+                                <input type="text" name="bin_location" class="form-control" placeholder="e.g. A1-B2-C3">
+                                <div class="form-text small">Updates the product's primary location.</div>
+                            </div>
+
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Remarks</label>
                                 <input type="text" name="remarks" class="form-control" placeholder="e.g. PO #1234, Vendor Name">
                             </div>

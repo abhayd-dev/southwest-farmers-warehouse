@@ -16,7 +16,8 @@ class StoreStock extends Model
         'product_id',
         'quantity',
         'selling_price',
-        'alert_level'
+        'min_stock',
+        'max_stock',
     ];
 
     protected $casts = [

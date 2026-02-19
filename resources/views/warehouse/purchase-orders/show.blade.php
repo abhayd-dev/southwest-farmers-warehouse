@@ -42,7 +42,26 @@
                             <a href="{{ route('warehouse.purchase-orders.labels', $purchaseOrder->id) }}" class="btn btn-dark shadow-sm" target="_blank">
                                 <i class="mdi mdi-barcode-scan me-1"></i> Print Labels
                             </a>
+                            <a href="{{ route('warehouse.purchase-orders.receiving-history', $purchaseOrder->id) }}" class="btn btn-outline-info shadow-sm">
+                                <i class="mdi mdi-history me-1"></i> Receiving History
+                            </a>
                             @endif
+                        @endif
+
+                        {{-- PRINT PO --}}
+                        <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}" class="btn btn-outline-dark shadow-sm" target="_blank">
+                            <i class="mdi mdi-printer me-1"></i> Print PO
+                        </a>
+
+                        {{-- SEND TO VENDOR --}}
+                        @if ($purchaseOrder->status === 'draft' || $purchaseOrder->status === 'ordered')
+                            <form action="{{ route('warehouse.purchase-orders.send-to-vendor', $purchaseOrder->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="send_email" value="1">
+                                <button class="btn btn-success shadow-sm" type="submit">
+                                    <i class="mdi mdi-email-send me-1"></i> Send to Vendor
+                                </button>
+                            </form>
                         @endif
 
                         {{-- MARK AS ORDERED --}}
@@ -106,13 +125,57 @@
             </div>
         </div>
 
+        {{-- APPROVAL STATUS SECTION --}}
+        @if($purchaseOrder->approval_email)
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm border-start border-4 border-{{ $purchaseOrder->isApproved() ? 'success' : ($purchaseOrder->isRejected() ? 'danger' : 'warning') }}">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-{{ $purchaseOrder->isApproved() ? 'success' : ($purchaseOrder->isRejected() ? 'danger' : 'warning') }} bg-opacity-10 text-{{ $purchaseOrder->isApproved() ? 'success' : ($purchaseOrder->isRejected() ? 'danger' : 'warning') }} rounded p-3 me-3">
+                                    <i class="mdi mdi-{{ $purchaseOrder->isApproved() ? 'check-circle' : ($purchaseOrder->isRejected() ? 'close-circle' : 'clock-outline') }} fs-3"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Approval Status: 
+                                        <span class="badge bg-{{ $purchaseOrder->isApproved() ? 'success' : ($purchaseOrder->isRejected() ? 'danger' : 'warning') }}">
+                                            {{ strtoupper($purchaseOrder->approval_status) }}
+                                        </span>
+                                    </h6>
+                                    <small class="text-muted">Approver: {{ $purchaseOrder->approval_email }}</small>
+                                </div>
+                            </div>
+                            @if($purchaseOrder->approved_by_email)
+                            <div class="text-end">
+                                <small class="text-muted d-block">Actioned by: <strong>{{ $purchaseOrder->approved_by_email }}</strong></small>
+                                @if($purchaseOrder->approved_at)
+                                <small class="text-muted">{{ $purchaseOrder->approved_at->format('d M, Y H:i') }}</small>
+                                @endif
+                            </div>
+                            @endif
+                        </div>
+                        @if($purchaseOrder->approval_reason)
+                        <div class="mt-3 pt-3 border-top">
+                            <strong class="text-muted small">Reason:</strong>
+                            <p class="mb-0 mt-1">{{ $purchaseOrder->approval_reason }}</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- RECEIVE SECTION (Protected & Conditional) --}}
         @if ($purchaseOrder->status !== 'draft' && $purchaseOrder->status !== 'completed' && $purchaseOrder->status !== 'cancelled')
             
             @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('receive_po'))
             <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
-                <div class="card-header bg-white border-bottom py-3">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold text-primary mb-0"><i class="mdi mdi-truck-check me-2"></i> Receive Incoming Stock</h5>
+                    <button type="button" id="receiveAllBtn" class="btn btn-sm btn-outline-primary">
+                        <i class="mdi mdi-check-all me-1"></i> Receive All Pending
+                    </button>
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}" method="POST">
@@ -128,14 +191,16 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0 text-nowrap">
+                            <table class="table table-bordered align-middle mb-0">
                                 <thead class="bg-light text-uppercase small text-muted">
                                     <tr>
+                                        <th class="px-3">UPC</th>
                                         <th class="px-3">Product</th>
                                         <th class="text-center">Ordered</th>
                                         <th class="text-center">Pending</th>
-                                        <th style="min-width: 140px;">Receive Now</th>
-                                        <th style="min-width: 160px;">Batch No.</th>
+                                        <th style="min-width: 130px;">Receive Now</th>
+                                        <th style="min-width: 150px;">Batch No.</th>
+                                        <th style="min-width: 140px;">Mfg Date</th>
                                         <th style="min-width: 140px;">Expiry Date</th>
                                     </tr>
                                 </thead>
@@ -144,22 +209,27 @@
                                         @if ($item->pending_quantity > 0)
                                             <tr>
                                                 <td class="px-3">
-                                                    <span class="fw-semibold text-dark">{{ $item->product->product_name }}</span>
-                                                    <br> 
+                                                    <span class="badge bg-secondary">{{ $item->product->barcode ?? 'N/A' }}</span>
+                                                </td>
+                                                <td class="px-3">
+                                                    <span class="fw-semibold text-dark">{{ $item->product->product_name }}</span><br>
                                                     <small class="text-muted">SKU: {{ $item->product->sku }}</small>
                                                 </td>
                                                 <td class="text-center fw-medium">{{ $item->requested_quantity }}</td>
-                                                <td class="text-center text-danger fw-bold">{{ $item->pending_quantity }}</td>
+                                                <td class="text-center text-danger fw-bold pending-qty" data-pending="{{ $item->pending_quantity }}">{{ $item->pending_quantity }}</td>
                                                 <td>
-                                                    <div class="input-group input-group-sm">
-                                                        <input type="number" name="items[{{ $item->id }}][receive_qty]" class="form-control text-center fw-bold text-primary" max="{{ $item->pending_quantity }}" min="0" value="0">
-                                                    </div>
+                                                    <input type="number" name="items[{{ $item->id }}][receive_qty]"
+                                                           class="form-control form-control-sm text-center fw-bold text-primary receive-qty-input"
+                                                           max="{{ $item->pending_quantity }}" min="0" value="0">
                                                 </td>
                                                 <td>
                                                     <input type="text" name="items[{{ $item->id }}][batch_number]" class="form-control form-control-sm" placeholder="Auto if empty">
                                                 </td>
                                                 <td>
-                                                    <input type="date" name="items[{{ $item->id }}][expiry_date]" class="form-control form-control-sm">
+                                                    <input type="date" name="items[{{ $item->id }}][mfg_date]" class="form-control form-control-sm">
+                                                </td>
+                                                <td>
+                                                    <input type="date" name="items[{{ $item->id }}][expiry_date]" class="form-control form-control-sm" min="{{ date('Y-m-d') }}">
                                                 </td>
                                             </tr>
                                         @endif
@@ -237,4 +307,19 @@
             </div>
         </div>
     </div>
+
+    @push("scripts")
+    <script>
+        // Receive All Pending — fills all receive_qty inputs with their pending quantity
+        document.getElementById("receiveAllBtn")?.addEventListener("click", function() {
+            document.querySelectorAll(".receive-qty-input").forEach(function(input) {
+                const row = input.closest("tr");
+                const pendingCell = row.querySelector(".pending-qty");
+                if (pendingCell) {
+                    input.value = pendingCell.dataset.pending;
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

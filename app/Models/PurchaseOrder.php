@@ -17,12 +17,14 @@ class PurchaseOrder extends Model
     protected $fillable = [
         'po_number', 'vendor_id', 'warehouse_id', 'order_date', 'expected_delivery_date',
         'total_amount', 'tax_amount', 'other_costs', 'status', 'payment_status',
-        'notes', 'created_by', 'approved_by'
+        'notes', 'created_by', 'approved_by',
+        'approval_email', 'approval_status', 'approved_by_email', 'approved_at', 'approval_reason'
     ];
 
     protected $casts = [
         'order_date' => 'date',
         'expected_delivery_date' => 'date',
+        'approved_at' => 'datetime',
     ];
 
     // Status Constants
@@ -47,11 +49,52 @@ class PurchaseOrder extends Model
         return $this->belongsTo(WareUser::class, 'created_by');
     }
 
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
     public function getProgressAttribute()
     {
         $totalReq = $this->items->sum('requested_quantity');
         if($totalReq == 0) return 0;
         $totalRec = $this->items->sum('received_quantity');
         return round(($totalRec / $totalReq) * 100);
+    }
+
+    // Approval methods
+    public function approve($approverEmail, $reason = null)
+    {
+        $this->update([
+            'approval_status' => 'approved',
+            'approved_by_email' => $approverEmail,
+            'approved_at' => now(),
+            'approval_reason' => $reason,
+        ]);
+    }
+
+    public function reject($approverEmail, $reason)
+    {
+        $this->update([
+            'approval_status' => 'rejected',
+            'approved_by_email' => $approverEmail,
+            'approved_at' => now(),
+            'approval_reason' => $reason,
+        ]);
+    }
+
+    public function isPending()
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    public function isApproved()
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    public function isRejected()
+    {
+        return $this->approval_status === 'rejected';
     }
 }

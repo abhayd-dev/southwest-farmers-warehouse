@@ -65,6 +65,20 @@
                                 <label class="form-label fw-semibold">Notes / Remarks</label>
                                 <textarea name="notes" class="form-control" rows="4" placeholder="Optional notes for this order..."></textarea>
                             </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Approval Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="mdi mdi-email-outline"></i></span>
+                                    <input 
+                                        type="email" 
+                                        name="approval_email" 
+                                        class="form-control border-start-0" 
+                                        placeholder="manager@example.com"
+                                    >
+                                </div>
+                                <small class="text-muted">If provided, an approval email will be sent to this address</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,7 +139,9 @@
         function addRow() {
             let options = '<option value="">Select Product</option>';
             products.forEach(p => {
-                options += `<option value="${p.id}" data-cost="${p.cost_price}">${p.product_name} (${p.sku})</option>`;
+                // Show Barcode first, then product name
+                const barcode = p.barcode || 'NO-BARCODE';
+                options += `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
             });
 
             const html = `

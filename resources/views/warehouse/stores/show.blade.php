@@ -167,6 +167,84 @@
             </div>
         </div>
 
+        {{-- Schedule & Logs Row --}}
+        <div class="row g-4 mb-4">
+            {{-- Schedule Settings --}}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3 border-bottom">
+                         <h6 class="mb-0 fw-bold text-primary"><i class="mdi mdi-calendar-clock me-2"></i> Auto-Order Schedule</h6>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('warehouse.stores.schedule.update', $store->id) }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Active Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_active" id="scheduleActive" {{ $schedule->is_active ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="scheduleActive">Enable Auto-Ordering</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Preferred Day</label>
+                                <select name="expected_day" class="form-select">
+                                    @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                                        <option value="{{ $day }}" {{ $schedule->expected_day == $day ? 'selected' : '' }}>{{ $day }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Order Time</label>
+                                <input type="time" name="order_time" class="form-control" value="{{ substr($schedule->time_window_start, 0, 5) }}">
+                                <div class="form-text small">System will attempt to generate POs around this time.</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save me-1"></i> Save Schedule</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Notification Logs --}}
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="mdi mdi-bell-ring-outline me-2"></i> Recent Alerts</h6>
+                        <span class="badge bg-light text-dark border">Last 20</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0 text-nowrap">
+                                <thead class="bg-light text-muted small text-uppercase sticky-top">
+                                    <tr>
+                                        <th class="ps-4">Time</th>
+                                        <th>Type</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($notificationLogs as $log)
+                                        <tr>
+                                            <td class="ps-4 text-muted small">{{ $log->created_at->diffForHumans() }}</td>
+                                            <td>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">{{ $log->notification_for }}</span>
+                                            </td>
+                                            <td class="text-wrap" style="min-width: 200px;">
+                                                {{ $log->message }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">No recent alerts.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Store Inventory Table --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 border-bottom">

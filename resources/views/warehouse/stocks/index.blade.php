@@ -77,6 +77,7 @@
                             <tr>
                                 <th class="px-4 py-3">Product Info</th>
                                 <th class="py-3">Category</th>
+                                <th class="py-3">Bin Loc</th>
                                 <th class="text-center py-3">Current Quantity</th>
                                 <th class="text-end px-4 py-3">Value</th>
                                 <th class="text-end px-4 py-3">Action</th>
@@ -105,6 +106,13 @@
                                         <span class="badge bg-primary bg-opacity-10 text-primary">
                                             {{ $stock->product->category->name ?? 'N/A' }}
                                         </span>
+                                    </td>
+                                    <td class="py-3">
+                                        @if($stock->bin_location)
+                                            <span class="badge bg-warning border text-dark">{{ $stock->bin_location }}</span>
+                                        @else
+                                            <span class="text-muted small fst-italic">--</span>
+                                        @endif
                                     </td>
                                     <td class="text-center py-3">
                                         @php

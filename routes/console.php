@@ -13,3 +13,8 @@ Artisan::command('inspire', function () {
 Schedule::command('po:check-delays')->hourly();
 
 Schedule::command('warehouse:automation')->dailyAt('09:00');
+
+// Phase 3: Store Order Automation
+Schedule::command('store-orders:check-alerts')->hourly();
+Schedule::command('store-orders:auto-generate')->dailyAt('07:00');
+

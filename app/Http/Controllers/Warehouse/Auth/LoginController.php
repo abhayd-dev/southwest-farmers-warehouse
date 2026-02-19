@@ -22,6 +22,19 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            // LOG LOGIN ACTIVITY
+            \App\Models\WareActivityLog::create([
+                'causer_id'    => Auth::id(),
+                'causer_type'  => get_class(Auth::user()),
+                'subject_type' => get_class(Auth::user()),
+                'subject_id'   => Auth::id(),
+                'action'       => 'login',
+                'description'  => 'User logged in',
+                'ip_address'   => $request->ip(),
+                'user_agent'   => $request->userAgent(),
+            ]);
+
             return redirect()->route('dashboard');
         }
 
@@ -32,6 +45,20 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        // LOG LOGOUT ACTIVITY
+        if (Auth::check()) {
+            \App\Models\WareActivityLog::create([
+                'causer_id'    => Auth::id(),
+                'causer_type'  => get_class(Auth::user()),
+                'subject_type' => get_class(Auth::user()),
+                'subject_id'   => Auth::id(),
+                'action'       => 'logout',
+                'description'  => 'User logged out',
+                'ip_address'   => $request->ip(),
+                'user_agent'   => $request->userAgent(),
+            ]);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

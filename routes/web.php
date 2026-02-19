@@ -20,16 +20,19 @@ use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\Warehouse\PurchaseOrderController;
 use App\Http\Controllers\Warehouse\RecallController;
-use App\Http\Controllers\Warehouse\RolePermissionController;
+use App\Http\Controllers\Warehouse\RoleController;
 use App\Http\Controllers\Warehouse\StaffController;
 use App\Http\Controllers\Warehouse\StockAuditController;
 use App\Http\Controllers\Warehouse\StockControlController;
 use App\Http\Controllers\Warehouse\StockRequestController;
+use App\Http\Controllers\Warehouse\StorePurchaseOrderController;
 use App\Http\Controllers\Warehouse\StoreController;
 use App\Http\Controllers\Warehouse\SupportTicketController;
 use App\Http\Controllers\Warehouse\TransferMonitorController;
 use App\Http\Controllers\Warehouse\VendorController;
 use App\Http\Controllers\Warehouse\WareSettingController;
+use App\Http\Controllers\Warehouse\FreeWeightController;
+use App\Http\Controllers\Warehouse\PalletController;
 use App\Http\Controllers\WarehouseController;
 
 Route::middleware('guest')->group(function () {
@@ -94,15 +97,21 @@ Route::middleware('auth')->group(function () {
             Route::post('/stock/mark-damaged',  'markAsDamaged')->name('warehouse.stock.mark-damaged');
         });
 
-        Route::resource('roles', RolePermissionController::class)->names('warehouse.roles');
-        Route::post('staff/status', [StaffController::class, 'changeStatus'])->name('warehouse.staff.status');
-        Route::resource('staff', StaffController::class)->names('warehouse.staff');
+        Route::resource('roles', RoleController::class)
+            ->names('warehouse.roles')
+            ->middleware('permission:manage_roles');
+            
+        Route::post('staff/status', [StaffController::class, 'changeStatus'])->name('warehouse.staff.status')->middleware('permission:manage_staff');
+        Route::resource('staff', StaffController::class)
+            ->names('warehouse.staff')
+            ->middleware('permission:manage_staff');
 
         Route::post('stores/update-status', [StoreController::class, 'updateStatus'])->name('warehouse.stores.update-status');
         Route::get('stores/{id}/analytics', [StoreController::class, 'analytics'])->name('warehouse.stores.analytics');
         Route::resource('stores', StoreController::class)->names('warehouse.stores');
         Route::post('stores/{id}/staff', [StoreController::class, 'storeStaff'])->name('warehouse.stores.staff.store');
         Route::delete('stores/staff/{id}', [StoreController::class, 'destroyStaff'])->name('warehouse.stores.staff.destroy');
+        Route::post('stores/{id}/schedule', [StoreController::class, 'updateSchedule'])->name('warehouse.stores.schedule.update');
 
         Route::controller(StockRequestController::class)->group(function () {
             Route::get('stock-requests', 'index')->name('warehouse.stock-requests.index');
@@ -111,6 +120,25 @@ Route::middleware('auth')->group(function () {
             Route::post('stock-requests/verify-payment', 'verifyPayment')->name('warehouse.stock-requests.verify-payment');
             Route::post('stock-requests/purchase-in', 'purchaseIn')->name('warehouse.stock-requests.purchase-in');
         });
+
+        // ===== STORE PURCHASE ORDERS (Phase 3) =====
+        Route::controller(StorePurchaseOrderController::class)
+            ->prefix('store-orders')
+            ->name('warehouse.store-orders.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{storeOrder}', 'show')->name('show');
+                Route::post('/{storeOrder}/approve', 'approve')->name('approve');
+                Route::post('/{storeOrder}/reject', 'reject')->name('reject');
+                Route::post('/{storeOrder}/dispatch', 'dispatch')->name('dispatch');
+                Route::post('/{storeOrder}/complete', 'complete')->name('complete');
+                Route::patch('/{storeOrder}/note', 'updateNote')->name('note');
+                // Per-item actions
+                Route::post('/items/{item}/approve', 'approveItem')->name('item.approve');
+                Route::post('/items/{item}/reject', 'rejectItem')->name('item.reject');
+                // Auto-PO generation (manual trigger)
+                Route::post('/generate/{store}', 'generateForStore')->name('generate');
+            });
 
         // ===== STOCK CONTROL MODULE ROUTES (COMPLETE) =====
         Route::prefix('stock-control')->name('warehouse.stock-control.')->group(function () {
@@ -166,6 +194,16 @@ Route::middleware('auth')->group(function () {
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
         Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
+        Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
+        Route::post('purchase-orders/{purchase_order}/send-to-vendor', [PurchaseOrderController::class, 'sendToVendor'])->name('warehouse.purchase-orders.send-to-vendor');
+        
+        // PO Approval Routes (signed URLs for email approval)
+        Route::get('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'handleApproval'])
+            ->name('warehouse.purchase-orders.approve')
+            ->middleware('signed');
+
+        Route::get('purchase-orders/{purchaseOrder}/receiving-history', [PurchaseOrderController::class, 'receivingHistory'])
+            ->name('warehouse.purchase-orders.receiving-history');
 
         Route::controller(DiscrepancyController::class)->group(function () {
             Route::get('/discrepancy', 'index')->name('warehouse.discrepancy.index');
@@ -211,6 +249,48 @@ Route::middleware('auth')->group(function () {
         Route::get('reports/expiry', [ExpiryReportController::class, 'index'])
             ->name('warehouse.reports.expiry');
 
+        // General Reports
+        Route::controller(\App\Http\Controllers\Warehouse\ReportController::class)
+            ->prefix('reports')
+            ->name('warehouse.reports.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/sales', 'sales')->name('sales');
+                Route::get('/stock-movement', 'stockMovement')->name('stock-movement');
+                Route::get('/inventory-health', 'inventoryHealth')->name('inventory-health');
+                Route::get('/fast-moving', 'fastMoving')->name('fast-moving');
+            });
+
+        // ===== FREE WEIGHT SYSTEM (Phase 5) =====
+        Route::controller(FreeWeightController::class)
+            ->prefix('free-weight')
+            ->name('warehouse.free-weight.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{bulkProduct}/packages/create', 'createPackage')->name('package.create');
+                Route::post('/{bulkProduct}/packages', 'storePackage')->name('package.store');
+                Route::get('/{bulkProduct}/events/create', 'createEvent')->name('event.create');
+                Route::post('/{bulkProduct}/events', 'storeEvent')->name('event.store');
+                Route::get('/history', 'history')->name('history');
+            });
+
+        // ===== PALLET BUILDER (Phase 5) =====
+        Route::controller(PalletController::class)
+            ->prefix('pallets')
+            ->name('warehouse.pallets.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+                Route::get('/{pallet}', 'show')->name('show');
+                Route::post('/{pallet}/items', 'addItem')->name('item.add');
+                Route::delete('/items/{item}', 'removeItem')->name('item.remove');
+                Route::post('/{pallet}/mark-ready', 'markReady')->name('mark-ready');
+                Route::get('/{pallet}/manifest', 'printManifest')->name('manifest');
+            });
+
         // Inter-Store Transfer Monitor
         Route::get('/transfers/monitor', [TransferMonitorController::class, 'index'])
             ->name('warehouse.transfers.monitor');
@@ -220,7 +300,8 @@ Route::middleware('auth')->group(function () {
 
         // Activity Logs
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])
-            ->name('warehouse.activity-logs.index');
+            ->name('warehouse.activity-logs.index')
+            ->middleware('permission:view_activity_logs');
 
         // Notifications
         Route::controller(NotificationController::class)->group(function () {

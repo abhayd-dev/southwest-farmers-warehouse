@@ -136,7 +136,7 @@ class Product extends Model
             'warehouse_qty' => ProductStock::selectRaw('COALESCE(SUM(quantity), 0)')
                 ->whereColumn('product_id', 'products.id')
                 ->where('warehouse_id', 1)
-        ])->havingRaw('warehouse_qty < ?', [$threshold]);
+        ])->whereRaw('(SELECT COALESCE(SUM(quantity), 0) FROM product_stocks WHERE product_stocks.product_id = products.id AND product_stocks.warehouse_id = 1) < ?', [$threshold]);
     }
 
     // ===== STOCK MANAGEMENT METHODS =====
@@ -155,7 +155,7 @@ class Product extends Model
                 'batch_number' => $batchData['batch_number'] ?? 'GEN-' . time(),
                 'manufacturing_date' => $batchData['mfg_date'] ?? null,
                 'expiry_date' => $batchData['exp_date'] ?? null,
-                'cost_price' => $batchData['cost_price'] ?? $this->cost_price,
+                'cost_price' => $batchData['cost_price'] ?? ($this->cost_price ?? 0),
                 'quantity' => $qty,
                 'is_active' => true,
             ]);

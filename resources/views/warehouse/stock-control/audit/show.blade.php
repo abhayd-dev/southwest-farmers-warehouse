@@ -62,7 +62,15 @@
                                     $canEdit = (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits')) && $audit->status != 'completed';
                                 @endphp
                                 <tr>
-                                    <td class="ps-4 fw-semibold">{{ $item->product->product_name }}</td>
+                                    <td class="ps-4 fw-semibold">
+                                        {{ $item->product->product_name }}
+                                        @if($item->product->stock && $item->product->stock->bin_location)
+                                            <div class="small">
+                                                <i class="mdi mdi-map-marker text-primary"></i> 
+                                                <span class="fw-bold text-dark">{{ $item->product->stock->bin_location }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td class="text-muted small">{{ $item->product->sku }}</td>
                                     
                                     {{-- System Qty --}}

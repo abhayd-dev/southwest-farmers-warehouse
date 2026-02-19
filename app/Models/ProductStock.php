@@ -11,7 +11,8 @@ class ProductStock extends Model
         'warehouse_id',
         'quantity',
         'reserved_quantity',
-        'damaged_quantity'
+        'damaged_quantity',
+        'bin_location'
     ];
 
     public function product()

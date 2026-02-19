@@ -23,7 +23,8 @@ class PurchaseOrderService
                 'warehouse_id' => 1, // Default Central
                 'order_date' => $data['order_date'],
                 'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
-                'notes' => $data['notes'],
+                'approval_email' => $data['approval_email'] ?? null,
+                'notes' => $data['notes'] ?? null,
                 'status' => PurchaseOrder::STATUS_DRAFT,
                 'created_by' => Auth::id(),
             ]);
@@ -65,10 +66,16 @@ class PurchaseOrderService
 
                 $poItem = PurchaseOrderItem::findOrFail($itemId);
 
+                // Generate batch number if not provided
+                $batchNumber = $data['batch_number'] ?? null;
+                if (empty($batchNumber)) {
+                    $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad($poItem->product_id, 4, '0', STR_PAD_LEFT) . '-' . rand(100, 999);
+                }
+
                 $batch = ProductBatch::create([
                     'product_id' => $poItem->product_id,
                     'warehouse_id' => 1,
-                    'batch_number' => $data['batch_number'] ?? 'BAT-' . time() . '-' . $itemId,
+                    'batch_number' => $batchNumber,
                     'manufacturing_date' => $data['mfg_date'] ?? null,
                     'expiry_date' => $data['expiry_date'] ?? null,
                     'cost_price' => $poItem->unit_cost,

@@ -223,11 +223,23 @@
 
                                
 
+                                {{-- 1. New PO-Based Store Orders --}}
+                                <li>
+                                    <a href="{{ route('warehouse.store-orders.index') }}"
+                                        class="{{ request()->routeIs('warehouse.store-orders.*') ? 'active' : '' }}">
+                                        <i class="mdi mdi-clipboard-list-outline me-2"></i> Store Orders (PO)
+                                        @php $pendingStorePOs = \App\Models\StorePurchaseOrder::where('status', 'pending')->count(); @endphp
+                                        @if($pendingStorePOs > 0)
+                                            <span class="badge bg-warning text-dark rounded-pill ms-2">{{ $pendingStorePOs }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+
                                 {{-- 2. All Orders History (Active if NOT 'pending') --}}
                                 <li>
                                     <a href="{{ route('warehouse.stock-requests.index') }}"
                                         class="{{ request()->routeIs('warehouse.stock-requests.*') && request()->query('status') !== 'pending' ? 'active' : '' }}">
-                                        <i class="mdi mdi-history me-2"></i> All Orders
+                                        <i class="mdi mdi-history me-2"></i> Legacy Orders
                                         @if (isset($pendingRequestsCount) && $pendingRequestsCount > 0)
                                             <span
                                                 class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
@@ -319,6 +331,26 @@
                                         </a>
                                     </li>
                                 @endif
+
+                                {{-- Free Weight System --}}
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                    <li>
+                                        <a href="{{ route('warehouse.free-weight.index') }}"
+                                            class="{{ request()->routeIs('warehouse.free-weight.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-scale me-2"></i> Free Weight
+                                        </a>
+                                    </li>
+                                @endif
+
+                                {{-- Pallet Builder --}}
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                    <li>
+                                        <a href="{{ route('warehouse.pallets.index') }}"
+                                            class="{{ request()->routeIs('warehouse.pallets.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-dolly me-2"></i> Pallet Builder
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </div>
                     </li>
@@ -371,6 +403,36 @@
                             <div class="collapse {{ request()->routeIs('warehouse.reports.*') ? 'show' : '' }}"
                                 id="sidebarReports">
                                 <ul class="nav-second-level">
+                                    <li>
+                                        <a href="{{ route('warehouse.reports.index') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.index') ? 'active' : '' }}">
+                                            <i class="mdi mdi-view-dashboard-outline me-2"></i> Analytics Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.reports.sales') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.sales') ? 'active' : '' }}">
+                                            <i class="mdi mdi-cash-multiple me-2"></i> Sales Report
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.reports.stock-movement') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.stock-movement') ? 'active' : '' }}">
+                                            <i class="mdi mdi-exchange me-2"></i> Stock Movement
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.reports.inventory-health') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.inventory-health') ? 'active' : '' }}">
+                                            <i class="mdi mdi-heart-pulse me-2"></i> Inventory Health
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.reports.fast-moving') }}"
+                                            class="{{ request()->routeIs('warehouse.reports.fast-moving') ? 'active' : '' }}">
+                                            <i class="mdi mdi-rocket me-2"></i> Fast Moving Items
+                                        </a>
+                                    </li>
                                     <li>
                                         <a href="{{ route('warehouse.reports.expiry') }}"
                                             class="{{ request()->routeIs('warehouse.reports.expiry') ? 'active' : '' }}">

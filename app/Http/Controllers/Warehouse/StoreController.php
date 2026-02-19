@@ -9,6 +9,9 @@ use App\Models\StoreRole;
 use App\Models\ProductCategory;
 use App\Models\Product;
 use App\Models\StoreStock;
+use App\Models\StoreOrderSchedule;
+use App\Models\StorePurchaseOrder;
+use App\Models\NotificationLog;
 use App\Services\StoreService;
 use Illuminate\Http\Request;
 
@@ -106,6 +109,30 @@ class StoreController extends Controller
             ->orderBy('quantity', 'desc')
             ->paginate(10);
 
+        // Fetch Schedule (or default)
+        // Fetch Schedule (or default)
+        $schedule = StoreOrderSchedule::firstOrCreate(
+            ['store_id' => $id],
+            [
+                'expected_day' => 'Monday',
+                'time_window_start' => '09:00:00',
+                'cutoff_time' => '17:00:00',
+                'is_active' => false
+            ]
+        );
+
+        // Fetch Notification Logs related to this store (via POs)
+        $poIds = StorePurchaseOrder::where('store_id', $id)->pluck('id');
+        $notificationLogs = NotificationLog::whereIn('related_id', $poIds)
+            ->whereIn('notification_for', [
+                NotificationLog::FOR_STORE_PO_ALERT,
+                NotificationLog::FOR_LATE_ORDER,
+                NotificationLog::FOR_AUTO_PO
+            ])
+            ->latest()
+            ->limit(20)
+            ->get();
+
         return view('warehouse.stores.show', compact(
             'store',
             'stats',
@@ -113,7 +140,9 @@ class StoreController extends Controller
             'roles',
             'categories',
             'products',
-            'storeInventory'
+            'storeInventory',
+            'schedule',
+            'notificationLogs'
         ));
     }
 
@@ -219,6 +248,21 @@ class StoreController extends Controller
         try {
             $this->storeService->deleteStoreStaff($id);
             return back()->with('success', 'Staff removed successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function updateSchedule(Request $request, $id)
+    {
+        $request->validate([
+            'expected_day' => 'required|string',
+            'order_time'   => 'required',
+        ]);
+
+        try {
+            $this->storeService->updateStoreSchedule($id, $request->all());
+            return back()->with('success', 'Schedule updated successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
