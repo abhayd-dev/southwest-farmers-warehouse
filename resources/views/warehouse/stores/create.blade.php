@@ -119,18 +119,26 @@
                                     </div>
                                 </div>
 
-                                {{-- City, State, Zip --}}
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
                                     <input type="text" name="city" class="form-control" placeholder="City" value="{{ old('city') }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-semibold">State <span class="text-danger">*</span></label>
                                     <input type="text" name="state" class="form-control" placeholder="State" value="{{ old('state') }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label class="form-label fw-semibold">Pincode <span class="text-danger">*</span></label>
-                                    <input type="text" name="pincode" class="form-control" placeholder="123456" value="{{ old('pincode') }}" required>
+                                    <input type="text" name="pincode" class="form-control" placeholder="12345" value="{{ old('pincode') }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Market Zone</label>
+                                    <select name="market_id" class="form-select">
+                                        <option value="">-- Select Market --</option>
+                                        @foreach($markets as $market)
+                                            <option value="{{ $market->id }}" {{ old('market_id') == $market->id ? 'selected' : '' }}>{{ $market->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 
                                 {{-- MAP SECTION --}}

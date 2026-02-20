@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductBatch;
 use App\Models\StoreDetail;
 use App\Models\SaleItem;
+use App\Models\StorePurchaseOrderItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -127,5 +128,78 @@ class ReportController extends Controller
             ->get();
 
         return view('warehouse.reports.fast_moving', compact('items', 'days'));
+    }
+
+    /**
+     * Top Dispatched Report (Weight vs Unit)
+     */
+    public function topDispatched(Request $request)
+    {
+        $days = $request->input('days', 30);
+        $startDate = Carbon::now()->subDays($days);
+
+        $dispatchedItems = StorePurchaseOrderItem::select('product_id', DB::raw('SUM(dispatched_qty) as total_dispatched'))
+            ->where('dispatched_qty', '>', 0)
+            ->whereHas('storePurchaseOrder', function($q) use ($startDate) {
+                $q->where('updated_at', '>=', $startDate)
+                  ->whereIn('status', ['dispatched', 'completed']);
+            })
+            ->with('product')
+            ->groupBy('product_id')
+            ->orderByDesc('total_dispatched')
+            ->get();
+
+        $weightBased = $dispatchedItems->filter(function($item) {
+            $unit = strtolower($item->product->unit ?? '');
+            return in_array($unit, ['kg', 'lbs', 'g', 'oz', 'litre', 'ml']);
+        })->take(15);
+
+        $unitBased = $dispatchedItems->filter(function($item) {
+            $unit = strtolower($item->product->unit ?? '');
+            return !in_array($unit, ['kg', 'lbs', 'g', 'oz', 'litre', 'ml']);
+        })->take(15);
+
+        return view('warehouse.reports.top_dispatched', compact('weightBased', 'unitBased', 'days'));
+    }
+
+    /**
+     * Warehouse Min Report
+     */
+    public function warehouseMin()
+    {
+        $lowStockItems = Product::select('products.*')
+            ->join('product_min_max_levels', 'products.id', '=', 'product_min_max_levels.product_id')
+            ->join('product_stocks', 'products.id', '=', 'product_stocks.product_id')
+            ->whereNull('products.store_id')
+            ->where('product_stocks.warehouse_id', 1)
+            ->whereRaw('product_stocks.quantity <= product_min_max_levels.min_level')
+            ->with(['stock' => function($q) { $q->where('warehouse_id', 1); }, 'category', 'stocks'])
+            ->get();
+            
+        return view('warehouse.reports.warehouse_min', compact('lowStockItems'));
+    }
+
+    /**
+     * Sales by Price Point Report
+     */
+    public function salesByPricePoint(Request $request)
+    {
+        $days = $request->input('days', 30);
+        $startDate = Carbon::now()->subDays($days);
+
+        // Group by both Product ID and specific Selling Price to see how different price points perform
+        $items = SaleItem::select('product_id', 'price', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(total) as revenue'))
+            ->whereHas('sale', function($q) use ($startDate) {
+                $q->where('created_at', '>=', $startDate);
+            })
+            ->with('product')
+            ->groupBy('product_id', 'price')
+            ->orderByDesc('total_qty')
+            ->get();
+
+        // Group the final collection by Product ID for nice display
+        $groupedProducts = $items->groupBy('product_id');
+
+        return view('warehouse.reports.sales_by_price_point', compact('groupedProducts', 'days'));
     }
 }

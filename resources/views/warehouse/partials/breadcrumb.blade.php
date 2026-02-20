@@ -13,12 +13,13 @@
         {{-- 2. Dynamic Middle Links (Passed via array) --}}
         @foreach($items as $item)
             <li class="breadcrumb-item">
+                @php $label = $item['text'] ?? $item['name'] ?? 'Link'; @endphp
                 @if(isset($item['url']) && $item['url'] != '#')
                     <a href="{{ $item['url'] }}" class="text-decoration-none text-dark">
-                        {{ $item['text'] }}
+                        {{ $label }}
                     </a>
                 @else
-                    <span class="text-muted">{{ $item['text'] }}</span>
+                    <span class="text-muted">{{ $label }}</span>
                 @endif
             </li>
         @endforeach

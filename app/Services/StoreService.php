@@ -48,6 +48,10 @@ class StoreService
 
             $store->update(['store_user_id' => $manager->id]);
 
+            if (!empty($data['market_id'])) {
+                $store->markets()->sync([$data['market_id']]);
+            }
+
             return $store;
         });
     }
@@ -56,6 +60,15 @@ class StoreService
     {
         return DB::transaction(function () use ($store, $data) {
             $store->update($data);
+            
+            if (isset($data['market_id'])) {
+                if (!empty($data['market_id'])) {
+                    $store->markets()->sync([$data['market_id']]);
+                } else {
+                    $store->markets()->detach();
+                }
+            }
+            
             return $store;
         });
     }

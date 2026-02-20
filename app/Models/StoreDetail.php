@@ -47,6 +47,14 @@ class StoreDetail extends Model
     }
 
     /**
+     * The markets this store belongs to.
+     */
+    public function markets()
+    {
+        return $this->belongsToMany(Market::class, 'store_markets', 'store_id', 'market_id');
+    }
+
+    /**
      * The manager (Store Super Admin) assigned to this store.
      */
     public function manager()

@@ -89,6 +89,66 @@
                 </div>
             </div>
         </div>
+
+        <!-- Top Dispatched -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Store Orders</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Top Dispatched</div>
+                             <p class="mb-0 small mt-2">Weight vs Unit dispatches.</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck-loading fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('warehouse.reports.top-dispatched') }}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouse Min Health -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Safety Stocks</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Warehouse Min</div>
+                             <p class="mb-0 small mt-2">Items below minimum levels.</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-down fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('warehouse.reports.warehouse-min') }}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales By Price Point -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Pricing Analytics</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Sales By Price Point</div>
+                             <p class="mb-0 small mt-2">Analyze volumes at varying prices.</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{{ route('warehouse.reports.sales-by-price-point') }}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

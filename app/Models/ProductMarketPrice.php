@@ -16,14 +16,21 @@ class ProductMarketPrice extends Model
         'market_id',
         'cost_price',
         'sale_price',
+        'promotion_price',
+        'promotion_start_date',
+        'promotion_end_date',
         'margin_percent',
     ];
 
     protected $casts = [
         'cost_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
+        'promotion_price' => 'decimal:2',
+        'promotion_start_date' => 'datetime',
+        'promotion_end_date' => 'datetime',
         'margin_percent' => 'decimal:2',
     ];
+
 
     // Relationships
     public function product()

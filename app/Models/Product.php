@@ -10,6 +10,17 @@ class Product extends Model
 {
     use LogsActivity;
 
+    protected $casts = [
+        'store_id' => 'integer',
+        'category_id' => 'integer',
+        'subcategory_id' => 'integer',
+        'allow_decimal' => 'boolean',
+        'is_active' => 'boolean',
+        'promotion_start_date' => 'datetime',
+        'promotion_end_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
     protected $fillable = [
         'ware_user_id',
         'product_option_id',
@@ -25,6 +36,9 @@ class Product extends Model
         'tax_percent',
         'price',
         'cost_price',
+        'promotion_price',
+        'promotion_start_date',
+        'promotion_end_date',
         'icon',
         'department_id',
         'pack_size',
@@ -91,6 +105,11 @@ class Product extends Model
     public function stockRequests()
     {
         return $this->hasMany(StockRequest::class);
+    }
+
+    public function marketPrices()
+    {
+        return $this->hasMany(ProductMarketPrice::class);
     }
 
     // ===== SCOPES =====

@@ -124,6 +124,18 @@
                                             <i class="mdi mdi-view-grid-plus-outline me-2"></i> Departments
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.markets.index') }}"
+                                            class="{{ request()->routeIs('warehouse.markets.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-map-marker-multiple me-2"></i> Markets
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.market-prices.index') }}"
+                                            class="{{ request()->routeIs('warehouse.market-prices.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-cash-multiple me-2"></i> Market Pricing
+                                        </a>
+                                    </li>
                                 @endif
                             </ul>
                         </div>
@@ -348,6 +360,15 @@
                                         <a href="{{ route('warehouse.pallets.index') }}"
                                             class="{{ request()->routeIs('warehouse.pallets.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-dolly me-2"></i> Pallet Builder
+                                        </a>
+                                    </li>
+                                @endif
+                                {{-- Restock Planning --}}
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                    <li>
+                                        <a href="{{ route('warehouse.stock-control.restock-planning') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.restock-planning*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-clipboard-text-play me-2"></i> Restock Planning
                                         </a>
                                     </li>
                                 @endif

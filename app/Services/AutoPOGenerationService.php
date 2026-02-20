@@ -43,7 +43,7 @@ class AutoPOGenerationService
      * Auto-generate a PO for a single store based on StoreStock min/max levels.
      * Returns the created StorePurchaseOrder or null if nothing needed.
      */
-    public static function generateForStore(StoreDetail $store): ?StorePurchaseOrder
+    public static function generateForStore(StoreDetail $store, array $recipients = []): ?StorePurchaseOrder
     {
         // Get all store stocks that are at or below min_stock
         $lowStocks = StoreStock::where('store_id', $store->id)
@@ -74,6 +74,8 @@ class AutoPOGenerationService
                 ->where('warehouse_id', 1)
                 ->sum('quantity');
 
+            // ProductMinMaxLevel is not imported? Assume it works or is fully qualified if not used here
+            // It is used in original code
             $minMax = ProductMinMaxLevel::where('product_id', $storeStock->product_id)->first();
             $warehouseMin = $minMax?->min_level ?? 0;
             $availableAboveMin = max(0, $warehouseQty - $warehouseMin);
@@ -103,7 +105,7 @@ class AutoPOGenerationService
         }
 
         // Create the PO in a transaction
-        return DB::transaction(function () use ($store, $itemsToOrder) {
+        return DB::transaction(function () use ($store, $itemsToOrder, $recipients) {
             $po = StorePurchaseOrder::create([
                 'po_number'    => StorePurchaseOrder::generatePONumber(),
                 'store_id'     => $store->id,
@@ -138,16 +140,18 @@ class AutoPOGenerationService
                 route('warehouse.store-orders.show', $po->id)
             );
 
-            // TODO: Twilio SMS — uncomment when Twilio is configured
-            // try {
-            //     $twilio = new \Twilio\Rest\Client(config('services.twilio.sid'), config('services.twilio.token'));
-            //     $twilio->messages->create(config('services.twilio.notify_number'), [
-            //         'from' => config('services.twilio.from'),
-            //         'body' => "Auto PO #{$po->po_number} created for {$store->store_name}. Login to review.",
-            //     ]);
-            // } catch (\Exception $e) {
-            //     Log::error('[AutoPO] Twilio SMS failed: ' . $e->getMessage());
-            // }
+            // Email Notifications to Store + Schedule Recipients
+            $emails = array_unique(array_merge([$store->email], $recipients));
+            foreach ($emails as $email) {
+                if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\StoreOrderCreated($po));
+                        Log::info("[AutoPO] Email sent to {$email}");
+                    } catch (\Exception $e) {
+                        Log::error("[AutoPO] Failed to email {$email}: " . $e->getMessage());
+                    }
+                }
+            }
 
             Log::info("[AutoPO] Created PO #{$po->po_number} for store {$store->store_name} with " . count($itemsToOrder) . " items.");
 
@@ -167,26 +171,35 @@ class AutoPOGenerationService
 
         foreach ($stores as $store) {
             try {
-                // Check for active schedule
-                $schedule = StoreOrderSchedule::where('store_id', $store->id)
+                // Check for ANY active schedules
+                $schedules = StoreOrderSchedule::where('store_id', $store->id)
                     ->where('is_active', true)
-                    ->first();
+                    ->get();
 
                 // If no schedule exists, default to MANUAL ONLY (skip auto-generation)
-                if (!$schedule) {
+                if ($schedules->isEmpty()) {
                     Log::info("[AutoPO] Store #{$store->id}: Skipping (No active schedule found).");
                     continue;
                 }
 
-                // If schedule exists, check if today is the expected day
-                // We compare case-insensitive just to be safe
-                if (strcasecmp($schedule->expected_day, $todayDay) !== 0) {
-                    Log::info("[AutoPO] Store #{$store->id}: Skipping (Scheduled for {$schedule->expected_day}, today is {$todayDay}).");
+                // Check if today is one of the scheduled days
+                $todaySchedule = $schedules->first(function ($schedule) use ($todayDay) {
+                    return strcasecmp($schedule->expected_day, $todayDay) === 0;
+                });
+
+                if (!$todaySchedule) {
+                    $scheduledDays = $schedules->pluck('expected_day')->implode(', ');
+                    Log::info("[AutoPO] Store #{$store->id}: Skipping (Scheduled for [{$scheduledDays}], today is {$todayDay}).");
                     continue;
                 }
 
+                // Optional: Check Cutoff Time (assuming command runs at correct time or we check here)
+                
+                // Fetch recipients from schedule
+                $recipients = $todaySchedule->notification_recipients ?? [];
+
                 // If scheduled for today, proceed
-                $po = self::generateForStore($store);
+                $po = self::generateForStore($store, $recipients);
                 if ($po) {
                     $created[] = $po;
                 }

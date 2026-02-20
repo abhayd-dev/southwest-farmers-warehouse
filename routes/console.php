@@ -14,7 +14,9 @@ Schedule::command('po:check-delays')->hourly();
 
 Schedule::command('warehouse:automation')->dailyAt('09:00');
 
-// Phase 3: Store Order Automation
+// Phase 7: Store Order Automation (Replenishment)
 Schedule::command('store-orders:check-alerts')->hourly();
-Schedule::command('store-orders:auto-generate')->dailyAt('07:00');
+Schedule::command('warehouse:generate-store-pos')->dailyAt('07:00');
 
+// Phase 7: Promotions Auto-Revert
+Schedule::command('promotions:revert-expired')->hourly();

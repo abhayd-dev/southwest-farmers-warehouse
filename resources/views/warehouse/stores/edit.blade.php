@@ -65,17 +65,27 @@
                                     <textarea name="address" class="form-control" rows="2" required>{{ old('address', $store->address) }}</textarea>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">City <span class="text-danger">*</span></label>
                                     <input type="text" name="city" class="form-control" value="{{ old('city', $store->city) }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">State <span class="text-danger">*</span></label>
                                     <input type="text" name="state" class="form-control" value="{{ old('state', $store->state) }}" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label class="form-label fw-bold">Pincode <span class="text-danger">*</span></label>
                                     <input type="text" name="pincode" class="form-control" value="{{ old('pincode', $store->pincode) }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Market Zone</label>
+                                    @php $currentMarketId = $store->markets->first()->id ?? ''; @endphp
+                                    <select name="market_id" class="form-select">
+                                        <option value="">-- Select Market --</option>
+                                        @foreach($markets as $market)
+                                            <option value="{{ $market->id }}" {{ (old('market_id') ?? $currentMarketId) == $market->id ? 'selected' : '' }}>{{ $market->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
                                 <div class="col-md-12 mt-4">

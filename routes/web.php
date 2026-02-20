@@ -48,8 +48,25 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [WarehouseController::class, 'dashboard'])->name('dashboard');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // User Profile & Activity
+    Route::middleware(['auth', 'permission'])->group(function () {
+        Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+        // Notification & Activity Logs
+        Route::get('/notifications', function() { return view('notifications.index'); })->name('notifications.index');
+        Route::post('/notifications/mark-all-read', function() { return back(); })->name('notifications.markAllRead');
+        Route::get('/activity-logs', function() { return view('activity-logs.index'); })->name('activity-logs.index');
+    });
+
+    // require __DIR__.'/auth.php';
+
+    // API Endpoints for POS Synchronization
+    Route::prefix('api/v1')->name('api.')->group(function () {
+        Route::get('/store/{storeCode}/sync', [\App\Http\Controllers\Api\V1\PosSyncController::class, 'syncProducts'])->name('store.sync');
+    });
+
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/warehouse', [WarehouseController::class, 'index'])->name('warehouse.index');
     Route::get('/warehouse/edit/{warehouse}', [WarehouseController::class, 'edit'])->name('warehouse.edit');
@@ -177,6 +194,9 @@ Route::middleware('auth')->group(function () {
 
             // Rules (placeholder for future expansion)
             Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
+            
+            // Restock Planning (Phase 7 Final Missing Element)
+            Route::get('restock-planning', [App\Http\Controllers\Warehouse\RestockPlanningController::class, 'index'])->name('restock-planning');
 
             Route::controller(StockAuditController::class)->prefix('audit')->name('audit.')->group(function () {
                 Route::get('/', 'index')->name('index');
@@ -242,6 +262,17 @@ Route::middleware('auth')->group(function () {
         Route::post('departments/status', [DepartmentController::class, 'changeStatus'])
             ->name('warehouse.departments.status');
 
+        // Markets
+        Route::get('markets', [App\Http\Controllers\Warehouse\MarketController::class, 'index'])->name('warehouse.markets.index');
+        Route::post('markets', [App\Http\Controllers\Warehouse\MarketController::class, 'store'])->name('warehouse.markets.store');
+        Route::put('markets/{market}', [App\Http\Controllers\Warehouse\MarketController::class, 'update'])->name('warehouse.markets.update');
+        Route::post('markets/status', [App\Http\Controllers\Warehouse\MarketController::class, 'changeStatus'])->name('warehouse.markets.status');
+
+        // Market Prices
+        Route::get('market-prices', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'index'])->name('warehouse.market-prices.index');
+        Route::post('market-prices/update', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'update'])->name('warehouse.market-prices.update');
+        Route::post('market-prices/promo', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'updatePromo'])->name('warehouse.market-prices.promo');
+
         Route::get('/print-label/pallet', [LabelController::class, 'printPallet'])
             ->name('warehouse.print.pallet');
 
@@ -259,6 +290,9 @@ Route::middleware('auth')->group(function () {
                 Route::get('/stock-movement', 'stockMovement')->name('stock-movement');
                 Route::get('/inventory-health', 'inventoryHealth')->name('inventory-health');
                 Route::get('/fast-moving', 'fastMoving')->name('fast-moving');
+                Route::get('/top-dispatched', 'topDispatched')->name('top-dispatched');
+                Route::get('/warehouse-min', 'warehouseMin')->name('warehouse-min');
+                Route::get('/sales-by-price-point', 'salesByPricePoint')->name('sales-by-price-point');
             });
 
         // ===== FREE WEIGHT SYSTEM (Phase 5) =====

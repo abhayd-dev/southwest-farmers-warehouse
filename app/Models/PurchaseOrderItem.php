@@ -19,6 +19,11 @@ class PurchaseOrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
+
     public function getPendingQuantityAttribute()
     {
         return max(0, $this->requested_quantity - $this->received_quantity);

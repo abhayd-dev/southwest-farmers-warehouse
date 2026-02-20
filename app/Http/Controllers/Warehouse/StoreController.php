@@ -54,7 +54,8 @@ class StoreController extends Controller
 
     public function create()
     {
-        return view('warehouse.stores.create');
+        $markets = \App\Models\Market::active()->get();
+        return view('warehouse.stores.create', compact('markets'));
     }
 
     public function store(Request $request)
@@ -168,8 +169,9 @@ class StoreController extends Controller
 
     public function edit($id)
     {
-        $store = StoreDetail::findOrFail($id);
-        return view('warehouse.stores.edit', compact('store'));
+        $store = StoreDetail::with('markets')->findOrFail($id);
+        $markets = \App\Models\Market::active()->get();
+        return view('warehouse.stores.edit', compact('store', 'markets'));
     }
 
     public function update(Request $request, $id)
