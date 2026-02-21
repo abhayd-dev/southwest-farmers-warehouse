@@ -169,6 +169,15 @@
                 </tr>
             `;
             $('#itemsTable tbody').append(html);
+            
+            // Re-initialize Select2 for this newly added row's select
+            $(`#row-${rowIdx} .product-select`).select2({
+                theme: 'bootstrap-5',
+                width: 'style',
+                placeholder: 'Select Product',
+                allowClear: true
+            });
+            
             rowIdx++;
             
             // Ensure empty state is hidden

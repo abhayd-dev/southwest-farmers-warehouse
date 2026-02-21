@@ -40,6 +40,50 @@
 <!-- ApexCharts (for valuation chart) -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Global Initializations -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr on all inputs of type date, or inputs with class .datepicker or .flatpickr
+        flatpickr("input[type='date'], .datepicker, .flatpickr", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        // Initialize Select2 on all select elements unless they have the class .no-select2
+        $(document).ready(function() {
+            $('select:not(.no-select2)').each(function() {
+                $(this).select2({
+                    theme: 'bootstrap-5',
+                    width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
+                    placeholder: $(this).data('placeholder'),
+                    allowClear: Boolean($(this).data('placeholder'))
+                });
+            });
+            
+            // Fix Select2 search focus within Bootstrap Modals
+            $(document).on('shown.bs.modal', function (e) {
+                $(this).find('select').each(function() {
+                    let dropdownParent = $(e.target);
+                    // Re-initialize for modal
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
+                        dropdownParent: dropdownParent,
+                        placeholder: $(this).data('placeholder'),
+                        allowClear: Boolean($(this).data('placeholder'))
+                    });
+                });
+            });
+        });
+    });
+</script>
+
 <!-- Your custom app.js (keep at the end) -->
 <script src="{{ asset('assets/js/app.js') }}"></script>
 

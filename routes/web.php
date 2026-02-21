@@ -220,7 +220,7 @@ Route::middleware('auth')->group(function () {
         // PO Approval Routes (signed URLs for email approval)
         Route::get('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'handleApproval'])
             ->name('warehouse.purchase-orders.approve')
-            ->middleware('signed');
+            ->middleware('signed:reason');
 
         Route::get('purchase-orders/{purchaseOrder}/receiving-history', [PurchaseOrderController::class, 'receivingHistory'])
             ->name('warehouse.purchase-orders.receiving-history');

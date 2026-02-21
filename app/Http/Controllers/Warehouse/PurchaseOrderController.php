@@ -120,7 +120,7 @@ class PurchaseOrderController extends Controller
     {
         $vendors = Vendor::active()->get();
         // Only get Warehouse Products
-        $products = Product::warehouse()->active()->select('id', 'product_name', 'sku', 'cost_price')->get();
+        $products = Product::warehouse()->active()->select('id', 'product_name', 'sku', 'barcode', 'cost_price')->get();
         
         return view('warehouse.purchase-orders.create', compact('vendors', 'products'));
     }
