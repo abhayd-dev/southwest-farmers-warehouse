@@ -13,16 +13,26 @@
                 <h5 class="card-title text-primary mb-0 fw-bold">
                     <i class="mdi mdi-clipboard-text-play me-2"></i> Inventory Restock Forecast
                 </h5>
-                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-                    <i class="mdi mdi-printer me-1"></i> Print Forecast
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" id="createBulkPOBtn" class="btn btn-primary btn-sm d-none" onclick="createBulkPO()">
+                        <i class="mdi mdi-cart-plus me-1"></i> Create Purchase Order (<span id="selectedCount">0</span>)
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="mdi mdi-printer me-1"></i> Print Forecast
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-4">Product</th>
+                                <th class="ps-4" style="width: 40px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Product</th>
                                 <th>Category</th>
                                 <th class="text-end">Qty on Hand</th>
                                 <th class="text-end">In Transit</th>
@@ -36,7 +46,17 @@
                         <tbody>
                             @forelse($planningData as $item)
                                 <tr>
-                                    <td class="ps-4 fw-semibold">
+                                    <td class="ps-4">
+                                        @if($item->recommended_order > 0)
+                                            <div class="form-check">
+                                                <input class="form-check-input product-checkbox" type="checkbox" 
+                                                    value="{{ $item->product->id }}" 
+                                                    data-qty="{{ $item->recommended_order }}"
+                                                    data-cost="{{ $item->cost }}">
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold">
                                         {{ $item->product->product_name }}
                                         <div class="small text-muted">{{ $item->product->sku }}</div>
                                     </td>
@@ -86,4 +106,91 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Select All functionality
+            $('#selectAll').on('change', function() {
+                $('.product-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+            });
+
+            // Update button visibility and count
+            $(document).on('change', '.product-checkbox', function() {
+                const checked = $('.product-checkbox:checked');
+                const count = checked.length;
+                
+                $('#selectedCount').text(count);
+                if (count > 0) {
+                    $('#createBulkPOBtn').removeClass('d-none');
+                } else {
+                    $('#createBulkPOBtn').addClass('d-none');
+                }
+            });
+        });
+
+        function createBulkPO() {
+            const selectedItems = [];
+            $('.product-checkbox:checked').each(function() {
+                selectedItems.push({
+                    id: $(this).val(),
+                    qty: $(this).data('qty'),
+                    cost: $(this).data('cost')
+                });
+            });
+
+            if (selectedItems.length === 0) return;
+
+            Swal.fire({
+                title: 'Create Bulk Purchase Order?',
+                text: `You are about to create a draft PO for ${selectedItems.length} items.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Create Draft',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // We'll redirect to the Create PO page with these items pre-filled
+                    // Or we can submit via AJAX to a new endpoint
+                    // Let's go with a POST request to a new endpoint
+                    
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ route('warehouse.purchase-orders.bulk-store-draft') }}";
+                    
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+
+                    selectedItems.forEach((item, index) => {
+                        const idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = `items[${index}][product_id]`;
+                        idInput.value = item.id;
+                        form.appendChild(idInput);
+
+                        const qtyInput = document.createElement('input');
+                        qtyInput.type = 'hidden';
+                        qtyInput.name = `items[${index}][quantity]`;
+                        qtyInput.value = item.qty;
+                        form.appendChild(qtyInput);
+
+                        const costInput = document.createElement('input');
+                        costInput.type = 'hidden';
+                        costInput.name = `items[${index}][cost]`;
+                        costInput.value = item.cost;
+                        form.appendChild(costInput);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+    @endpush
 </x-app-layout>

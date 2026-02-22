@@ -218,7 +218,23 @@
 
         // Init
         document.getElementById('addRowBtn').addEventListener('click', addRow);
-        addRow(); // Add one row by default
+        
+        @if(session('prefilled_items'))
+            const prefilled = @json(session('prefilled_items'));
+            prefilled.forEach(item => {
+                // Find product details
+                const p = products.find(prod => prod.id == item.product_id);
+                if (p) {
+                    addRow();
+                    const lastRowIdx = rowIdx - 1;
+                    const select = $(`#row-${lastRowIdx} .product-select`);
+                    select.val(p.id).trigger('change');
+                    $(`#row-${lastRowIdx} .qty-input`).val(item.quantity).trigger('input');
+                }
+            });
+        @else
+            addRow(); // Add one row by default
+        @endif
     </script>
     @endpush
 </x-app-layout>

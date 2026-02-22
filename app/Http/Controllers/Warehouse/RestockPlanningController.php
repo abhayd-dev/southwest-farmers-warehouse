@@ -44,6 +44,16 @@ class RestockPlanningController extends Controller
                 ->whereHas('storePurchaseOrder', function($q) use ($thirtyDaysAgo) {
                     $q->where('updated_at', '>=', $thirtyDaysAgo);
                 })->sum('dispatched_qty');
+
+            // Get last vendor and actual lead time if possible
+            $lastPurchase = PurchaseOrderItem::where('product_id', $product->id)
+                ->whereHas('purchaseOrder', function($q) {
+                    $q->where('status', 'completed');
+                })->with('purchaseOrder.vendor')
+                ->latest()
+                ->first();
+
+            $vendorLeadTime = $lastPurchase ? ($lastPurchase->purchaseOrder->vendor->lead_time_days ?? 7) : 7;
                 
             $dailyBurnRate = $dispatchVolume / 30;
             
@@ -84,7 +94,7 @@ class RestockPlanningController extends Controller
                 'qty_in_hand' => $qtyInHand,
                 'in_transit' => $inTransit,
                 'cost' => $product->cost_price,
-                'lead_time' => 7, // Default 7 days lead time assumed for suppliers
+                'lead_time' => $vendorLeadTime,
                 'recommended_order' => $recommendedOrder,
                 'suggested_date' => $suggestedDate,
                 'is_fast_moving' => $isFastMoving,

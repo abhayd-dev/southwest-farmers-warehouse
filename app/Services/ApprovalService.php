@@ -51,6 +51,14 @@ class ApprovalService
         if ($action === 'approve') {
             $po->approve($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'approved', $reason);
+            
+            \App\Services\NotificationService::sendToAdmins(
+                'PO Approved',
+                "Purchase Order #{$po->po_number} has been approved by external approver.",
+                'success',
+                route('warehouse.purchase-orders.show', $po->id)
+            );
+
             return 'Purchase Order approved successfully';
         } elseif ($action === 'reject') {
             if (!$reason) {
@@ -58,6 +66,14 @@ class ApprovalService
             }
             $po->reject($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'rejected', $reason);
+
+            \App\Services\NotificationService::sendToAdmins(
+                'PO Rejected',
+                "Purchase Order #{$po->po_number} has been rejected. Reason: {$reason}",
+                'danger',
+                route('warehouse.purchase-orders.show', $po->id)
+            );
+
             return 'Purchase Order rejected';
         }
 

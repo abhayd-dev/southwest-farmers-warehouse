@@ -44,39 +44,39 @@
                                     <label class="form-label fw-semibold">Contact Name</label>
                                     <input type="text" name="contact_person" class="form-control" placeholder="e.g. John Doe">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Email</label>
-                                    <input type="email" name="email" class="form-control" placeholder="vendor@example.com">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Phone</label>
-                                    <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
-                                </div>
-                            </div>
-
-                            <hr class="text-muted opacity-25">
-
-                            {{-- Operational Info --}}
-                            <div class="row g-3 mt-2">
-                                <div class="col-12">
-                                    <h6 class="fw-bold text-warning mb-3"><i class="mdi mdi-clock-outline"></i> Operations</h6>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Lead Time (Days)</label>
-                                    <div class="input-group">
-                                        <input type="number" name="lead_time_days" class="form-control" value="0" min="0">
-                                        <span class="input-group-text bg-light">Days</span>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Email</label>
+                                        <input type="email" name="email" class="form-control" placeholder="vendor@example.com">
                                     </div>
-                                    <small class="text-muted">Average time to deliver after PO is sent.</small>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Phone</label>
+                                        <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Status</label>
-                                    <select name="is_active" class="form-select">
-                                        <option value="1" selected>Active</option>
-                                        <option value="0">Inactive</option>
-                                    </select>
+
+                                <hr class="text-muted opacity-25">
+
+                                {{-- Operational Info --}}
+                                <div class="row g-3 mt-2">
+                                    <div class="col-12">
+                                        <h6 class="fw-bold text-warning mb-3"><i class="mdi mdi-clock-outline"></i> Operations</h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Default Lead Time (Days)</label>
+                                        <div class="input-group">
+                                            <input type="number" name="lead_time_days" class="form-control" value="{{ old('lead_time_days', 7) }}" min="0">
+                                            <span class="input-group-text bg-light">Days</span>
+                                        </div>
+                                        <small class="text-muted">Average time to deliver after PO is sent.</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Status</label>
+                                        <select name="is_active" class="form-select">
+                                            <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Active</option>
+                                            <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
 
                             {{-- Actions --}}
                             <div class="d-flex justify-content-end gap-2 mt-4">

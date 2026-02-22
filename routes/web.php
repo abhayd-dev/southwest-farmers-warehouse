@@ -211,6 +211,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('vendors', VendorController::class)->names('warehouse.vendors');
         Route::post('vendors/status', [VendorController::class, 'changeStatus'])->name('warehouse.vendors.status');
         Route::resource('purchase-orders', PurchaseOrderController::class)->names('warehouse.purchase-orders');
+        Route::post('purchase-orders/bulk-store-draft', [PurchaseOrderController::class, 'bulkStoreDraft'])->name('warehouse.purchase-orders.bulk-store-draft');
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
         Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');

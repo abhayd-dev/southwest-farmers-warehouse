@@ -132,7 +132,7 @@ class PurchaseOrderController extends Controller
             'order_date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost' => 'required|numeric|min:0',
         ]);
 
@@ -163,6 +163,32 @@ class PurchaseOrderController extends Controller
                 ->with('success', 'Purchase Order created successfully!' . $approvalMessage);
         } catch (\Exception $e) {
             return back()->with('error', 'Error creating PO: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create a DRAFT PO from Restock Planning data
+     */
+    public function bulkStoreDraft(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.cost' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            // Find a common vendor if possible, otherwise use a placeholder or ask
+            // For now, we'll assign to the first available vendor or the last vendor of the product
+            // Alternatively, redirects to 'create' page with pre-filled items
+            
+            // Actually, let's just redirect to the Create PO page with the items in the session
+            // so the user can select the vendor and verify costs.
+            return redirect()->route('warehouse.purchase-orders.create')
+                ->with('prefilled_items', $request->items);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to process restock items: ' . $e->getMessage());
         }
     }
 
