@@ -89,7 +89,11 @@ class PurchaseOrderController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $viewUrl = route('warehouse.purchase-orders.show', $row->id);
-                    return '<a href="' . $viewUrl . '" class="btn btn-sm btn-outline-primary">View / Receive</a>';
+                    return '<div class="action-btns">
+                                <a href="' . $viewUrl . '" class="btn btn-sm btn-outline-info btn-view" title="View / Receive">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                            </div>';
                 })
                 ->rawColumns(['progress', 'status_badge', 'approval_badge', 'action'])
                 ->make(true);

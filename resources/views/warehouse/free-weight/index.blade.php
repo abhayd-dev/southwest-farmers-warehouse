@@ -37,12 +37,12 @@
                             </div>
                             <small class="text-muted">Available Bulk Weight</small>
                         </div>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}" class="btn btn-sm btn-outline-info">
-                                <i class="mdi mdi-plus-box me-1"></i> Add Package Size
+                        <div class="action-btns">
+                            <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}" class="btn btn-sm btn-outline-info" title="Add Package Size">
+                                <i class="mdi mdi-plus-box"></i>
                             </a>
-                            <a href="{{ route('warehouse.free-weight.event.create', $bulk->id) }}" class="btn btn-sm btn-success">
-                                <i class="mdi mdi-play me-1"></i> Start Packaging
+                            <a href="{{ route('warehouse.free-weight.event.create', $bulk->id) }}" class="btn btn-sm btn-outline-success" style="color: #10b981; border-color: #10b981;" title="Start Packaging">
+                                <i class="mdi mdi-play"></i>
                             </a>
                         </div>
                     </div>

@@ -139,13 +139,78 @@
         };
     </script>
     <script>
-        window.addEventListener('offline', function() {
-            window.location.href = "{{ route('offline.view') }}";
-        });
+        // Robust Connection Monitoring
+        (function() {
+            function showConnectionToast(isOnline) {
+                if (typeof Swal === 'undefined') return;
 
-        if (!navigator.onLine) {
-            window.location.href = "{{ route('offline.view') }}";
-        }
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                if (isOnline) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Connection Restored',
+                        text: 'You are back online.'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Connection Lost',
+                        text: 'Please check your internet. You can continue working, but changes may not save until restored.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 6000,
+                        timerProgressBar: true
+                    });
+                }
+            }
+
+            window.addEventListener('offline', function() {
+                showConnectionToast(false);
+            });
+
+            window.addEventListener('online', function() {
+                showConnectionToast(true);
+            });
+        })();
+    </script>
+    <script>
+        // Custom Sidebar Responsive Logic
+        (function() {
+            function adjustSidebar() {
+                const body = document.body;
+                const width = window.innerWidth;
+                
+                // User requirement: 
+                // Phones & Mini Tabs (< 992px) -> Closed (hidden)
+                // Tablets, Laptops, Desktops (>= 992px) -> Open (default)
+                if (width < 992) {
+                    body.setAttribute('data-sidebar', 'hidden');
+                } else {
+                    body.setAttribute('data-sidebar', 'default');
+                }
+            }
+
+            // Initial adjustment
+            adjustSidebar();
+
+            // Handle resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(adjustSidebar, 100);
+            });
+
+            // Re-run after main app.js loads just in case
+            window.addEventListener('load', adjustSidebar);
+        })();
     </script>
     @stack('scripts')
 

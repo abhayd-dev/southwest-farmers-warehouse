@@ -76,7 +76,7 @@
                                     <td class="px-4 py-3 text-muted">{{ $loop->iteration + ($categories->currentPage()-1)*$categories->perPage() }}</td>
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ $category->icon ?  Storage::url($category->icon) : 'https://placehold.co/40?text=IMG' }}" 
+                                            <img src="{{ $category->icon ?  Storage::url($category->icon) : asset('assets/images/placeholder.svg') }}" 
                                                  class="rounded bg-light border object-fit-cover" 
                                                  width="40" height="40">
                                         </div>
@@ -94,18 +94,12 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            {{-- View is always visible --}}
-                                            <button class="btn btn-outline-info view-btn" data-data="{{ json_encode($category) }}" title="View"><i class="mdi mdi-eye"></i></button>
-                                            
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
-                                                <a href="{{ route('warehouse.categories.edit', $category) }}" class="btn btn-outline-primary" title="Edit"><i class="mdi mdi-pencil"></i></a>
-                                                <form method="POST" action="{{ route('warehouse.categories.destroy', $category) }}" class="d-inline delete-form">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn btn-outline-danger delete-form" title="Delete"><i class="mdi mdi-delete"></i></button>
-                                                </form>
-                                            @endif
-                                        </div>
+                                        <x-action-buttons 
+                                            :viewUrl="null" 
+                                            :data="$category"
+                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.categories.edit', $category) : null"
+                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.categories.destroy', $category) : null"
+                                        />
                                     </td>
                                 </tr>
                             @empty

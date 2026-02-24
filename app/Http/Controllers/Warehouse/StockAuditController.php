@@ -38,9 +38,13 @@ class StockAuditController extends Controller
                     return '<span class="badge bg-'.($colors[$row->status]??'primary').'">'.ucfirst(str_replace('_',' ',$row->status)).'</span>';
                 })
                 ->addColumn('action', function($row) {
-                    return '<a href="'.route('warehouse.stock-control.audit.show', $row->id).'" class="btn btn-sm btn-outline-primary">Open</a>';
+                    return '<div class="action-btns">
+                                <a href="'.route('warehouse.stock-control.audit.show', $row->id).'" class="btn btn-sm btn-outline-info btn-view" title="View / Process">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                            </div>';
                 })
-                ->rawColumns(['type_label', 'status_badge', 'action']) // Allow HTML
+                ->rawColumns(['type_label', 'status_badge', 'action']) 
                 ->make(true);
         }
         return view('warehouse.stock-control.audit.index');

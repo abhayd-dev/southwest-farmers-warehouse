@@ -74,9 +74,9 @@
                                 <i class="mdi mdi-package-variant me-1"></i> {{ $pallet->items->count() }} item type(s)
                             </div>
 
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('warehouse.pallets.show', $pallet->id) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
-                                    <i class="mdi mdi-pencil me-1"></i> Build / View
+                            <div class="action-btns w-100">
+                                <a href="{{ route('warehouse.pallets.show', $pallet->id) }}" class="btn btn-sm btn-outline-info flex-grow-1" title="Build / View">
+                                    <i class="mdi mdi-pencil me-1"></i> Build
                                 </a>
                                 <a href="{{ route('warehouse.pallets.manifest', $pallet->id) }}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Print Manifest">
                                     <i class="mdi mdi-printer"></i>

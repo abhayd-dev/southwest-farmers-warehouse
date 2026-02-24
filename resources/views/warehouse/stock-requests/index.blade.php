@@ -187,22 +187,24 @@
                                         <span class="badge {{ $badge }}">{{ $statusLabel }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <a href="{{ route('warehouse.stock-requests.show', $req->id) }}"
-                                           class="btn btn-sm btn-outline-dark shadow-sm">
-                                            Manage
-                                        </a>
-                                        @if ($req->status == 'pending')
-                                            <button class="btn btn-sm btn-outline-primary ms-1"
-                                                onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
-                                                Change Status
-                                            </button>
-                                        @elseif($req->status == 'dispatched')
-                                            @php $proof = $req->store_payment_proof ? Storage::url($req->store_payment_proof) : ''; @endphp
-                                            <button class="btn btn-sm btn-outline-success ms-1"
-                                                onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
-                                                Verify Payment
-                                            </button>
-                                        @endif
+                                        <x-action-buttons>
+                                            <a href="{{ route('warehouse.stock-requests.show', $req->id) }}"
+                                               class="btn btn-sm btn-outline-info btn-view" title="Manage">
+                                                <i class="mdi mdi-cog"></i>
+                                            </a>
+                                            @if ($req->status == 'pending')
+                                                <button class="btn btn-sm btn-outline-primary btn-edit" title="Change Status"
+                                                    onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
+                                                    <i class="mdi mdi-swap-horizontal"></i>
+                                                </button>
+                                            @elseif($req->status == 'dispatched')
+                                                @php $proof = $req->store_payment_proof ? Storage::url($req->store_payment_proof) : ''; @endphp
+                                                <button class="btn btn-sm btn-outline-success" style="color: #10b981; border-color: #10b981;" title="Verify Payment"
+                                                    onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
+                                                    <i class="mdi mdi-check-decagram"></i>
+                                                </button>
+                                            @endif
+                                        </x-action-buttons>
                                     </td>
                                 </tr>
                             @empty

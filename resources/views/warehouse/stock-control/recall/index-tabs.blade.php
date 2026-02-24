@@ -26,8 +26,8 @@
 
     {{-- TABS & CONTENT --}}
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom pt-3 pb-0 px-3">
-            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+        <div class="card-header bg-white border-bottom-0 pt-3 pb-0 px-3">
+            <ul class="nav nav-tabs card-header-tabs border-bottom-0" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active fw-semibold" href="#myRequests" data-bs-toggle="tab" role="tab">
                         <i class="mdi mdi-clipboard-list-outline me-1"></i> My Requests

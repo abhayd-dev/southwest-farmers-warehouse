@@ -45,7 +45,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small text-muted">Main Logo</label>
                                     <div class="border p-3 rounded text-center bg-light position-relative">
-                                        <img src="{{ isset($settings['main_logo']) ? Storage::url($settings['main_logo']) : 'https://placehold.co/150x50?text=Logo' }}"
+                                        <img src="{{ isset($settings['main_logo']) ? Storage::url($settings['main_logo']) : asset('assets/images/placeholder.svg') }}"
                                             id="preview_main_logo" class="img-fluid mb-2" style="max-height: 50px;">
                                         <input type="file" name="main_logo" class="form-control form-control-sm mt-2"
                                             accept="image/png, image/jpeg"
@@ -57,7 +57,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small text-muted">Login Page Logo</label>
                                     <div class="border p-3 rounded text-center bg-light">
-                                        <img src="{{ isset($settings['login_logo']) ? Storage::url($settings['login_logo']) : 'https://placehold.co/150x50?text=Login+Logo' }}"
+                                        <img src="{{ isset($settings['login_logo']) ? Storage::url($settings['login_logo']) : asset('assets/images/placeholder.svg') }}"
                                             id="preview_login_logo" class="img-fluid mb-2" style="max-height: 60px;">
                                         <input type="file" name="login_logo"
                                             class="form-control form-control-sm mt-2" accept="image/png, image/jpeg"
@@ -69,7 +69,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small text-muted">Favicon</label>
                                     <div class="border p-3 rounded text-center bg-light">
-                                        <img src="{{ isset($settings['favicon']) ? Storage::url($settings['favicon']) : 'https://placehold.co/32x32?text=Icon' }}"
+                                        <img src="{{ isset($settings['favicon']) ? Storage::url($settings['favicon']) : asset('assets/images/placeholder.svg') }}"
                                             id="preview_favicon" class="img-fluid mb-2"
                                             style="width: 32px; height: 32px;">
                                         <input type="file" name="favicon" class="form-control form-control-sm mt-2"

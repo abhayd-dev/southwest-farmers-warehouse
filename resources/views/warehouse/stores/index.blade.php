@@ -127,20 +127,14 @@
                                     </div>
                                 </td>
                                 <td class="text-end pe-4 py-3">
-                                    <div class="btn-group shadow-sm">
+                                    <x-action-buttons 
+                                        :editUrl="route('warehouse.stores.edit', $store->id)"
+                                        :deleteUrl="route('warehouse.stores.destroy', $store->id)"
+                                    >
                                         <a href="{{ route('warehouse.stores.show', $store->id) }}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Dashboard">
                                             <i class="mdi mdi-chart-bar"></i>
                                         </a>
-                                        <a href="{{ route('warehouse.stores.edit', $store->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
-                                            <i class="mdi mdi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete" onclick="window.confirmDelete({{ $store->id }})">
-                                            <i class="mdi mdi-trash-can"></i>
-                                        </button>
-                                    </div>
-                                    <form id="delete-form-{{ $store->id }}" action="{{ route('warehouse.stores.destroy', $store->id) }}" method="POST" class="d-none">
-                                        @csrf @method('DELETE')
-                                    </form>
+                                    </x-action-buttons>
                                 </td>
                             </tr>
                             @empty

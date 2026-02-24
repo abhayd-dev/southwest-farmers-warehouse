@@ -50,16 +50,16 @@ class MinMaxController extends Controller
                 return '<span class="badge bg-success">Optimal</span>';
             })
             ->addColumn('action', function ($row) {
-                // Pass the Product ID as data-id
-                return '
-                    <button class="btn btn-sm btn-outline-primary edit-minmax" 
-                            data-id="' . $row->id . '" 
-                            data-min="' . $row->min_level . '"
-                            data-max="' . $row->max_level . '"
-                            data-reorder="' . $row->reorder_qty . '">
-                        <i class="mdi mdi-pencil"></i> Edit
-                    </button>
-                ';
+                return '<div class="action-btns">
+                            <button class="btn btn-sm btn-outline-primary btn-edit edit-minmax" 
+                                    data-id="' . $row->id . '" 
+                                    data-min="' . $row->min_level . '"
+                                    data-max="' . $row->max_level . '"
+                                    data-reorder="' . $row->reorder_qty . '"
+                                    title="Edit">
+                                <i class="mdi mdi-pencil"></i>
+                            </button>
+                        </div>';
             })
             ->rawColumns(['status', 'action'])
             ->make(true);

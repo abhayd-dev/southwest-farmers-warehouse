@@ -52,15 +52,15 @@ class VendorController extends Controller
                     $editUrl = route('warehouse.vendors.edit', $row->id);
                     $deleteUrl = route('warehouse.vendors.destroy', $row->id);
                     
-                    return '<div class="text-end">
-                                <a href="'.$editUrl.'" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                    return '<div class="action-btns">
+                                <a href="'.$editUrl.'" class="btn btn-sm btn-outline-primary btn-edit" title="Edit">
                                     <i class="mdi mdi-pencil"></i>
                                 </a>
                                 <form action="'.$deleteUrl.'" method="POST" class="d-inline delete-form">
                                     '.csrf_field().'
                                     '.method_field('DELETE').'
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                        <i class="mdi mdi-delete"></i>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-delete" title="Delete">
+                                        <i class="mdi mdi-trash-can"></i>
                                     </button>
                                 </form>
                             </div>';

@@ -200,21 +200,15 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        {{-- SHOW BUTTON (Added) --}}
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-info view-warehouse-btn"
-                                                data-warehouse="{{ json_encode($warehouse) }}"
-                                                data-bs-toggle="tooltip" 
-                                                title="View Details">
-                                            <i class="mdi mdi-eye"></i>
-                                        </button>
-
-                                        <a href="{{ route('warehouse.edit', $warehouse) }}"
-                                           class="btn btn-sm btn-outline-primary"
-                                           data-bs-toggle="tooltip"
-                                           title="Edit Warehouse">
-                                            <i class="mdi mdi-pencil"></i>
-                                        </a>
+                                        <x-action-buttons :editUrl="route('warehouse.edit', $warehouse)">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-info btn-view view-warehouse-btn"
+                                                    data-warehouse="{{ json_encode($warehouse) }}"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="View Details">
+                                                <i class="mdi mdi-eye"></i>
+                                            </button>
+                                        </x-action-buttons>
                                     </td>
                                 </tr>
                             @empty

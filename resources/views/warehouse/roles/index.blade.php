@@ -80,32 +80,10 @@
                                         </span>
                                     </td>
                                     <td class="px-4 text-end">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            {{-- Edit Button --}}
-                                            <a href="{{ route('warehouse.roles.edit', $role->id) }}" 
-                                               class="btn btn-sm btn-outline-primary" 
-                                               data-bs-toggle="tooltip" title="Edit Role">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-
-                                            {{-- Delete Button (Protected) --}}
-                                            @if($role->name !== 'Super Admin')
-                                                <form action="{{ route('warehouse.roles.destroy', $role->id) }}" 
-                                                      method="POST" 
-                                                      class="d-inline" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete Role">
-                                                        <i class="mdi mdi-delete"></i>
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <button class="btn btn-sm btn-light text-muted border" disabled data-bs-toggle="tooltip" title="System Role Locked">
-                                                    <i class="mdi mdi-lock"></i>
-                                                </button>
-                                            @endif
-                                        </div>
+                                        <x-action-buttons 
+                                            :editUrl="route('warehouse.roles.edit', $role->id)"
+                                            :deleteUrl="$role->name !== 'Super Admin' ? route('warehouse.roles.destroy', $role->id) : null"
+                                        />
                                     </td>
                                 </tr>
                             @empty

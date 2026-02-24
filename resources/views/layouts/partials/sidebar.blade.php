@@ -1,6 +1,6 @@
 <div class="app-sidebar-menu">
     <div class="h-100" data-simplebar>
-        <div id="sidebar-menu">
+        <div id="sidebar-menu-wrapper">
 
             {{-- LOGO --}}
             <div class="logo-box">
@@ -439,7 +439,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.reports.stock-movement') }}"
                                             class="{{ request()->routeIs('warehouse.reports.stock-movement') ? 'active' : '' }}">
-                                            <i class="mdi mdi-exchange me-2"></i> Stock Movement
+                                            <i class="mdi mdi-swap-horizontal me-2"></i> Stock Movement
                                         </a>
                                     </li>
                                     <li>

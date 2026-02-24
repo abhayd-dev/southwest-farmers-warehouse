@@ -89,7 +89,7 @@
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="bg-light rounded p-1 border flex-shrink-0">
-                                                <img src="{{ $stock->product->icon ? Storage::url($stock->product->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                                <img src="{{ $stock->product->icon ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
                                                     class="rounded bg-light border object-fit-cover" width="40" height="40">
                                             </div>
                                             <div>
@@ -134,10 +134,12 @@
                                         </div>
                                     </td>
                                     <td class="text-end px-4 py-3">
-                                        <a href="{{ route('warehouse.stocks.history', $stock->product_id) }}"
-                                            class="btn btn-sm btn-outline-info" title="View Full History">
-                                            <i class="mdi mdi-history me-1"></i> History
-                                        </a>
+                                        <div class="action-btns">
+                                            <a href="{{ route('warehouse.stocks.history', $stock->product_id) }}"
+                                                class="btn btn-sm btn-outline-info btn-view" title="View Full History">
+                                                <i class="mdi mdi-history"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

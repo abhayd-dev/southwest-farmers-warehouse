@@ -92,10 +92,13 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                            onclick="openPromoModal({{ $product->id }}, '{{ addslashes($product->product_name) }}', '{{ $marketPrice->promotion_price ?? '' }}', '{{ $marketPrice && $marketPrice->promotion_start_date ? $marketPrice->promotion_start_date->format('Y-m-d\TH:i') : '' }}', '{{ $marketPrice && $marketPrice->promotion_end_date ? $marketPrice->promotion_end_date->format('Y-m-d\TH:i') : '' }}')">
-                                                        <i class="mdi mdi-tag-plus"></i> Promo
-                                                    </button>
+                                                    <div class="action-btns ms-auto">
+                                                        <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                                onclick="openPromoModal({{ $product->id }}, '{{ addslashes($product->product_name) }}', '{{ $marketPrice->promotion_price ?? '' }}', '{{ $marketPrice && $marketPrice->promotion_start_date ? $marketPrice->promotion_start_date->format('Y-m-d\TH:i') : '' }}', '{{ $marketPrice && $marketPrice->promotion_end_date ? $marketPrice->promotion_end_date->format('Y-m-d\TH:i') : '' }}')"
+                                                                title="Promo">
+                                                            <i class="mdi mdi-tag-plus"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @empty

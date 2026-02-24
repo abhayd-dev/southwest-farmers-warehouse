@@ -42,12 +42,15 @@
                                             </div>
                                         </td>
                                         <td class="text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-primary edit-market-btn"
-                                                data-id="{{ $market->id }}"
-                                                data-name="{{ $market->name }}"
-                                                data-description="{{ $market->description }}">
-                                                <i class="mdi mdi-pencil"></i> Edit
-                                            </button>
+                                            <x-action-buttons>
+                                                <button type="button" class="btn btn-sm btn-outline-primary btn-edit edit-market-btn"
+                                                    data-id="{{ $market->id }}"
+                                                    data-name="{{ $market->name }}"
+                                                    data-description="{{ $market->description }}"
+                                                    title="Edit">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </button>
+                                            </x-action-buttons>
                                         </td>
                                     </tr>
                                     @endforeach

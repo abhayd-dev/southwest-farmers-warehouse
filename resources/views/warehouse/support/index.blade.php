@@ -169,10 +169,12 @@
                                     {{ $ticket->sla_due_at->diffForHumans() }}
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a href="{{ route('warehouse.support.show', $ticket->id) }}"
-                                        class="btn btn-sm btn-light text-primary shadow-sm border">
-                                        View Details <i class="mdi mdi-arrow-right ms-1"></i>
-                                    </a>
+                                    <x-action-buttons>
+                                        <a href="{{ route('warehouse.support.show', $ticket->id) }}"
+                                            class="btn btn-sm btn-outline-info btn-view" title="View Details">
+                                            <i class="mdi mdi-eye"></i>
+                                        </a>
+                                    </x-action-buttons>
                                 </td>
                             </tr>
                         @empty

@@ -81,7 +81,7 @@
                                     </td>
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ $sub->icon ? Storage::url($sub->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                            <img src="{{ $sub->icon ? Storage::url($sub->icon) : asset('assets/images/placeholder.svg') }}"
                                                 class="rounded bg-light border object-fit-cover" width="40" height="40">
                                             <span>{{ $sub->name }}</span>
                                         </div>
@@ -95,26 +95,12 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button class="btn btn-outline-info view-btn"
-                                                data-data="{{ json_encode($sub) }}"
-                                                data-cat="{{ $sub->category->name ?? 'N/A' }}" title="View">
-                                                <i class="mdi mdi-eye"></i>
-                                            </button>
-
-                                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
-                                                <a href="{{ route('warehouse.subcategories.edit', $sub) }}"
-                                                    class="btn btn-outline-primary" title="Edit">
-                                                    <i class="mdi mdi-pencil"></i>
-                                                </a>
-                                                <form method="POST" action="{{ route('warehouse.subcategories.destroy', $sub) }}" class="d-inline delete-form">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn btn-outline-danger delete-form" title="Delete">
-                                                        <i class="mdi mdi-delete"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
+                                        <x-action-buttons 
+                                            :viewUrl="null" 
+                                            :data="$sub"
+                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.subcategories.edit', $sub) : null"
+                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.subcategories.destroy', $sub) : null"
+                                        />
                                     </td>
                                 </tr>
                             @empty

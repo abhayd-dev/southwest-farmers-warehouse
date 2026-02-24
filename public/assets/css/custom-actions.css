@@ -1,0 +1,152 @@
+/* Sidebar Polish - Compact & Professional Black */
+ul#sidebar-menu a {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    padding: 6px 20px !important;
+    /* Compact vertical padding */
+    color: #343a40 !important;
+    /* Professional Black */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+ul#sidebar-menu a:hover,
+ul#sidebar-menu a.active,
+ul#sidebar-menu a[aria-expanded="true"] {
+    color: #f7b84b !important;
+    /* Warning color for hover/active */
+}
+
+ul#sidebar-menu a:hover i,
+ul#sidebar-menu a.active i,
+ul#sidebar-menu a:hover iconify-icon,
+ul#sidebar-menu a.active iconify-icon {
+    color: #f7b84b !important;
+}
+
+/* Space after active section or open sub-menu */
+.collapse.show {
+    margin-bottom: 20px !important;
+    /* Increased spacing for open sub-menus */
+    margin-top: 5px !important;
+}
+
+ul#sidebar-menu li.active>a,
+ul#sidebar-menu li.menuitem-active>a {
+    margin-top: 10px !important;
+    /* Space before active section */
+    margin-bottom: 5px !important;
+}
+
+/* Remove default bullets if any */
+ul#sidebar-menu,
+ul#sidebar-menu ul {
+    list-style: none !important;
+}
+
+ul#sidebar-menu .nav-second-level li a {
+    padding: 4px 20px 4px 45px !important;
+    /* More compacted sub-items */
+    font-size: 0.825rem;
+}
+
+#sidebar-menu .menu-title {
+    margin-top: 15px !important;
+    /* Maintain section spacing */
+    margin-bottom: 5px !important;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #adb5bd !important;
+    /* Subtle section headings */
+}
+
+ul#sidebar-menu a iconify-icon,
+ul#sidebar-menu a i {
+    flex-shrink: 0;
+    margin-right: 12px;
+    font-size: 1.1rem;
+    color: #495057;
+    /* Darker icons */
+}
+
+/* Action Buttons Utility */
+.action-btns {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    /* Slight gap as seen in some designs, but we can stick them if needed */
+}
+
+.action-btns .btn {
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    /* Matching the rounded look */
+    transition: all 0.2s ease-in-out;
+}
+
+.action-btns .btn i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Specific colors to match the requirement/screenshot */
+.btn-view {
+    color: #00b4d8 !important;
+    border-color: #00b4d8 !important;
+    background: transparent;
+}
+
+.btn-view:hover {
+    background: #00b4d8 !important;
+    color: #fff !important;
+}
+
+.btn-edit {
+    color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    background: transparent;
+
+}
+
+/* Image Placeholders */
+.img-placeholder {
+    object-fit: contain !important;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    padding: 2px;
+}
+
+.btn-edit:hover {
+    background: #1e3a8a !important;
+    color: #fff !important;
+}
+
+.btn-delete {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    background: transparent;
+}
+
+.btn-delete:hover {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .action-btns {
+        flex-wrap: nowrap;
+    }
+
+    .action-btns .btn {
+        padding: 4px 8px;
+    }
+}

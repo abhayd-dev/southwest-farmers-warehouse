@@ -50,15 +50,10 @@
                                         </td>
                                         <td class="text-end">
                                             @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
-                                            <a href="{{ route('warehouse.departments.edit', $dept->id) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('warehouse.departments.destroy', $dept->id) }}" method="POST" class="d-inline delete-form">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="mdi mdi-delete"></i>
-                                                </button>
-                                            </form>
+                                                <x-action-buttons 
+                                                    :editUrl="route('warehouse.departments.edit', $dept->id)"
+                                                    :deleteUrl="route('warehouse.departments.destroy', $dept->id)"
+                                                />
                                             @endif
                                         </td>
                                     </tr>

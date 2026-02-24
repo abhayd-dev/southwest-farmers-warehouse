@@ -84,8 +84,7 @@ class WareUser extends Authenticatable
             return Storage::url($this->profile_image);
         }
 
-        $name = urlencode($this->name ?? 'User');
-        return "https://ui-avatars.com/api/?name={$name}&color=7F9CF5&background=EBF4FF&bold=true";
+        return asset('assets/images/default-avatar.png');
         
     }
 }

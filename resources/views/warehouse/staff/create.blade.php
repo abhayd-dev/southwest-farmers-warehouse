@@ -17,7 +17,7 @@
                         <div class="card-header bg-light fw-bold">Profile Image</div>
                         <div class="card-body text-center">
                             <div class="mb-3">
-                                <img id="previewImg" src="https://placehold.co/150?text=Upload" class="rounded-circle border mb-3" width="120" height="120">
+                                <img id="previewImg" src="{{ asset('assets/images/placeholder.svg') }}" class="rounded-circle border mb-3" width="120" height="120">
                                 <input type="file" name="profile_image" class="form-control form-control-sm" onchange="previewFile(this)">
                             </div>
                         </div>

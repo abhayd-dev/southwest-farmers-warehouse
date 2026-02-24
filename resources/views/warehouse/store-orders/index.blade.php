@@ -140,10 +140,7 @@
                                         <span class="badge {{ $badgeClass }}">{{ strtoupper($order->status) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <a href="{{ route('warehouse.store-orders.show', $order->id) }}"
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="mdi mdi-eye me-1"></i> View
-                                        </a>
+                                        <x-action-buttons :viewUrl="route('warehouse.store-orders.show', $order->id)" />
                                     </td>
                                 </tr>
                             @empty

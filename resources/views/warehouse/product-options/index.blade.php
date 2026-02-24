@@ -135,7 +135,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $option->icon ? Storage::url( $option->icon) : 'https://placehold.co/40?text=IMG' }}"
+                                            <img src="{{ $option->icon ? Storage::url( $option->icon) : asset('assets/images/placeholder.svg') }}"
                                                 class="rounded bg-light border object-fit-cover shadow-sm"
                                                 width="40" height="40" alt="{{ $option->option_name }}">
                                             <div>
@@ -167,25 +167,10 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
-                                            <a href="{{ route('warehouse.product-options.edit', $option) }}"
-                                                class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                                                title="Edit Option">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-
-                                            <form method="POST"
-                                                action="{{ route('warehouse.product-options.destroy', $option) }}"
-                                                class="d-inline delete-form">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger delete-form"
-                                                    data-bs-toggle="tooltip" title="Delete Option">
-                                                    <i class="mdi mdi-delete"></i>
-                                                </button>
-                                            </form>
-                                            @endif
-                                        </div>
+                                        <x-action-buttons 
+                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? route('warehouse.product-options.edit', $option) : null"
+                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? route('warehouse.product-options.destroy', $option) : null"
+                                        />
                                     </td>
                                 </tr>
                             @empty

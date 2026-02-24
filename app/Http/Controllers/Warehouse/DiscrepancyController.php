@@ -39,7 +39,11 @@ class DiscrepancyController extends Controller
                 })
                 ->addColumn('date', fn($row) => $row->updated_at->format('d M Y'))
                 ->addColumn('action', function($row) {
-                    return '<a href="'.route('warehouse.stock-requests.show', $row->id).'" class="btn btn-sm btn-outline-primary">View</a>';
+                    return '<div class="action-btns">
+                                <a href="'.route('warehouse.stock-requests.show', $row->id).'" class="btn btn-sm btn-outline-info btn-view" title="View">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                            </div>';
                 })
                 ->rawColumns(['discrepancy', 'action'])
                 ->make(true);
@@ -68,7 +72,11 @@ class DiscrepancyController extends Controller
                 })
                 ->addColumn('reason', fn($row) => $row->reason ?? '-')
                 ->addColumn('action', function($row) {
-                    return '<a href="'.route('warehouse.stock-control.recall.show', $row->id).'" class="btn btn-sm btn-outline-primary">View</a>';
+                    return '<div class="action-btns">
+                                <a href="'.route('warehouse.stock-control.recall.show', $row->id).'" class="btn btn-sm btn-outline-info btn-view" title="View">
+                                    <i class="mdi mdi-eye"></i>
+                                </a>
+                            </div>';
                 })
                 ->rawColumns(['status_badge', 'action'])
                 ->make(true);

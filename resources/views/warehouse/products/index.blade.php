@@ -139,7 +139,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $product->icon ? Storage::url($product->icon) : 'https://placehold.co/50?text=IMG' }}"
+                                            <img src="{{ $product->icon ? Storage::url($product->icon) : asset('assets/images/placeholder.svg') }}"
                                                 class="rounded bg-light border object-fit-cover shadow-sm"
                                                 width="50" height="50" alt="{{ $product->product_name }}">
                                             <div>
@@ -173,37 +173,20 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="btn-group btn-group-sm" role="group">
+                                        <x-action-buttons 
+                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('edit_products') ? route('warehouse.products.edit', $product) : null"
+                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') ? route('warehouse.products.destroy', $product) : null"
+                                        >
                                             @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('print_labels') || auth()->user()->hasPermission('view_products'))
                                             <a href="{{ route('warehouse.print.pallet', ['product_id' => $product->id, 'qty' => 1]) }}" 
                                                target="_blank" 
-                                               class="btn btn-outline-dark" 
+                                               class="btn btn-sm btn-outline-dark" 
                                                data-bs-toggle="tooltip" 
                                                title="Print Label">
                                                 <i class="mdi mdi-printer"></i>
                                             </a>
                                             @endif
-
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('edit_products'))
-                                            <a href="{{ route('warehouse.products.edit', $product) }}"
-                                                class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                                                title="Edit Product">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-                                            @endif
-
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products'))
-                                            <form method="POST"
-                                                action="{{ route('warehouse.products.destroy', $product) }}"
-                                                class="d-inline delete-form">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger delete-form"
-                                                    data-bs-toggle="tooltip" title="Delete Product">
-                                                    <i class="mdi mdi-delete"></i>
-                                                </button>
-                                            </form>
-                                            @endif
-                                        </div>
+                                        </x-action-buttons>
                                     </td>
                                 </tr>
                             @empty

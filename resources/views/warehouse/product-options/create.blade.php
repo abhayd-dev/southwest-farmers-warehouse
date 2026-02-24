@@ -35,7 +35,7 @@
                                     title="Upload Icon">
                                     {{-- Preview Image --}}
                                     <img id="iconPreview"
-                                        src="{{ isset($productOption) && $productOption->icon ?  Storage::url( $productOption->icon) : 'https://placehold.co/120?text=Option+Img' }}"
+                                        src="{{ isset($productOption) && $productOption->icon ?  Storage::url( $productOption->icon) : asset('assets/images/placeholder.svg') }}"
                                         class="rounded border shadow-sm object-fit-cover" width="120" height="120"
                                         alt="Icon Preview">
 

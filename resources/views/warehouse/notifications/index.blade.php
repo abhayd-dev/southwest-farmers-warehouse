@@ -49,19 +49,20 @@
                                 <p class="mb-1 text-muted">{{ $notification->message }}</p>
                             </div>
 
-                            {{-- Actions --}}
-                            <div class="ms-3 d-flex flex-column gap-2">
-                                <form action="{{ route('warehouse.notifications.destroy', $notification->id) }}" method="POST">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-light border text-danger" title="Delete">
-                                        <i class="mdi mdi-trash-can"></i>
+                             <div class="ms-3">
+                                <div class="action-btns flex-column gap-2">
+                                    <form action="{{ route('warehouse.notifications.destroy', $notification->id) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="mdi mdi-trash-can"></i>
+                                        </button>
+                                    </form>
+                                    @if(!$notification->read_at)
+                                    <button onclick="markAsRead({{ $notification->id }}); location.reload();" class="btn btn-sm btn-outline-primary" title="Mark as Read">
+                                        <i class="mdi mdi-check"></i>
                                     </button>
-                                </form>
-                                @if(!$notification->read_at)
-                                <button onclick="markAsRead({{ $notification->id }}); location.reload();" class="btn btn-sm btn-light border text-primary" title="Mark as Read">
-                                    <i class="mdi mdi-check"></i>
-                                </button>
-                                @endif
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>

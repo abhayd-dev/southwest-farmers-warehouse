@@ -57,7 +57,7 @@
 
         // Initialize Select2 on all select elements unless they have the class .no-select2
         $(document).ready(function() {
-            $('select:not(.no-select2)').each(function() {
+            $('select:not(.no-select2, .swal2-select, [class^="swal2-"])').each(function() {
                 $(this).select2({
                     theme: 'bootstrap-5',
                     width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
@@ -82,6 +82,29 @@
             });
         });
     });
+</script>
+
+<script>
+    /**
+     * Universal Image Error Handler
+     * Automatically replaces broken images with a local professional placeholder.
+     */
+    document.addEventListener('error', function (event) {
+        if (event.target.tagName.toLowerCase() !== 'img') return;
+        
+        const img = event.target;
+        const placeholder = "{{ asset('assets/images/placeholder.svg') }}";
+        
+        // Prevent infinite loops if the placeholder itself is missing
+        if (img.src === placeholder) return;
+
+        // Use custom placeholder if provided via data-placeholder attribute
+        const customPlaceholder = img.getAttribute('data-placeholder');
+        img.src = customPlaceholder ? customPlaceholder : placeholder;
+        
+        // Add a class for optional styling
+        img.classList.add('img-placeholder');
+    }, true);
 </script>
 
 <!-- Your custom app.js (keep at the end) -->

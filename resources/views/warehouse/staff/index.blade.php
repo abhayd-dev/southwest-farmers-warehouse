@@ -92,22 +92,14 @@
                                     </div>
                                 </td>
                                 <td class="text-end px-4">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
-                                            <a href="{{ route('warehouse.staff.edit', $user->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
-                                                <i class="mdi mdi-pencil"></i>
-                                            </a>
-                                            
-                                            @if ($user->id !== auth()->id())
-                                                <form action="{{ route('warehouse.staff.destroy', $user->id) }}" method="POST" class="d-inline delete-form">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
-                                                </form>
-                                            @endif
-                                        @else
-                                            <span class="text-muted small">Read Only</span>
-                                        @endif
-                                    </div>
+                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
+                                        <x-action-buttons 
+                                            :editUrl="route('warehouse.staff.edit', $user->id)"
+                                            :deleteUrl="$user->id !== auth()->id() ? route('warehouse.staff.destroy', $user->id) : null"
+                                        />
+                                    @else
+                                        <span class="text-muted small">Read Only</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
