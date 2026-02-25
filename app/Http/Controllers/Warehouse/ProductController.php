@@ -29,7 +29,7 @@ class ProductController extends Controller
                 ->with(['category', 'subcategory', 'option', 'department'])
                 ->when($request->search, function ($q) use ($request) {
                     $s = $request->search;
-                    $q->where(function($query) use ($s) {
+                    $q->where(function ($query) use ($s) {
                         $query->where('product_name', 'ilike', "%$s%")
                             ->orWhere('sku', 'ilike', "%$s%")
                             ->orWhere('barcode', 'ilike', "%$s%")
@@ -74,15 +74,16 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
+                'upc' => 'nullable|string|max:255',
                 'barcode' => 'required|string|unique:products,barcode|max:255', // Changed to required and unique
                 'icon' => 'nullable|image|max:2048',
             ]);
 
             return DB::transaction(function () use ($request) {
                 $data = $request->except('icon');
-                
+
                 // Explicitly set store_id to NULL for Warehouse Products
-                $data['store_id'] = null; 
+                $data['store_id'] = null;
 
                 if ($request->hasFile('icon')) {
                     $data['icon'] = $request->file('icon')->store('products', 'public');
@@ -98,6 +99,7 @@ class ProductController extends Controller
                         'category_id' => $request->category_id,
                         'subcategory_id' => $request->subcategory_id,
                         'unit' => $request->unit,
+                        'upc' => $request->upc,
                         'barcode' => $request->barcode,
                         'tax_percent' => 0,
                         'cost_price' => $request->price,
@@ -119,7 +121,6 @@ class ProductController extends Controller
                 return redirect()->route('warehouse.products.index')
                     ->with('success', 'Product created successfully');
             });
-
         } catch (\Exception $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
@@ -153,6 +154,7 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
+                'upc' => 'nullable|string|max:255',
                 'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id, // Added unique check ignoring current id
                 'icon' => 'nullable|image|max:2048',
             ]);
@@ -226,10 +228,10 @@ class ProductController extends Controller
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
             ]);
-            
+
             // Pass department_id to Import Class (Assuming Import Class constructor is updated)
             Excel::import(new ProductImport($request->category_id, $request->subcategory_id, $request->department_id), $request->file);
-            
+
             return back()->with('success', 'Imported successfully');
         } catch (\Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
@@ -257,9 +259,19 @@ class ProductController extends Controller
         return response()->json(['barcode' => $barcode]);
     }
 
+    public function generateUpc()
+    {
+        // Generate a random 12 digit number
+        do {
+            $upc = mt_rand(100000000000, 999999999999);
+        } while (Product::where('upc', $upc)->exists());
+
+        return response()->json(['upc' => $upc]);
+    }
+
     public function bulkPriceUpdate(Request $request)
     {
-        set_time_limit(300); 
+        set_time_limit(300);
         $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'subcategory_id' => 'nullable|exists:product_subcategories,id',
@@ -283,24 +295,23 @@ class ProductController extends Controller
 
             // Calculate Factor (e.g., 10% -> 1.10)
             $factor = 1 + ($request->percentage / 100);
-            
+
             // PostgreSQL Raw Update
             $query->update(['price' => DB::raw("price * $factor")]);
 
             // Optional: Notification
             $catName = ProductCategory::find($request->category_id)->name;
             $msg = "Bulk Price Update: Increased by {$request->percentage}% for Category: $catName";
-            if($request->subcategory_id) {
+            if ($request->subcategory_id) {
                 $subName = ProductSubcategory::find($request->subcategory_id)->name;
                 $msg .= ", Subcategory: $subName";
             }
-            
+
             NotificationService::sendToAdmins('Price Update', $msg, 'info');
 
             DB::commit();
 
             return back()->with('success', "Updated prices for $count products successfully.");
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to update prices: ' . $e->getMessage());

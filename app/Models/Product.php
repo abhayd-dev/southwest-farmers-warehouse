@@ -28,6 +28,7 @@ class Product extends Model
         'subcategory_id',
         'product_name',
         'sku',
+        'upc',
         'barcode',
         'unit',
         'purchase_unit',

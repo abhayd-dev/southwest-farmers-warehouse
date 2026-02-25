@@ -25,6 +25,20 @@
                 }
             }
 
+            const upcInput = document.getElementById('upcInput');
+            const generateUpcBtn = document.getElementById('generateUpcBtn');
+
+            if (generateUpcBtn) {
+                generateUpcBtn.addEventListener('click', function() {
+                    fetch("{{ route('warehouse.products.generate-upc') }}")
+                        .then(response => response.json())
+                        .then(data => {
+                            if (upcInput) upcInput.value = data.upc;
+                        })
+                        .catch(err => console.error(err));
+                });
+            }
+
             // Generate Barcode via Ajax
             generateBtn.addEventListener('click', function() {
                 fetch("{{ route('warehouse.products.generate-barcode') }}")

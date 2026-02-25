@@ -55,9 +55,15 @@ Route::middleware('auth')->group(function () {
         Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
         // Notification & Activity Logs
-        Route::get('/notifications', function() { return view('notifications.index'); })->name('notifications.index');
-        Route::post('/notifications/mark-all-read', function() { return back(); })->name('notifications.markAllRead');
-        Route::get('/activity-logs', function() { return view('activity-logs.index'); })->name('activity-logs.index');
+        Route::get('/notifications', function () {
+            return view('notifications.index');
+        })->name('notifications.index');
+        Route::post('/notifications/mark-all-read', function () {
+            return back();
+        })->name('notifications.markAllRead');
+        Route::get('/activity-logs', function () {
+            return view('activity-logs.index');
+        })->name('activity-logs.index');
     });
 
     // require __DIR__.'/auth.php';
@@ -101,6 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::get('products/sample', [ProductController::class, 'sample'])->name('warehouse.products.sample');
         Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])->name('warehouse.products.fetch-option');
         Route::get('products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('warehouse.products.generate-barcode');
+        Route::get('products/generate-upc', [ProductController::class, 'generateUpc'])->name('warehouse.products.generate-upc');
         Route::post('products/bulk-price-update', [ProductController::class, 'bulkPriceUpdate'])->name('warehouse.products.bulk-price-update');
 
         Route::controller(ProductStockController::class)->group(function () {
@@ -117,7 +124,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('roles', RoleController::class)
             ->names('warehouse.roles')
             ->middleware('permission:manage_roles');
-            
+
         Route::post('staff/status', [StaffController::class, 'changeStatus'])->name('warehouse.staff.status')->middleware('permission:manage_staff');
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff')
@@ -194,7 +201,7 @@ Route::middleware('auth')->group(function () {
 
             // Rules (placeholder for future expansion)
             Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
-            
+
             // Restock Planning (Phase 7 Final Missing Element)
             Route::get('restock-planning', [App\Http\Controllers\Warehouse\RestockPlanningController::class, 'index'])->name('restock-planning');
 
@@ -217,7 +224,7 @@ Route::middleware('auth')->group(function () {
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
         Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
         Route::post('purchase-orders/{purchase_order}/send-to-vendor', [PurchaseOrderController::class, 'sendToVendor'])->name('warehouse.purchase-orders.send-to-vendor');
-        
+
         // PO Approval Routes (signed URLs for email approval)
         Route::get('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'handleApproval'])
             ->name('warehouse.purchase-orders.approve')

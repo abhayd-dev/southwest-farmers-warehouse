@@ -9,17 +9,17 @@
         {{-- Icon Upload Section --}}
         <div class="mb-4 text-center">
             <label for="iconInput" class="position-relative d-inline-block cursor-pointer">
-                <img id="iconPreview" 
-                     src="{{ isset($product) && $product->icon ? Storage::url($product->icon) : asset('assets/images/placeholder.svg') }}" 
-                     class="rounded border shadow-sm object-fit-cover" 
-                     width="120" height="120">
+                <img id="iconPreview"
+                    src="{{ isset($product) && $product->icon ? Storage::url($product->icon) : asset('assets/images/placeholder.svg') }}"
+                    class="rounded border shadow-sm object-fit-cover" width="120" height="120">
                 <div class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border">
                     <i class="mdi mdi-camera text-primary"></i>
                 </div>
-                <input type="file" name="icon" id="iconInput" class="d-none" accept="image/*" onchange="previewImage(event)">
+                <input type="file" name="icon" id="iconInput" class="d-none" accept="image/*"
+                    onchange="previewImage(event)">
             </label>
         </div>
-        
+
         <div class="row g-4">
 
             {{-- DEPARTMENT DROPDOWN --}}
@@ -34,7 +34,7 @@
                     <select name="department_id" class="form-select border-start-0" required>
                         <option value="">Select Department</option>
                         @foreach ($departments as $dept)
-                            <option value="{{ $dept->id }}" 
+                            <option value="{{ $dept->id }}"
                                 {{ isset($product) && $product->department_id == $dept->id ? 'selected' : '' }}>
                                 {{ $dept->name }} ({{ $dept->code }})
                             </option>
@@ -115,14 +115,30 @@
             </div>
 
             <div class="col-md-6">
+                <label class="form-label fw-semibold">UPC</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="mdi mdi-barcode text-muted"></i>
+                    </span>
+                    <input type="text" name="upc" id="upcInput" class="form-control border-start-0"
+                        value="{{ old('upc', $product->upc ?? '') }}" placeholder="Scan or generate UPC">
+                    <button class="btn btn-outline-secondary" type="button" id="generateUpcBtn" title="Generate UPC">
+                        <i class="mdi mdi-refresh"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
                 <label class="form-label fw-semibold">Barcode <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
                         <i class="mdi mdi-barcode-scan text-muted"></i>
                     </span>
                     <input type="text" name="barcode" id="barcodeInput" class="form-control border-start-0"
-                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Scan or generate barcode" required>
-                    <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn" title="Generate Barcode">
+                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Scan or generate barcode"
+                        required>
+                    <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn"
+                        title="Generate Barcode">
                         <i class="mdi mdi-refresh"></i>
                     </button>
                 </div>
@@ -185,4 +201,3 @@
         </div>
     </div>
 </div>
-
