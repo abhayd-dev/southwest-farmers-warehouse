@@ -10,8 +10,13 @@ return [
     // Default category margin percentage
     'default_category_margin' => env('DEFAULT_CATEGORY_MARGIN', 25),
 
-    // Pallet maximum weight in lbs
-    'pallet_max_weight' => env('PALLET_MAX_WEIGHT', 2200),
+    // Pallet dimensional and weight constraints
+    'pallet' => [
+        'max_weight_lbs' => env('PALLET_MAX_WEIGHT', 2200),
+        'max_height_in' => env('PALLET_MAX_HEIGHT', 60), // standard 5 feet
+        'length_in' => env('PALLET_LENGTH', 48), // standard 48
+        'width_in' => env('PALLET_WIDTH', 40), // standard 40
+    ],
 
     // Warehouse low stock ratio for rationing (25% of requested)
     'low_stock_ratio' => env('WAREHOUSE_LOW_STOCK_RATIO', 0.25),

@@ -49,6 +49,12 @@ class Product extends Model
         'margin_percent',
         'is_active',
         'store_id',
+        'carton_length',
+        'carton_width',
+        'carton_height',
+        'units_per_carton',
+        'is_stackable',
+        'is_fragile',
     ];
 
     // ===== RELATIONSHIPS =====

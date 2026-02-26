@@ -36,7 +36,7 @@ class StorePurchaseOrderController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('po_number', 'like', "%{$search}%")
-                  ->orWhereHas('store', fn($s) => $s->where('store_name', 'like', "%{$search}%"));
+                    ->orWhereHas('store', fn($s) => $s->where('store_name', 'like', "%{$search}%"));
             });
         }
 
@@ -50,8 +50,13 @@ class StorePurchaseOrderController extends Controller
         $rejectedCount   = StorePurchaseOrder::where('status', 'rejected')->count();
 
         return view('warehouse.store-orders.index', compact(
-            'orders', 'status',
-            'pendingCount', 'approvedCount', 'dispatchedCount', 'completedCount', 'rejectedCount'
+            'orders',
+            'status',
+            'pendingCount',
+            'approvedCount',
+            'dispatchedCount',
+            'completedCount',
+            'rejectedCount'
         ));
     }
 
@@ -69,9 +74,9 @@ class StorePurchaseOrderController extends Controller
                 ->sum('quantity');
 
             $inTransitQty = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
-                    $q->where('store_id', $storeOrder->store_id)
-                      ->whereIn('status', ['approved', 'dispatched']);
-                })
+                $q->where('store_id', $storeOrder->store_id)
+                    ->whereIn('status', ['approved', 'dispatched']);
+            })
                 ->where('product_id', $item->product_id)
                 ->where('id', '!=', $item->id)
                 ->sum('pending_qty');
@@ -269,16 +274,18 @@ class StorePurchaseOrderController extends Controller
 
             // Check if all items dispatched → mark PO as dispatched
             $storeOrder->refresh();
-            $allDispatched = $storeOrder->items->every(fn($i) =>
+            $allDispatched = $storeOrder->items->every(
+                fn($i) =>
                 in_array($i->status, [
                     StorePurchaseOrderItem::STATUS_DISPATCHED,
                     StorePurchaseOrderItem::STATUS_REJECTED,
                 ])
             );
 
-            $storeOrder->update(['status' => $allDispatched
-                ? StorePurchaseOrder::STATUS_DISPATCHED
-                : StorePurchaseOrder::STATUS_APPROVED
+            $storeOrder->update([
+                'status' => $allDispatched
+                    ? StorePurchaseOrder::STATUS_DISPATCHED
+                    : StorePurchaseOrder::STATUS_APPROVED
             ]);
         });
 
@@ -337,6 +344,79 @@ class StorePurchaseOrderController extends Controller
             return redirect()
                 ->route('warehouse.store-orders.index')
                 ->with('error', "Auto-PO generation failed: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Auto Arrange Pallets for an Approved PO
+     */
+    public function autoArrangePallets(Request $request, StorePurchaseOrder $storeOrder, \App\Services\PalletizationService $palletizationService)
+    {
+        if ($storeOrder->status !== 'approved') {
+            return back()->with('error', 'Only approved POs can be auto-arranged onto pallets.');
+        }
+
+        $approvedItems = $storeOrder->items->where('status', StorePurchaseOrderItem::STATUS_APPROVED);
+
+        if ($approvedItems->isEmpty()) {
+            return back()->with('error', 'No approved items to arrange.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Delete any existing pallets for this PO to start fresh
+            \App\Models\Pallet::where('store_po_id', $storeOrder->id)->delete();
+
+            // 2. Mock items into the format needed by PalletizationService
+            // The service expects objects with a 'product' relation and 'quantity'. 
+            // We use pending_qty because that is the amount approved to be packed/dispatched.
+            $itemsToPack = [];
+            foreach ($approvedItems as $item) {
+                if ($item->pending_qty > 0) {
+                    $itemMock = new \stdClass();
+                    $itemMock->product = $item->product;
+                    $itemMock->quantity = $item->pending_qty;
+                    $itemsToPack[] = $itemMock;
+                }
+            }
+
+            // 3. Utilize Algorithm
+            $arrangedData = $palletizationService->calculateOptimalArrangement($itemsToPack);
+
+            // 4. Save to Database
+            foreach ($arrangedData as $index => $palletData) {
+                // Determine dominating department based on heaviest weight or item count (simplification: take from first item)
+                $firstProduct = \App\Models\Product::find($palletData['items'][0]['product_id'] ?? null);
+
+                $pallet = \App\Models\Pallet::create([
+                    'store_po_id'   => $storeOrder->id,
+                    'pallet_number' => \App\Models\Pallet::generatePalletNumber(),
+                    'department_id' => $firstProduct ? $firstProduct->department_id : null,
+                    'total_weight'  => $palletData['total_weight'],
+                    'max_weight'    => $palletData['max_weight'],
+                    'status'        => \App\Models\Pallet::STATUS_PREPARING,
+                    'notes'         => 'Auto-Generated Plt ' . ($index + 1) . ' of ' . count($arrangedData)
+                ]);
+
+                foreach ($palletData['items'] as $itemDetails) {
+                    // Item weight in arrangement data is total weight of that cartoned item stack.
+                    // The addItem method expects weight_per_unit as (Total Carton Stack Weight / Total Units).
+                    $pallet->addItem(
+                        $itemDetails['product_id'],
+                        $itemDetails['total_quantity'],
+                        $itemDetails['weight_per_unit']
+                    );
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('warehouse.pallets.index')
+                ->with('success', "Auto-arranged PO #{$storeOrder->po_number} into " . count($arrangedData) . " pallets successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to auto-arrange pallets: ' . $e->getMessage());
         }
     }
 }

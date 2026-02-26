@@ -14,6 +14,7 @@ class Pallet extends Model
 
     protected $fillable = [
         'transfer_id',
+        'store_po_id',
         'pallet_number',
         'department_id',
         'total_weight',
@@ -65,7 +66,7 @@ class Pallet extends Model
     public function addItem($productId, $quantity, $weightPerUnit)
     {
         $totalWeight = $quantity * $weightPerUnit;
-        
+
         if (($this->total_weight + $totalWeight) > $this->max_weight) {
             throw new \Exception("Adding this item would exceed pallet weight limit of {$this->max_weight} lbs");
         }

@@ -195,9 +195,78 @@
                     </span>
                     <textarea name="description" class="form-control border-start-0" rows="3"
                         placeholder="Enter product description (optional)">{{ old('description', $product->description ?? '') }}</textarea>
+
+                    <div class="col-12 mt-4">
+                        <hr>
+                        <h6 class="fw-semibold text-primary mb-3"><i class="mdi mdi-package-variant-closed"></i>
+                            Pallet Arrangement & Carton Details</h6>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Carton Length (in)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="mdi mdi-arrow-left-right text-muted"></i></span>
+                            <input type="number" step="0.01" name="carton_length"
+                                class="form-control border-start-0"
+                                value="{{ old('carton_length', $product->carton_length ?? '') }}" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Carton Width (in)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="mdi mdi-arrow-expand-horizontal text-muted"></i></span>
+                            <input type="number" step="0.01" name="carton_width"
+                                class="form-control border-start-0"
+                                value="{{ old('carton_width', $product->carton_width ?? '') }}" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Carton Height (in)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="mdi mdi-arrow-up-down text-muted"></i></span>
+                            <input type="number" step="0.01" name="carton_height"
+                                class="form-control border-start-0"
+                                value="{{ old('carton_height', $product->carton_height ?? '') }}" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Units Per Carton <span
+                                class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="mdi mdi-apps text-muted"></i></span>
+                            <input type="number" min="1" step="1" name="units_per_carton"
+                                class="form-control border-start-0"
+                                value="{{ old('units_per_carton', $product->units_per_carton ?? '1') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check form-switch fs-5 mb-1">
+                            <input class="form-check-input" type="checkbox" name="is_stackable" value="1"
+                                id="isStackableSwitch"
+                                {{ old('is_stackable', $product->is_stackable ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label fs-6 fw-semibold" for="isStackableSwitch">Is
+                                Stackable?</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check form-switch fs-5 mb-1">
+                            <input class="form-check-input" type="checkbox" name="is_fragile" value="1"
+                                id="isFragileSwitch"
+                                {{ old('is_fragile', $product->is_fragile ?? false) ? 'checked' : '' }}>
+                            <label class="form-check-label fs-6 fw-semibold text-danger" for="isFragileSwitch">Is
+                                Fragile?</label>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
         </div>
-    </div>
-</div>

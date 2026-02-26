@@ -160,6 +160,8 @@ Route::middleware('auth')->group(function () {
                 // Per-item actions
                 Route::post('/items/{item}/approve', 'approveItem')->name('item.approve');
                 Route::post('/items/{item}/reject', 'rejectItem')->name('item.reject');
+                // Auto-arrange pallets for PO
+                Route::post('/{storeOrder}/auto-arrange', 'autoArrangePallets')->name('auto-arrange');
                 // Auto-PO generation (manual trigger)
                 Route::post('/generate/{store}', 'generateForStore')->name('generate');
             });
