@@ -19,6 +19,7 @@ use App\Http\Controllers\Warehouse\ProductCategoryController;
 use App\Http\Controllers\Warehouse\ProductStockController;
 use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\Warehouse\PurchaseOrderController;
+use App\Http\Controllers\Warehouse\ReceivingController;
 use App\Http\Controllers\Warehouse\RecallController;
 use App\Http\Controllers\Warehouse\RoleController;
 use App\Http\Controllers\Warehouse\StaffController;
@@ -222,6 +223,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('purchase-orders', PurchaseOrderController::class)->names('warehouse.purchase-orders');
         Route::post('purchase-orders/bulk-store-draft', [PurchaseOrderController::class, 'bulkStoreDraft'])->name('warehouse.purchase-orders.bulk-store-draft');
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
+        Route::post('purchase-orders/{purchase_order}/mark-completed', [PurchaseOrderController::class, 'markCompleted'])->name('warehouse.purchase-orders.mark-completed');
         Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
         Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
@@ -234,6 +236,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('purchase-orders/{purchaseOrder}/receiving-history', [PurchaseOrderController::class, 'receivingHistory'])
             ->name('warehouse.purchase-orders.receiving-history');
+
+        Route::controller(ReceivingController::class)->prefix('receiving')->name('warehouse.receiving.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
+        });
 
         Route::controller(DiscrepancyController::class)->group(function () {
             Route::get('/discrepancy', 'index')->name('warehouse.discrepancy.index');

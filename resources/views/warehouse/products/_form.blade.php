@@ -103,16 +103,7 @@
                 <div class="invalid-feedback">Please enter a product name.</div>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">SKU</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">
-                        <i class="mdi mdi-barcode text-muted"></i>
-                    </span>
-                    <input type="text" name="sku" class="form-control border-start-0"
-                        value="{{ old('sku', $product->sku ?? '') }}" placeholder="Stock Keeping Unit">
-                </div>
-            </div>
+
 
             <div class="col-md-6">
                 <label class="form-label fw-semibold">UPC</label>
@@ -134,13 +125,9 @@
                     <span class="input-group-text bg-light border-end-0">
                         <i class="mdi mdi-barcode-scan text-muted"></i>
                     </span>
-                    <input type="text" name="barcode" id="barcodeInput" class="form-control border-start-0"
-                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Scan or generate barcode"
-                        required>
-                    <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn"
-                        title="Generate Barcode">
-                        <i class="mdi mdi-refresh"></i>
-                    </button>
+                    <input type="text" name="barcode" id="barcodeInput" class="form-control border-start-0 bg-light"
+                        value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Auto-generated from UPC"
+                        readonly required>
                 </div>
                 <div class="mt-2" style="height: 50px;">
                     <svg id="barcodeDisplay"></svg>
@@ -175,16 +162,48 @@
                 <div class="invalid-feedback">Please select a unit.</div>
             </div>
 
+            <div class="col-12 mt-2">
+                <hr>
+                <h6 class="fw-semibold text-primary mb-3"><i class="mdi mdi-currency-usd"></i>
+                    Pricing Details</h6>
+            </div>
+
             <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                    Price <span class="text-danger">*</span>
-                </label>
+                <label class="form-label fw-semibold">Tax Percentage (%)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">%</span>
+                    <input type="number" step="0.01" name="tax_percent" class="form-control border-start-0"
+                        value="{{ old('tax_percent', $product->tax_percent ?? '0.00') }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Warehouse Cost (WHSE Cost)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">$</span>
+                    <input type="number" step="0.01" name="cost_price" class="form-control border-start-0"
+                        value="{{ old('cost_price', $product->cost_price ?? '') }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Warehouse Price (WHSE Price) <span
+                        class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
                     <input type="number" step="0.01" name="price" class="form-control border-start-0"
                         value="{{ old('price', $product->price ?? '') }}" placeholder="0.00" required>
                 </div>
                 <div class="invalid-feedback">Please enter a price.</div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Retail Price</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">$</span>
+                    <input type="number" step="0.01" name="retail_price" class="form-control border-start-0"
+                        value="{{ old('retail_price', $product->retail_price ?? '') }}" placeholder="0.00">
+                </div>
             </div>
 
             <div class="col-12">

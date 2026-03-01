@@ -25,6 +25,7 @@ class PurchaseOrderService
                 'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
                 'approval_email' => $data['approval_email'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'vendor_notes' => $data['vendor_notes'] ?? null,
                 'status' => PurchaseOrder::STATUS_DRAFT,
                 'created_by' => Auth::id(),
             ]);
@@ -33,7 +34,7 @@ class PurchaseOrderService
 
             // 2. Create Items
             foreach ($data['items'] as $item) {
-                $lineTotal = ($item['quantity'] * $item['cost']); 
+                $lineTotal = ($item['quantity'] * $item['cost']);
 
                 PurchaseOrderItem::create([
                     'purchase_order_id' => $po->id,
@@ -89,7 +90,7 @@ class PurchaseOrderService
 
                 if ($stock) {
                     $stock->quantity += $qtyToReceive;
-                    $stock->save(); 
+                    $stock->save();
                 } else {
                     $stock = ProductStock::create([
                         'product_id' => $poItem->product_id,
@@ -124,7 +125,7 @@ class PurchaseOrderService
             if ($allCompleted && $po->vendor) {
                 $po->vendor->updateRating();
             }
-          
+
 
             return $po;
         });

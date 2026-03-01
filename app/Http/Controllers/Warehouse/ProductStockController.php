@@ -23,7 +23,7 @@ class ProductStockController extends Controller
     public function index(Request $request)
     {
         // Fetch products with their total stock quantity
-        $stocks = ProductStock::with(['product', 'product.category'])
+        $stocks = ProductStock::with(['product', 'product.category', 'product.subcategory'])
             ->when($request->search, function ($q) use ($request) {
                 $s = $request->search;
                 $q->whereHas('product', function ($p) use ($s) {
@@ -45,6 +45,21 @@ class ProductStockController extends Controller
             })
             ->latest('updated_at')
             ->paginate(15);
+
+        // Calculate Transit Stock for the displayed items
+        $productIds = $stocks->pluck('product_id')->toArray();
+        $transitStocks = \App\Models\StorePurchaseOrderItem::whereIn('product_id', $productIds)
+            ->whereHas('storePurchaseOrder', function($q) {
+                $q->whereIn('status', ['approved', 'dispatched']);
+            })
+            ->selectRaw('product_id, SUM(pending_qty) as total')
+            ->groupBy('product_id')
+            ->pluck('total', 'product_id');
+
+        $stocks->getCollection()->transform(function($stock) use ($transitStocks) {
+            $stock->in_transit_qty = $transitStocks[$stock->product_id] ?? 0;
+            return $stock;
+        });
 
         $categories = ProductCategory::active()->get();
 

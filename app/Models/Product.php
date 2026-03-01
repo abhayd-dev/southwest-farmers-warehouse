@@ -38,6 +38,7 @@ class Product extends Model
         'price',
         'cost_price',
         'promotion_price',
+        'retail_price',
         'promotion_start_date',
         'promotion_end_date',
         'icon',

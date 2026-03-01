@@ -2,15 +2,17 @@
     <div class="container-fluid p-3 p-md-4">
 
         {{-- HEADER --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
-                <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-cart-arrow-down text-primary me-2"></i>Purchase Orders</h4>
+                <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-cart-arrow-down text-primary me-2"></i>Purchase
+                    Orders</h4>
                 <small class="text-muted">Manage procurement and receiving</small>
             </div>
-            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_po'))
-            <a href="{{ route('warehouse.purchase-orders.create') }}" class="btn btn-primary">
-                <i class="mdi mdi-plus me-1"></i> Create PO
-            </a>
+            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_po'))
+                <a href="{{ route('warehouse.purchase-orders.create') }}" class="btn btn-primary">
+                    <i class="mdi mdi-plus me-1"></i> Create PO
+                </a>
             @endif
         </div>
 
@@ -42,22 +44,53 @@
             </div>
         </div>
 
-        {{-- STATUS FILTER TABS --}}
-        <ul class="nav nav-tabs mb-0" id="statusTabs">
-            @foreach(['all' => ['label' => 'All', 'color' => 'dark'],
-                      'draft' => ['label' => 'Draft', 'color' => 'secondary'],
-                      'ordered' => ['label' => 'Ordered', 'color' => 'info'],
-                      'partial' => ['label' => 'Partial', 'color' => 'warning'],
-                      'completed' => ['label' => 'Completed', 'color' => 'success'],
-                      'cancelled' => ['label' => 'Cancelled', 'color' => 'danger']] as $key => $tab)
-                <li class="nav-item">
-                    <a href="#" class="nav-link status-tab {{ $key === 'all' ? 'active fw-bold' : '' }}" data-status="{{ $key }}">
-                        {{ $tab['label'] }}
-                        <span class="badge bg-{{ $tab['color'] }} ms-1 tab-count" id="count-{{ $key }}"></span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
+        {{-- FILTERS --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">PO Number</label>
+                        <input type="text" class="form-control form-control-sm" id="filter_po"
+                            placeholder="e.g. PO-123">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">Status</label>
+                        <select class="form-select form-select-sm" id="filter_status">
+                            <option value="all">All</option>
+                            <option value="ordered">Ordered</option>
+                            <option value="partial">In Transit</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">Approval</label>
+                        <select class="form-select form-select-sm" id="filter_approval">
+                            <option value="all">All</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted mb-1">Vendor Name</label>
+                        <input type="text" class="form-control form-control-sm" id="filter_vendor"
+                            placeholder="Search Vendor...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted mb-1">Date Range</label>
+                        <div class="input-group input-group-sm">
+                            <input type="date" class="form-control" id="filter_date_from">
+                            <span class="input-group-text bg-light border-0">to</span>
+                            <input type="date" class="form-control" id="filter_date_to">
+                        </div>
+                    </div>
+                    <div class="col-md-1 d-flex flex-column gap-2">
+                        <button type="button" class="btn btn-sm btn-primary w-100" id="btnFilter">Filter</button>
+                        <button type="button" class="btn btn-sm btn-light w-100" id="btnReset">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <div class="card border-0 shadow-sm" style="border-top-left-radius: 0;">
             <div class="card-body p-0">
@@ -82,61 +115,102 @@
     </div>
 
     @push('scripts')
-    <script>
-        let currentStatus = 'all';
+        <script>
+            let currentStatus = 'all';
 
-        const table = $('#po-table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ route('warehouse.purchase-orders.index') }}",
-                data: function(d) {
-                    if (currentStatus !== 'all') d.status = currentStatus;
-                }
-            },
-            columns: [
-                {data: 'po_number', name: 'po_number', className: 'fw-bold px-4'},
-                {data: 'vendor_name', name: 'vendor.name'},
-                {data: 'order_date', name: 'order_date'},
-                {data: 'total_amount', name: 'total_amount'},
-                {data: 'approval_badge', name: 'approval_status', orderable: false, searchable: false},
-                {data: 'progress', name: 'progress', orderable: false, searchable: false},
-                {data: 'status_badge', name: 'status'},
-                {data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end px-4'}
-            ],
-            order: [[0, 'desc']],
-            drawCallback: function() {
-                loadStats();
-            }
-        });
-
-        // Tab click handler
-        $('.status-tab').on('click', function(e) {
-            e.preventDefault();
-            $('.status-tab').removeClass('active fw-bold');
-            $(this).addClass('active fw-bold');
-            currentStatus = $(this).data('status');
-            table.ajax.reload();
-        });
-
-        // Load summary stats
-        function loadStats() {
-            $.get("{{ route('warehouse.purchase-orders.index') }}", {stats: 1}, function(data) {
-                if (data.stats) {
-                    $('#stat-total').text(data.stats.total);
-                    $('#stat-pending').text(data.stats.pending);
-                    $('#stat-completed').text(data.stats.completed);
-                    $('#stat-value').text('$' + data.stats.value);
-                    // Update tab counts
-                    $.each(data.stats.by_status, function(status, count) {
-                        $('#count-' + status).text(count > 0 ? count : '');
-                    });
-                    $('#count-all').text(data.stats.total > 0 ? data.stats.total : '');
+            const table = $('#po-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('warehouse.purchase-orders.index') }}",
+                    data: function(d) {
+                        d.status = $('#filter_status').val();
+                        d.approval_status = $('#filter_approval').val();
+                        d.po_number = $('#filter_po').val();
+                        d.vendor = $('#filter_vendor').val();
+                        d.date_from = $('#filter_date_from').val();
+                        d.date_to = $('#filter_date_to').val();
+                    }
+                },
+                columns: [{
+                        data: 'po_number',
+                        name: 'po_number',
+                        className: 'fw-bold px-4'
+                    },
+                    {
+                        data: 'vendor_name',
+                        name: 'vendor.name'
+                    },
+                    {
+                        data: 'order_date',
+                        name: 'order_date'
+                    },
+                    {
+                        data: 'total_amount',
+                        name: 'total_amount'
+                    },
+                    {
+                        data: 'approval_badge',
+                        name: 'approval_status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'progress',
+                        name: 'progress',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'status_badge',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-end px-4'
+                    }
+                ],
+                order: [
+                    [0, 'desc']
+                ],
+                drawCallback: function() {
+                    loadStats();
                 }
             });
-        }
 
-        loadStats();
-    </script>
+            $('#btnFilter').on('click', function() {
+                table.ajax.reload();
+            });
+            $('#btnReset').on('click', function() {
+                $('#filterForm')[0].reset();
+                table.ajax.reload();
+            });
+
+            // Tab functionality removed as per client request. Filter via the form.
+
+            // Load summary stats
+            function loadStats() {
+                $.get("{{ route('warehouse.purchase-orders.index') }}", {
+                    stats: 1
+                }, function(data) {
+                    if (data.stats) {
+                        $('#stat-total').text(data.stats.total);
+                        $('#stat-pending').text(data.stats.pending);
+                        $('#stat-completed').text(data.stats.completed);
+                        $('#stat-value').text('$' + data.stats.value);
+                        // Update tab counts
+                        $.each(data.stats.by_status, function(status, count) {
+                            $('#count-' + status).text(count > 0 ? count : '');
+                        });
+                        $('#count-all').text(data.stats.total > 0 ? data.stats.total : '');
+                    }
+                });
+            }
+
+            loadStats();
+        </script>
     @endpush
 </x-app-layout>

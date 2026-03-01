@@ -118,11 +118,12 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="px-4 py-3 text-muted fw-semibold small">CODE</th>
+                                <th class="px-4 py-3 text-muted fw-semibold small">LOT NO.</th>
                                 <th class="py-3 text-muted fw-semibold small">UPC & BARCODE</th>
                                 <th class="py-3 text-muted fw-semibold small">ICON & NAME</th>
                                 <th class="py-3 text-muted fw-semibold small">CATEGORY</th>
-                                <th class="py-3 text-muted fw-semibold small">SKU</th>
+                                <th class="py-3 text-muted fw-semibold small">SUB-CATEGORY</th>
+                                <th class="py-3 text-muted fw-semibold small">COST</th>
                                 <th class="py-3 text-muted fw-semibold small">PRICE</th>
                                 <th class="py-3 text-muted fw-semibold small text-center">STATUS</th>
                                 <th class="px-4 py-3 text-muted fw-semibold small text-end">ACTIONS</th>
@@ -163,11 +164,17 @@
                                         <span class="badge bg-primary bg-opacity-10 text-primary">
                                             {{ $product->category->name ?? '-' }}
                                         </span>
-                                        <br>
+                                    </td>
+                                    <td class="py-3">
                                         <small class="text-muted">{{ $product->subcategory->name ?? '-' }}</small>
                                     </td>
                                     <td class="py-3">
-                                        <code class="bg-light px-2 py-1 rounded">{{ $product->sku ?? '-' }}</code>
+                                        @if ($product->cost_price)
+                                            <span
+                                                class="fw-semibold text-warning">${{ number_format($product->cost_price, 2) }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
                                     </td>
                                     <td class="py-3">
                                         @if ($product->price)
@@ -189,10 +196,7 @@
                                         <x-action-buttons :editUrl="auth()->user()->isSuperAdmin() ||
                                         auth()->user()->hasPermission('edit_products')
                                             ? route('warehouse.products.edit', $product)
-                                            : null" :deleteUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('delete_products')
-                                            ? route('warehouse.products.destroy', $product)
-                                            : null">
+                                            : null" :deleteUrl="null">
                                             @if (auth()->user()->isSuperAdmin() ||
                                                     auth()->user()->hasPermission('print_labels') ||
                                                     auth()->user()->hasPermission('view_products'))

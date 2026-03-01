@@ -96,11 +96,10 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_promotions'))
                                     <li>
-                                        <a href="{{ route('warehouse.product-options.index') }}"
-                                            class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-cogs me-2"></i> Product Options
+                                        <a href="#" class="">
+                                            <i class="mdi mdi-ticket-percent-outline me-2"></i> Promotions
                                         </a>
                                     </li>
                                 @endif
@@ -205,6 +204,12 @@
                                             <i class="mdi mdi-file-document-outline me-2"></i> Purchase Orders
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.receiving.index') }}"
+                                            class="{{ request()->routeIs('warehouse.receiving.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-truck-check-outline me-2"></i> Receiving Orders
+                                        </a>
+                                    </li>
                                 @endif
                             </ul>
                         </div>
@@ -233,7 +238,7 @@
                             id="sidebarStoreOrders">
                             <ul class="nav-second-level">
 
-                               
+
 
                                 {{-- 1. New PO-Based Store Orders --}}
                                 <li>
@@ -241,8 +246,9 @@
                                         class="{{ request()->routeIs('warehouse.store-orders.*') ? 'active' : '' }}">
                                         <i class="mdi mdi-clipboard-list-outline me-2"></i> Store Orders (PO)
                                         @php $pendingStorePOs = \App\Models\StorePurchaseOrder::where('status', 'pending')->count(); @endphp
-                                        @if($pendingStorePOs > 0)
-                                            <span class="badge bg-warning text-dark rounded-pill ms-2">{{ $pendingStorePOs }}</span>
+                                        @if ($pendingStorePOs > 0)
+                                            <span
+                                                class="badge bg-warning text-dark rounded-pill ms-2">{{ $pendingStorePOs }}</span>
                                         @endif
                                     </a>
                                 </li>

@@ -33,29 +33,29 @@
                     fetch("{{ route('warehouse.products.generate-upc') }}")
                         .then(response => response.json())
                         .then(data => {
-                            if (upcInput) upcInput.value = data.upc;
+                            if (upcInput) {
+                                upcInput.value = data.upc;
+                                // Dispatch input event so barcode syncs
+                                upcInput.dispatchEvent(new Event('input'));
+                            }
                         })
                         .catch(err => console.error(err));
                 });
             }
 
-            // Generate Barcode via Ajax
-            generateBtn.addEventListener('click', function() {
-                fetch("{{ route('warehouse.products.generate-barcode') }}")
-                    .then(response => response.json())
-                    .then(data => {
-                        barcodeInput.value = data.barcode;
-                        renderBarcode(data.barcode);
-                    })
-                    .catch(err => console.error(err));
-            });
-
-            // Render on input change
-            barcodeInput.addEventListener('input', function() {
-                renderBarcode(this.value);
-            });
+            // Sync Barcode with UPC
+            if (upcInput) {
+                upcInput.addEventListener('input', function() {
+                    const val = this.value.trim();
+                    barcodeInput.value = val;
+                    renderBarcode(val);
+                });
+            }
 
             // Initial Render
+            if (upcInput && !barcodeInput.value) {
+                barcodeInput.value = upcInput.value;
+            }
             renderBarcode(barcodeInput.value);
         });
     </script>

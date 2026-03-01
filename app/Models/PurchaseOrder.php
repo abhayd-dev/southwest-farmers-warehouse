@@ -15,10 +15,24 @@ class PurchaseOrder extends Model
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
-        'po_number', 'vendor_id', 'warehouse_id', 'order_date', 'expected_delivery_date',
-        'total_amount', 'tax_amount', 'other_costs', 'status', 'payment_status',
-        'notes', 'created_by', 'approved_by',
-        'approval_email', 'approval_status', 'approved_by_email', 'approved_at', 'approval_reason'
+        'po_number',
+        'vendor_id',
+        'warehouse_id',
+        'order_date',
+        'expected_delivery_date',
+        'total_amount',
+        'tax_amount',
+        'other_costs',
+        'status',
+        'payment_status',
+        'notes',
+        'created_by',
+        'approved_by',
+        'approval_email',
+        'approval_status',
+        'approved_by_email',
+        'approved_at',
+        'approval_reason'
     ];
 
     protected $casts = [
@@ -57,7 +71,7 @@ class PurchaseOrder extends Model
     public function getProgressAttribute()
     {
         $totalReq = $this->items->sum('requested_quantity');
-        if($totalReq == 0) return 0;
+        if ($totalReq == 0) return 0;
         $totalRec = $this->items->sum('received_quantity');
         return round(($totalRec / $totalReq) * 100);
     }
@@ -66,6 +80,7 @@ class PurchaseOrder extends Model
     public function approve($approverEmail, $reason = null)
     {
         $this->update([
+            'status' => self::STATUS_ORDERED,
             'approval_status' => 'approved',
             'approved_by_email' => $approverEmail,
             'approved_at' => now(),

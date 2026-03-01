@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Purchase Order - {{ $po->po_number }}</title>
+    <title>Receiving Receipt - {{ $po->po_number }}</title>
     <style>
         @page {
             margin: 20mm;
@@ -101,35 +101,6 @@
             text-align: center;
         }
 
-        .totals-section {
-            margin-top: 20px;
-            float: right;
-            width: 40%;
-        }
-
-        .totals-table {
-            width: 100%;
-        }
-
-        .totals-table td {
-            padding: 5px;
-        }
-
-        .grand-total {
-            font-size: 14pt;
-            font-weight: bold;
-            border-top: 2px solid #206bc4;
-            padding-top: 8px !important;
-        }
-
-        .notes-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid #ffc107;
-            padding: 10px;
-            margin-top: 20px;
-            clear: both;
-        }
-
         .footer {
             margin-top: 30px;
             padding-top: 15px;
@@ -171,8 +142,8 @@
                     </div>
                 </td>
                 <td style="width: 40%; vertical-align: top;">
-                    <h2 class="po-title">PURCHASE ORDER</h2>
-                    <div class="po-number">#{{ $po->po_number }}</div>
+                    <h2 class="po-title">RECEIVED ORDERS</h2>
+                    <div class="po-number">#PO-{{ explode('-', $po->po_number)[1] ?? $po->po_number }}</div>
                 </td>
             </tr>
         </table>
@@ -206,8 +177,8 @@
                             <td>{{ $po->order_date->format('F d, Y') }}</td>
                         </tr>
                         <tr>
-                            <td class="info-label">Expected Delivery:</td>
-                            <td>{{ $po->expected_delivery_date ? $po->expected_delivery_date->format('F d, Y') : 'TBD' }}
+                            <td class="info-label">RECEIVED DELIVERY:</td>
+                            <td>{{ $po->expected_delivery_date ? $po->expected_delivery_date->format('F d, Y') : ($po->updated_at ? $po->updated_at->format('F d, Y') : 'TBD') }}
                             </td>
                         </tr>
                         <tr>
@@ -221,74 +192,39 @@
     </div>
 
     <div class="section">
-        <div class="section-title">ORDER ITEMS</div>
+        <div class="section-title">RECEIVED ITEMS</div>
         <table class="items-table">
             <thead>
                 <tr>
                     <th style="width: 5%;">#</th>
                     <th style="width: 15%;">UPC</th>
                     <th style="width: 40%;">Product Description</th>
-                    <th style="width: 10%;" class="text-center">Quantity</th>
-                    <th style="width: 15%;" class="text-right">Unit Price</th>
-                    <th style="width: 15%;" class="text-right">Total</th>
+                    <th style="width: 40%;" class="text-center">Quantity Ordered and Quantity Received</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($po->items as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->product->barcode ?? 'N/A' }}</td>
-                        <td><strong>{{ $item->product->product_name }}</strong></td>
-                        <td class="text-center">{{ $item->requested_quantity }}</td>
-                        <td class="text-right">${{ number_format($item->cost_price, 2) }}</td>
-                        <td class="text-right">${{ number_format($item->requested_quantity * $item->cost_price, 2) }}
-                        </td>
-                    </tr>
+                    @if ($item->received_quantity > 0)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $item->product->upc ?? 'N/A' }}</td>
+                            <td><strong>{{ $item->product->product_name }}</strong></td>
+                            <td class="text-center">{{ $item->requested_quantity }} Ordered /
+                                {{ $item->received_quantity }} Received</td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
     </div>
-
-    <div class="totals-section">
-        <table class="totals-table">
-            <tr>
-                <td>Subtotal:</td>
-                <td class="text-right">${{ number_format($po->total_amount - $po->tax_amount - $po->other_costs, 2) }}
-                </td>
-            </tr>
-            @if ($po->tax_amount > 0)
-                <tr>
-                    <td>Tax:</td>
-                    <td class="text-right">${{ number_format($po->tax_amount, 2) }}</td>
-                </tr>
-            @endif
-            @if ($po->other_costs > 0)
-                <tr>
-                    <td>Other Costs:</td>
-                    <td class="text-right">${{ number_format($po->other_costs, 2) }}</td>
-                </tr>
-            @endif
-            <tr class="grand-total">
-                <td><strong>GRAND TOTAL:</strong></td>
-                <td class="text-right"><strong>${{ number_format($po->total_amount, 2) }}</strong></td>
-            </tr>
-        </table>
-    </div>
-
-    @if ($po->notes)
-        <div class="notes-box">
-            <strong>Special Instructions / Notes:</strong><br>
-            {{ $po->notes }}
-        </div>
-    @endif
 
     <div class="signature-section">
         <table style="width: 100%;">
             <tr>
                 <td class="signature-box">
                     <div class="signature-line">
-                        <strong>Authorized By</strong><br>
-                        {{ $warehouse->name ?? 'Southwest Farmers Warehouse' }}
+                        <strong>Received By</strong><br>
+                        {{ $warehouse->name ?? 'Central Warehouse' }}
                     </div>
                 </td>
                 <td style="width: 10%;"></td>
@@ -300,16 +236,6 @@
                 </td>
             </tr>
         </table>
-    </div>
-
-    <div class="footer">
-        <p><strong>Thank you for your business!</strong></p>
-        <p>Please confirm receipt of this purchase order and provide delivery confirmation.</p>
-        <p style="margin-top: 10px; font-size: 8pt;">
-            This is a computer-generated document. For questions, contact
-            {{ $warehouse->phone ?? config('app.warehouse_phone') }} or
-            {{ $warehouse->email ?? config('app.warehouse_email') }}
-        </p>
     </div>
 </body>
 

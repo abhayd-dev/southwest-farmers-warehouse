@@ -27,39 +27,49 @@
 
     {{-- ACTION BUTTONS --}}
     <div class="d-flex align-items-center gap-2 ms-auto">
-        
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
-        <button type="button" class="btn btn-warning text-dark d-flex align-items-center gap-1"
-            data-bs-toggle="modal" data-bs-target="#pricingModal">
-            <i class="mdi mdi-currency-usd text-white"></i>
-            <span class="d-none d-lg-inline text-white">Set Pricing</span>
-        </button>
+
+        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
+            <button type="button" class="btn btn-warning text-dark d-flex align-items-center gap-1"
+                data-bs-toggle="modal" data-bs-target="#pricingModal">
+                <i class="mdi mdi-currency-usd text-white"></i>
+                <span class="d-none d-lg-inline text-white">Set Pricing</span>
+            </button>
         @endif
         {{-- EXPORT --}}
         {{-- Export usually allowed for Viewers too, but let's keep it restricted to managers or creators --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products') || auth()->user()->hasPermission('export_reports'))
-        <a href="{{ route('warehouse.products.export') }}"
-            class="btn btn-outline-primary d-flex align-items-center gap-1">
-            <i class="mdi mdi-download"></i>
-            <span class="d-none d-lg-inline">Export</span>
-        </a>
+        @if (auth()->user()->isSuperAdmin() ||
+                auth()->user()->hasPermission('manage_products') ||
+                auth()->user()->hasPermission('export_reports'))
+            <a href="{{ route('warehouse.products.export') }}"
+                class="btn btn-outline-primary d-flex align-items-center gap-1">
+                <i class="mdi mdi-download"></i>
+                <span class="d-none d-lg-inline">Export</span>
+            </a>
         @endif
 
         {{-- IMPORT BUTTON --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
-        <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1"
-            data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class="mdi mdi-upload"></i>
-            <span class="d-none d-lg-inline">Import</span>
-        </button>
+        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+            <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1"
+                data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="mdi mdi-upload"></i>
+                <span class="d-none d-lg-inline">Import</span>
+            </button>
+        @endif
+
+        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+            <a href="{{ route('warehouse.product-options.index') }}"
+                class="btn btn-primary text-white d-flex align-items-center gap-1">
+                <i class="mdi mdi-cogs"></i>
+                <span class="d-none d-lg-inline">Product Options</span>
+            </a>
         @endif
 
         {{-- ADD --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
-        <a href="{{ route('warehouse.products.create') }}" class="btn btn-success d-flex align-items-center gap-1">
-            <i class="mdi mdi-plus-circle"></i>
-            <span class="d-none d-lg-inline">Add Product</span>
-        </a>
+        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+            <a href="{{ route('warehouse.products.create') }}" class="btn btn-success d-flex align-items-center gap-1">
+                <i class="mdi mdi-plus-circle"></i>
+                <span class="d-none d-lg-inline">Add Product</span>
+            </a>
         @endif
     </div>
 </div>

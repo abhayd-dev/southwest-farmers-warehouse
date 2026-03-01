@@ -73,20 +73,21 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 text-nowrap">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="px-4 py-3">Product Info</th>
-                                <th class="py-3">Category</th>
-                                <th class="py-3">Bin Loc</th>
-                                <th class="text-center py-3">Current Quantity</th>
-                                <th class="text-end px-4 py-3">Value</th>
-                                <th class="text-end px-4 py-3">Action</th>
+                                <th class="px-3 py-2">Product Info</th>
+                                <th class="py-2">Category</th>
+                                <th class="py-2">Sub-category</th>
+                                <th class="py-2">Bin Loc</th>
+                                <th class="text-center py-2">Current stock quantity</th>
+                                <th class="text-center py-2">Transit stock</th>
+                                <th class="text-end px-3 py-2">Cost</th>
+                                <th class="text-end px-3 py-2">Total inventory value</th>
+                                <th class="text-end px-3 py-2">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($stocks as $stock)
                                 <tr>
-                                    <td class="px-4 py-3">
+                                    <td class="px-3 py-2">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="bg-light rounded p-1 border flex-shrink-0">
                                                 <img src="{{ $stock->product->icon ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
@@ -102,21 +103,26 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-3">
+                                    <td class="py-2">
                                         <span class="badge bg-primary bg-opacity-10 text-primary">
                                             {{ $stock->product->category->name ?? 'N/A' }}
                                         </span>
                                     </td>
-                                    <td class="py-3">
+                                    <td class="py-2">
+                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                            {{ $stock->product->subcategory->name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="py-2">
                                         @if($stock->bin_location)
                                             <span class="badge bg-warning border text-dark">{{ $stock->bin_location }}</span>
                                         @else
                                             <span class="text-muted small fst-italic">--</span>
                                         @endif
                                     </td>
-                                    <td class="text-center py-3">
+                                    <td class="text-center py-2">
                                         @php
-                                            $isLow = $stock->quantity <= $stock->min_stock_level;
+                                            $isLow = $stock->quantity <= ($stock->min_stock_level ?? 0);
                                             $color = $stock->quantity == 0 ? 'danger' : ($isLow ? 'warning' : 'success');
                                         @endphp
                                         <h5 class="mb-0 text-{{ $color }} fw-bold">
@@ -124,16 +130,26 @@
                                         </h5>
                                         @if ($isLow)
                                             <small class="text-danger fw-bold d-block mt-1">
-                                                <i class="mdi mdi-alert-circle"></i> Low Stock
+                                                <i class="mdi mdi-alert-circle"></i> Low stock alert
                                             </small>
                                         @endif
                                     </td>
-                                    <td class="text-end px-4 py-3">
+                                    <td class="text-center py-2">
+                                        <h5 class="mb-0 text-dark fw-bold">
+                                            {{ number_format($stock->in_transit_qty, 2) }}
+                                        </h5>
+                                    </td>
+                                    <td class="text-end px-3 py-2">
+                                        <div class="fw-semibold text-dark">
+                                            ${{ number_format($stock->product->cost_price ?? 0, 2) }}
+                                        </div>
+                                    </td>
+                                    <td class="text-end px-3 py-2">
                                         <div class="fw-semibold text-dark">
                                             ${{ number_format($stock->quantity * ($stock->product->cost_price ?? 0), 2) }}
                                         </div>
                                     </td>
-                                    <td class="text-end px-4 py-3">
+                                    <td class="text-end px-3 py-2">
                                         <div class="action-btns">
                                             <a href="{{ route('warehouse.stocks.history', $stock->product_id) }}"
                                                 class="btn btn-sm btn-outline-info btn-view" title="View Full History">
@@ -144,7 +160,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="9" class="text-center py-5">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="mdi mdi-package-variant-closed text-muted opacity-25" style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-2 fw-medium">No stock data found.</p>

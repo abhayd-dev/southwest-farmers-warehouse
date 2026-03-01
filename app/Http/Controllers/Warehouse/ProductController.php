@@ -74,8 +74,12 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
+                'tax_percent' => 'nullable|numeric|min:0',
+                'cost_price' => 'nullable|numeric|min:0',
+                'retail_price' => 'nullable|numeric|min:0',
                 'upc' => 'nullable|string|max:255',
                 'barcode' => 'required|string|unique:products,barcode|max:255', // Changed to required and unique
+                'sku' => 'nullable|string|max:100|unique:products,sku',
                 'icon' => 'nullable|image|max:2048',
             ]);
 
@@ -154,8 +158,12 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
+                'tax_percent' => 'nullable|numeric|min:0',
+                'cost_price' => 'nullable|numeric|min:0',
+                'retail_price' => 'nullable|numeric|min:0',
                 'upc' => 'nullable|string|max:255',
                 'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id, // Added unique check ignoring current id
+                'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id, // Added sku validation
                 'icon' => 'nullable|image|max:2048',
             ]);
 
@@ -178,17 +186,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->store_id !== null) abort(403);
-
-        try {
-            if ($product->icon && Storage::disk('public')->exists($product->icon)) {
-                Storage::disk('public')->delete($product->icon);
-            }
-            $product->delete();
-            return back()->with('success', 'Product deleted successfully');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed');
-        }
+        return back()->with('error', 'Products cannot be deleted from the system. Please deactivate them instead.');
     }
 
     public function changeStatus(Request $request)

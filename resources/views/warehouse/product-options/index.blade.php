@@ -10,9 +10,15 @@
                     {{-- LEFT: BREADCRUMB & TITLE --}}
                     <div class="d-flex flex-column gap-2">
                         @include('warehouse.partials.breadcrumb', ['title' => 'Product Options'])
-                        <h4 class="fw-bold mb-0 text-dark">
-                            <i class="mdi mdi-package-variant text-primary"></i>
-                            Product Options Management
+                        <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                            <a href="{{ route('warehouse.products.index') }}" class="btn btn-sm btn-outline-secondary"
+                                title="Back to All Products">
+                                <i class="mdi mdi-arrow-left"></i>
+                            </a>
+                            <span>
+                                <i class="mdi mdi-package-variant text-primary"></i>
+                                Product Options Management
+                            </span>
                         </h4>
                     </div>
 
@@ -28,12 +34,13 @@
         {{-- STATS CARDS --}}
         {{-- ... (Stats HTML remains unchanged) ... --}}
         <div class="row g-3 mb-4">
-             <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-package-variant text-primary fs-4"></i>
                                 </div>
                             </div>
@@ -45,13 +52,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                         <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
                                 </div>
                             </div>
@@ -65,12 +73,13 @@
                 </div>
             </div>
 
-             <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                         <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-warning fs-4"></i>
                                 </div>
                             </div>
@@ -87,9 +96,10 @@
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                         <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-view-list text-info fs-4"></i>
                                 </div>
                             </div>
@@ -135,7 +145,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $option->icon ? Storage::url( $option->icon) : asset('assets/images/placeholder.svg') }}"
+                                            <img src="{{ $option->icon ? Storage::url($option->icon) : asset('assets/images/placeholder.svg') }}"
                                                 class="rounded bg-light border object-fit-cover shadow-sm"
                                                 width="40" height="40" alt="{{ $option->option_name }}">
                                             <div>
@@ -163,14 +173,14 @@
                                             <input class="form-check-input status-toggle" type="checkbox" role="switch"
                                                 data-id="{{ $option->id }}"
                                                 {{ $option->is_active ? 'checked' : '' }}
-                                                {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options')) ? '' : 'disabled' }}>
+                                                {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons 
-                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? route('warehouse.product-options.edit', $option) : null"
-                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? route('warehouse.product-options.destroy', $option) : null"
-                                        />
+                                        <x-action-buttons :editUrl="auth()->user()->isSuperAdmin() ||
+                                        auth()->user()->hasPermission('manage_product_options')
+                                            ? route('warehouse.product-options.edit', $option)
+                                            : null" :deleteUrl="null" />
                                     </td>
                                 </tr>
                             @empty
@@ -180,12 +190,12 @@
                                             <i class="mdi mdi-package-variant-closed text-muted"
                                                 style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No product options found.</p>
-                                            
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
-                                            <a href="{{ route('warehouse.product-options.create') }}"
-                                                class="btn btn-sm btn-primary mt-3">
-                                                <i class="mdi mdi-plus"></i> Add First Option
-                                            </a>
+
+                                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+                                                <a href="{{ route('warehouse.product-options.create') }}"
+                                                    class="btn btn-sm btn-primary mt-3">
+                                                    <i class="mdi mdi-plus"></i> Add First Option
+                                                </a>
                                             @endif
                                         </div>
                                     </td>
@@ -213,10 +223,10 @@
 
     </div>
 
-    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
         @includeIf('warehouse.product-options._import-modal')
     @endif
-    
+
     @include('warehouse.product-options._scripts')
 
 </x-app-layout>

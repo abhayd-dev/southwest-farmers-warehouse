@@ -75,7 +75,7 @@ class ProductOptionController extends Controller
         try {
             $request->validate([
                 'option_name'   => 'required|string|max:255',
-                'sku'           => 'required|string|max:100|unique:product_options,sku',
+                'sku'           => 'nullable|string|max:100|unique:product_options,sku',
                 'category_id'   => 'required|exists:product_categories,id',
                 'subcategory_id' => 'required|exists:product_subcategories,id',
                 'unit'          => 'required',
@@ -131,7 +131,7 @@ class ProductOptionController extends Controller
         try {
             $request->validate([
                 'option_name'   => 'required|string|max:255',
-                'sku'           => 'required|string|max:100|unique:product_options,sku,' . $productOption->id,
+                'sku'           => 'nullable|string|max:100|unique:product_options,sku,' . $productOption->id,
                 'category_id'   => 'required|exists:product_categories,id',
                 'subcategory_id' => 'required|exists:product_subcategories,id',
                 'unit'          => 'required',
@@ -165,18 +165,7 @@ class ProductOptionController extends Controller
      */
     public function destroy(ProductOption $productOption)
     {
-        try {
-            if ($productOption->icon && \Storage::disk('public')->exists($productOption->icon)) {
-                \Storage::disk('public')->delete($productOption->icon);
-            }
-
-            $productOption->delete();
-
-            return back()->with('success', 'Product option deleted successfully.');
-        } catch (\Exception $e) {
-            Log::error('ProductOption Delete Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to delete product option.');
-        }
+        return back()->with('error', 'Product options cannot be deleted from the system. Please deactivate them instead.');
     }
 
 
