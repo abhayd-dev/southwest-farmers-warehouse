@@ -16,8 +16,8 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required','email'],
-            'password' => ['required'],
+            'emp_code' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -39,8 +39,8 @@ class LoginController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Invalid credentials',
-        ]);
+            'emp_code' => 'Invalid Employee ID or password.',
+        ])->onlyInput('emp_code');
     }
 
     public function logout(Request $request)

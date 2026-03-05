@@ -7,35 +7,64 @@
             </ol>
         </nav>
 
-        <form method="POST" action="{{ route('warehouse.staff.update', $user->id) }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <form method="POST" action="{{ route('warehouse.staff.update', $user->id) }}" enctype="multipart/form-data"
+            class="needs-validation" novalidate>
             @csrf @method('PUT')
-            
+
             <div class="row">
                 <div class="col-lg-4">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body text-center">
-                            <img id="previewImg" src="{{ $user->avatar_url }}" class="rounded-circle border mb-3" width="120" height="120">
-                            <input type="file" name="profile_image" class="form-control form-control-sm" onchange="previewFile(this)">
+                            <img id="previewImg" src="{{ $user->avatar_url }}" class="rounded-circle border mb-3"
+                                width="120" height="120">
+                            <input type="file" name="profile_image" class="form-control form-control-sm"
+                                onchange="previewFile(this)">
                             <small class="text-muted d-block mt-2">Leave empty to keep current image</small>
                         </div>
                     </div>
 
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-info text-white fw-bold"><i class="mdi mdi-lock-reset me-1"></i> Login & Role</div>
+                        <div class="card-header bg-info text-white fw-bold"><i class="mdi mdi-lock-reset me-1"></i>
+                            Login & Role</div>
                         <div class="card-body">
+                            {{-- Employee ID — primary login credential --}}
                             <div class="mb-3">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+                                <label class="form-label fw-semibold">Employee ID <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="mdi mdi-badge-account-outline"></i></span>
+                                    <input type="text" name="emp_code" class="form-control"
+                                        value="{{ old('emp_code', $user->emp_code) }}" placeholder="e.g. EMP-001"
+                                        required>
+                                </div>
+                                <small class="text-success mt-1 d-block">
+                                    <i class="mdi mdi-information-outline"></i>
+                                    This is the <strong>login credential</strong> for this staff member.
+                                </small>
                             </div>
+                            {{-- New Password --}}
                             <div class="mb-3">
                                 <label class="form-label">New Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                                <input type="password" name="password" class="form-control"
+                                    placeholder="Leave blank to keep current">
                             </div>
+                            {{-- Email — password reset only --}}
+                            <div class="mb-3">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', $user->email) }}" required>
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="mdi mdi-information-outline"></i>
+                                    Used for password reset only — <em>not</em> for login.
+                                </small>
+                            </div>
+                            {{-- Role --}}
                             <div class="mb-3">
                                 <label class="form-label">Role</label>
                                 <select name="role" class="form-select" required>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->name }}" {{ $userRole == $role->name ? 'selected' : '' }}>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->name }}"
+                                            {{ $userRole == $role->name ? 'selected' : '' }}>
                                             {{ $role->name }}
                                         </option>
                                     @endforeach
@@ -54,19 +83,23 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Full Name</label>
-                                    <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                                    <input type="text" name="name" class="form-control"
+                                        value="{{ $user->name }}" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Employee ID</label>
-                                    <input type="text" name="emp_code" class="form-control" value="{{ $user->emp_code }}" required>
+                                    <input type="text" name="emp_code" class="form-control"
+                                        value="{{ $user->emp_code }}" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Phone Number</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ $user->phone }}">
+                                    <input type="text" name="phone" class="form-control"
+                                        value="{{ $user->phone }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Designation</label>
-                                    <input type="text" name="designation" class="form-control" value="{{ $user->designation }}">
+                                    <input type="text" name="designation" class="form-control"
+                                        value="{{ $user->designation }}">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Address</label>
@@ -75,7 +108,8 @@
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="submit" class="btn btn-info text-white px-5 btn-lg">Update Staff</button>
+                                <button type="submit" class="btn btn-info text-white px-5 btn-lg">Update
+                                    Staff</button>
                             </div>
                         </div>
                     </div>
@@ -85,15 +119,17 @@
     </div>
 
     @push('scripts')
-    <script>
-        function previewFile(input) {
-            var file = input.files[0];
-            if(file){
-                var reader = new FileReader();
-                reader.onload = function(){ document.getElementById('previewImg').src = reader.result; }
-                reader.readAsDataURL(file);
+        <script>
+            function previewFile(input) {
+                var file = input.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        document.getElementById('previewImg').src = reader.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
             }
-        }
-    </script>
+        </script>
     @endpush
 </x-app-layout>

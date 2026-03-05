@@ -8,23 +8,20 @@
 
                         {{-- LOGO SECTION - LEFT SIDE --}}
                         <div class="col-12 col-lg-6 mb-5 mb-lg-0 pe-lg-5">
-                            <div class="login-logo-section d-flex flex-column align-items-center align-items-lg-start justify-content-center h-100">
+                            <div
+                                class="login-logo-section d-flex flex-column align-items-center align-items-lg-start justify-content-center h-100">
                                 <div class="auth-brand mb-4">
                                     <a href="{{ url('/') }}" class="logo logo-light">
                                         <span class="logo-lg">
-                                            <img src="{{ Storage::url($settings['login_logo']) }}"
-                                                 alt="Warehouse POS"
-                                                 height="40"
-                                                 class="d-inline-block">
+                                            <img src="{{ Storage::url($settings['login_logo']) }}" alt="Warehouse POS"
+                                                height="40" class="d-inline-block">
                                         </span>
                                     </a>
 
                                     <a href="{{ url('/') }}" class="logo logo-dark">
                                         <span class="logo-lg">
-                                            <img src="{{ Storage::url($settings['main_logo']) }}"
-                                                 alt="Warehouse POS"
-                                                 height="40"
-                                                 class="d-inline-block">
+                                            <img src="{{ Storage::url($settings['main_logo']) }}" alt="Warehouse POS"
+                                                height="40" class="d-inline-block">
                                         </span>
                                     </a>
                                 </div>
@@ -33,7 +30,8 @@
                                 <div class="text-center text-lg-start">
                                     <h2 class="fw-bold text-dark mb-3 d-none d-lg-block">Warehouse POS</h2>
                                     <p class="text-muted fs-15 d-none d-lg-block">
-                                        Manage your warehouse operations efficiently with our comprehensive point of sale system.
+                                        Manage your warehouse operations efficiently with our comprehensive point of
+                                        sale system.
                                     </p>
                                 </div>
                             </div>
@@ -47,35 +45,28 @@
                                         Welcome Back
                                     </h3>
                                     <p class="text-muted fs-14 mb-0">
-                                        Please sign in to continue to <strong>Warehouse POS</strong>.
+                                        Enter your <strong>Employee ID</strong> and password to sign in.
                                     </p>
                                 </div>
 
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-body p-4 p-md-5">
-                                        <form method="POST"
-                                              action="{{ route('login') }}"
-                                              class="mt-0"
-                                              data-form>
+                                        <form method="POST" action="{{ route('login') }}" class="mt-0" data-form>
                                             @csrf
 
-                                            {{-- EMAIL --}}
+                                            {{-- EMPLOYEE ID --}}
                                             <div class="form-group mb-3">
-                                                <label for="email" class="form-label fw-medium">
-                                                    Email Address
+                                                <label for="emp_code" class="form-label fw-medium">
+                                                    Employee ID
                                                 </label>
 
                                                 <input
-                                                    class="form-control form-control-lg @error('email') is-invalid @enderror"
-                                                    type="email"
-                                                    name="email"
-                                                    id="email"
-                                                    value="{{ old('email') }}"
-                                                    required
-                                                    autofocus
-                                                    placeholder="Enter your email">
+                                                    class="form-control form-control-lg @error('emp_code') is-invalid @enderror"
+                                                    type="text" name="emp_code" id="emp_code"
+                                                    value="{{ old('emp_code') }}" required autofocus autocomplete="off"
+                                                    placeholder="e.g. EMP-001">
 
-                                                @error('email')
+                                                @error('emp_code')
                                                     <div class="invalid-feedback">
                                                         {{ $message }}
                                                     </div>
@@ -90,10 +81,7 @@
 
                                                 <input
                                                     class="form-control form-control-lg @error('password') is-invalid @enderror"
-                                                    type="password"
-                                                    name="password"
-                                                    id="password"
-                                                    required
+                                                    type="password" name="password" id="password" required
                                                     placeholder="Enter your password">
 
                                                 @error('password')
@@ -104,13 +92,11 @@
                                             </div>
 
                                             {{-- OPTIONS --}}
-                                            <div class="form-group options d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
+                                            <div
+                                                class="form-group options d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
                                                 <div class="mb-2 mb-sm-0">
                                                     <div class="form-check">
-                                                        <input
-                                                            type="checkbox"
-                                                            class="form-check-input"
-                                                            id="remember_me"
+                                                        <input type="checkbox" class="form-check-input" id="remember_me"
                                                             name="remember">
                                                         <label class="form-check-label" for="remember_me">
                                                             Remember me
@@ -121,11 +107,13 @@
                                                 <div>
                                                     @if (Route::has('password.request'))
                                                         <a class="text-primary text-decoration-none fs-14"
-                                                           href="{{ route('password.request') }}">
+                                                            href="{{ route('password.request') }}">
                                                             Forgot password?
                                                         </a>
                                                     @endif
                                                 </div>
+                                                {{-- Hint for employees --}}
+                                                {{-- Password reset requires your registered email address --}}
                                             </div>
 
                                             {{-- SUBMIT --}}
@@ -175,7 +163,7 @@
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .card {
