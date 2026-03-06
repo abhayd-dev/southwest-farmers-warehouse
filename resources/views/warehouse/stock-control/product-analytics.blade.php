@@ -4,13 +4,14 @@
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('warehouse.stock-control.valuation') }}">Valuation</a></li>
+                        <li class="breadcrumb-item"><a
+                                href="{{ route('warehouse.stock-control.valuation') }}">Valuation</a></li>
                         <li class="breadcrumb-item active">{{ $product->product_name }}</li>
                     </ol>
                 </nav>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-chart-box-outline text-info me-2"></i> {{ $product->product_name }}
-                    <small class="text-muted fs-6 ms-2">({{ $product->sku }})</small>
+                    <small class="text-muted fs-6 ms-2">({{ $product->upc }})</small>
                 </h4>
             </div>
             <a href="{{ route('warehouse.stock-control.valuation') }}" class="btn btn-outline-secondary">
@@ -31,7 +32,8 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center p-4">
                         <h6 class="text-muted mb-1">Warehouse Stock</h6>
-                        <h3 class="fw-bold text-dark">{{ $warehouseQty }} <small class="fs-6 text-muted">{{ $product->unit }}</small></h3>
+                        <h3 class="fw-bold text-dark">{{ $warehouseQty }} <small
+                                class="fs-6 text-muted">{{ $product->unit }}</small></h3>
                         <small class="text-success">Value: $ {{ number_format($warehouseValue, 2) }}</small>
                     </div>
                 </div>
@@ -40,7 +42,8 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center p-4">
                         <h6 class="text-muted mb-1">Total Store Stock</h6>
-                        <h3 class="fw-bold text-dark">{{ $storesQty }} <small class="fs-6 text-muted">{{ $product->unit }}</small></h3>
+                        <h3 class="fw-bold text-dark">{{ $storesQty }} <small
+                                class="fs-6 text-muted">{{ $product->unit }}</small></h3>
                         <small class="text-info">Value: $ {{ number_format($storesValue, 2) }}</small>
                     </div>
                 </div>
@@ -71,7 +74,10 @@
                                             <td class="text-end pe-4">$ {{ number_format($sd->value, 2) }}</td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="3" class="text-center py-4 text-muted">No stock in stores.</td></tr>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">No stock in stores.
+                                            </td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -101,14 +107,17 @@
                                             <td class="ps-4 font-monospace">{{ $batch->batch_number }}</td>
                                             <td>
                                                 {{ $batch->expiry_date ? $batch->expiry_date->format('d M Y') : 'N/A' }}
-                                                @if($batch->expiry_date && $batch->expiry_date < now())
+                                                @if ($batch->expiry_date && $batch->expiry_date < now())
                                                     <span class="badge bg-danger ms-1">Expired</span>
                                                 @endif
                                             </td>
                                             <td class="text-end pe-4 fw-bold">{{ $batch->quantity }}</td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="3" class="text-center py-4 text-muted">No active batches in warehouse.</td></tr>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">No active batches in
+                                                warehouse.</td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -137,21 +146,26 @@
                             <tbody>
                                 @forelse($transactions as $txn)
                                     <tr>
-                                        <td class="ps-4 text-muted small">{{ $txn->created_at->format('d M Y H:i') }}</td>
+                                        <td class="ps-4 text-muted small">{{ $txn->created_at->format('d M Y H:i') }}
+                                        </td>
                                         <td>
-                                            <span class="badge bg-{{ $txn->quantity_change > 0 ? 'success' : 'warning' }} text-uppercase">
+                                            <span
+                                                class="badge bg-{{ $txn->quantity_change > 0 ? 'success' : 'warning' }} text-uppercase">
                                                 {{ $txn->type }}
                                             </span>
                                         </td>
                                         <td class="font-monospace small">{{ $txn->reference_id ?? '-' }}</td>
                                         <td>{{ $txn->store->store_name ?? 'Warehouse' }}</td>
-                                        <td class="fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
+                                        <td
+                                            class="fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                                             {{ $txn->quantity_change > 0 ? '+' : '' }}{{ $txn->quantity_change }}
                                         </td>
                                         <td class="small">{{ $txn->user->name ?? 'System' }}</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="6" class="text-center py-4 text-muted">No recent history.</td></tr>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">No recent history.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>

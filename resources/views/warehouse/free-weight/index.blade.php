@@ -2,7 +2,8 @@
     <div class="container-fluid p-3 p-md-4">
 
         {{-- HEADER --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-scale text-primary"></i> Free Weight System
@@ -38,10 +39,13 @@
                             <small class="text-muted">Available Bulk Weight</small>
                         </div>
                         <div class="action-btns">
-                            <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}" class="btn btn-sm btn-outline-info" title="Add Package Size">
+                            <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}"
+                                class="btn btn-sm btn-outline-info" title="Add Package Size">
                                 <i class="mdi mdi-plus-box"></i>
                             </a>
-                            <a href="{{ route('warehouse.free-weight.event.create', $bulk->id) }}" class="btn btn-sm btn-outline-success" style="color: #10b981; border-color: #10b981;" title="Start Packaging">
+                            <a href="{{ route('warehouse.free-weight.event.create', $bulk->id) }}"
+                                class="btn btn-sm btn-outline-success" style="color: #10b981; border-color: #10b981;"
+                                title="Start Packaging">
                                 <i class="mdi mdi-play"></i>
                             </a>
                         </div>
@@ -49,34 +53,36 @@
                 </div>
 
                 {{-- Package Definitions --}}
-                @if($bulk->packages->isNotEmpty())
+                @if ($bulk->packages->isNotEmpty())
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
                                     <th class="px-4 py-2">Package Name</th>
                                     <th class="py-2">Size</th>
-                                    <th class="py-2">SKU</th>
+                                    <th class="py-2">UPC</th>
                                     <th class="py-2">Target Product</th>
                                     <th class="text-end px-4 py-2">Total Produced</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($bulk->packages as $pkg)
+                                @foreach ($bulk->packages as $pkg)
                                     <tr>
                                         <td class="px-4 py-2 fw-semibold">{{ $pkg->package_name }}</td>
                                         <td class="py-2">{{ $pkg->package_size }} {{ $pkg->unit }}</td>
                                         <td class="py-2"><code>{{ $pkg->sku }}</code></td>
                                         <td class="py-2">
-                                            @if($pkg->targetProduct)
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                            @if ($pkg->targetProduct)
+                                                <span
+                                                    class="badge bg-success bg-opacity-10 text-success border border-success">
                                                     {{ $pkg->targetProduct->product_name }}
                                                 </span>
                                             @else
                                                 <span class="text-muted small fst-italic">No linked product</span>
                                             @endif
                                         </td>
-                                        <td class="text-end px-4 py-2 fw-bold">{{ number_format($pkg->quantity_created) }}</td>
+                                        <td class="text-end px-4 py-2 fw-bold">
+                                            {{ number_format($pkg->quantity_created) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -86,7 +92,8 @@
                     <div class="card-body text-center text-muted py-4">
                         <i class="mdi mdi-package-variant-closed-remove fs-2 opacity-25"></i>
                         <p class="mt-2 mb-0">No package sizes defined yet.</p>
-                        <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}" class="btn btn-sm btn-outline-primary mt-2">
+                        <a href="{{ route('warehouse.free-weight.package.create', $bulk->id) }}"
+                            class="btn btn-sm btn-outline-primary mt-2">
                             Add Package Size
                         </a>
                     </div>
@@ -105,7 +112,7 @@
         @endforelse
 
         {{-- RECENT EVENTS --}}
-        @if($recentEvents->isNotEmpty())
+        @if ($recentEvents->isNotEmpty())
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-header bg-white border-bottom py-3">
                     <h5 class="mb-0 fw-bold"><i class="mdi mdi-history text-info me-2"></i> Recent Packaging Events</h5>
@@ -123,13 +130,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($recentEvents as $event)
+                            @foreach ($recentEvents as $event)
                                 <tr>
-                                    <td class="px-4 py-2 text-muted small">{{ $event->event_date->format('d M Y, H:i') }}</td>
-                                    <td class="py-2 fw-semibold">{{ $event->freeWeightProduct->product->product_name ?? 'N/A' }}</td>
+                                    <td class="px-4 py-2 text-muted small">
+                                        {{ $event->event_date->format('d M Y, H:i') }}</td>
+                                    <td class="py-2 fw-semibold">
+                                        {{ $event->freeWeightProduct->product->product_name ?? 'N/A' }}</td>
                                     <td class="py-2">{{ $event->package->package_name ?? 'N/A' }}</td>
-                                    <td class="py-2 text-danger fw-bold">-{{ number_format($event->bulk_weight_reduced, 2) }} lbs</td>
-                                    <td class="py-2 text-success fw-bold">+{{ number_format($event->packages_created) }} pcs</td>
+                                    <td class="py-2 text-danger fw-bold">
+                                        -{{ number_format($event->bulk_weight_reduced, 2) }} lbs</td>
+                                    <td class="py-2 text-success fw-bold">
+                                        +{{ number_format($event->packages_created) }} pcs</td>
                                     <td class="py-2">{{ $event->employee->name ?? 'System' }}</td>
                                 </tr>
                             @endforeach

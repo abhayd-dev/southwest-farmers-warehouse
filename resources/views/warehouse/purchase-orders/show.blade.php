@@ -45,30 +45,67 @@
 
                     {{-- ACTIONS --}}
                     <div class="d-flex flex-wrap gap-2">
-
-                        {{-- PRINT LABELS --}}
-                        @if ($purchaseOrder->items->sum('received_quantity') > 0)
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
-                                <a href="{{ route('warehouse.purchase-orders.labels', $purchaseOrder->id) }}"
-                                    class="btn btn-dark shadow-sm" target="_blank">
-                                    <i class="mdi mdi-barcode-scan me-1"></i> Print Labels
+                        @if ($purchaseOrder->status === 'draft')
+                            @if ($purchaseOrder->approval_status === 'pending')
+                                {{-- Waiting for Approval --}}
+                                <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                    class="btn btn-outline-dark shadow-sm" target="_blank">
+                                    <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                <a href="{{ route('warehouse.purchase-orders.receiving-history', $purchaseOrder->id) }}"
-                                    class="btn btn-outline-info shadow-sm">
-                                    <i class="mdi mdi-history me-1"></i> Receiving History
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']) }}"
+                                        class="btn btn-success shadow-sm">
+                                        <i class="mdi mdi-check me-1"></i> Approve
+                                    </a>
+                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
+                                        class="btn btn-danger shadow-sm">
+                                        <i class="mdi mdi-close me-1"></i> Reject
+                                    </a>
+                                @endif
+                            @elseif ($purchaseOrder->approval_status === 'approved')
+                                {{-- Approved --}}
+                                <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                    class="btn btn-outline-dark shadow-sm" target="_blank">
+                                    <i class="mdi mdi-printer me-1"></i> Print PO
+                                </a>
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                    <form
+                                        action="{{ route('warehouse.purchase-orders.mark-ordered', $purchaseOrder->id) }}"
+                                        method="POST" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-info text-white shadow-sm">
+                                            <i class="mdi mdi-send me-1"></i> Mark as Ordered
+                                        </button>
+                                    </form>
+                                @endif
+                            @else
+                                {{-- Draft --}}
+                                <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                    class="btn btn-outline-dark shadow-sm" target="_blank">
+                                    <i class="mdi mdi-printer me-1"></i> Print PO
+                                </a>
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                    <form
+                                        action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
+                                        method="POST" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-info text-white shadow-sm" type="submit">
+                                            <i class="mdi mdi-email-send me-1"></i> Send For Approval
+                                        </button>
+                                    </form>
+                                @endif
+                                <a href="{{ route('warehouse.purchase-orders.edit', $purchaseOrder->id) }}"
+                                    class="btn btn-primary shadow-sm">
+                                    <i class="mdi mdi-pencil me-1"></i> Edit PO
                                 </a>
                             @endif
-                        @endif
-
-                        {{-- PRINT PO --}}
-                        <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
-                            class="btn btn-outline-dark shadow-sm" target="_blank">
-                            <i class="mdi mdi-printer me-1"></i> Print PO
-                        </a>
-
-                        {{-- SEND TO VENDOR --}}
-                        @if (request()->query('source') !== 'receiving')
-                            @if ($purchaseOrder->status === 'draft' || $purchaseOrder->status === 'ordered')
+                        @elseif ($purchaseOrder->status === 'ordered')
+                            {{-- Ordered --}}
+                            <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                class="btn btn-outline-dark shadow-sm" target="_blank">
+                                <i class="mdi mdi-printer me-1"></i> Print PO
+                            </a>
+                            @if (request()->query('source') !== 'receiving')
                                 <form
                                     action="{{ route('warehouse.purchase-orders.send-to-vendor', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline">
@@ -79,43 +116,14 @@
                                     </button>
                                 </form>
                             @endif
-                        @endif
-
-                        {{-- PRINT RECEIPT --}}
-                        @if ($purchaseOrder->items->sum('received_quantity') > 0)
-                            <a href="{{ route('warehouse.receiving.receipt', $purchaseOrder->id) }}"
-                                class="btn btn-primary shadow-sm" target="_blank">
-                                <i class="mdi mdi-receipt me-1"></i> Print Receipt
-                            </a>
-                        @endif
-
-                        {{-- MARK AS ORDERED --}}
-                        @if ($purchaseOrder->status === 'draft')
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
-                                <form
-                                    action="{{ route('warehouse.purchase-orders.mark-ordered', $purchaseOrder->id) }}"
-                                    method="POST" class="d-inline">
-                                    @csrf
-                                    <button class="btn btn-info text-white shadow-sm">
-                                        <i class="mdi mdi-send me-1"></i> Mark as Ordered
-                                    </button>
-                                </form>
-                            @endif
-                        @endif
-
-                        {{-- MARK AS COMPLETED (For Partial) --}}
-                        @if ($purchaseOrder->status === 'partial')
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('receive_po'))
-                                <form
-                                    action="{{ route('warehouse.purchase-orders.mark-completed', $purchaseOrder->id) }}"
-                                    method="POST" class="d-inline"
-                                    onsubmit="return confirm('Are you sure you want to mark this PO as Completed? Items pending will not be received.');">
-                                    @csrf
-                                    <button class="btn text-white shadow-sm" style="background-color: purple;">
-                                        <i class="mdi mdi-check-all me-1"></i> Mark Completed
-                                    </button>
-                                </form>
-                            @endif
+                            <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
+                                method="POST" class="d-inline"
+                                onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                @csrf
+                                <button class="btn btn-danger shadow-sm">
+                                    <i class="mdi mdi-cancel me-1"></i> Cancel order
+                                </button>
+                            </form>
                         @endif
 
                         <a href="{{ route('warehouse.purchase-orders.index') }}"
@@ -193,7 +201,11 @@
                                             </span>
                                         </h6>
                                         <small class="text-muted">Approver:
-                                            {{ $purchaseOrder->approval_email }}</small>
+                                            {{ $purchaseOrder->approval_email }}</small><br>
+                                        @if ($purchaseOrder->approver_phone)
+                                            <small class="text-muted">Approver's Number:
+                                                {{ $purchaseOrder->approver_phone }}</small>
+                                        @endif
                                     </div>
                                 </div>
                                 @if ($purchaseOrder->approved_by_email)
@@ -219,119 +231,7 @@
             </div>
         @endif
 
-        {{-- RECEIVE SECTION (Protected & Conditional) --}}
-        @if (
-            $purchaseOrder->status !== 'draft' &&
-                $purchaseOrder->status !== 'completed' &&
-                $purchaseOrder->status !== 'cancelled')
 
-            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('receive_po'))
-                <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
-                    <div
-                        class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold text-primary mb-0"><i class="mdi mdi-truck-check me-2"></i> Receive
-                            Incoming
-                            Stock</h5>
-                        <button type="button" id="receiveAllBtn" class="btn btn-sm btn-outline-primary">
-                            <i class="mdi mdi-check-all me-1"></i> Receive All Pending
-                        </button>
-                    </div>
-                    <div class="card-body p-4">
-                        <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}"
-                            method="POST">
-                            @csrf
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Vendor Invoice Number <span
-                                            class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light"><i class="mdi mdi-receipt"></i></span>
-                                        <input type="text" name="invoice_number" class="form-control" required
-                                            placeholder="e.g. INV-9988">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle mb-0">
-                                    <thead class="bg-light text-uppercase small text-muted">
-                                        <tr>
-                                            <th class="px-3">UPC</th>
-                                            <th class="px-3">Product</th>
-                                            <th class="text-center">Ordered</th>
-                                            <th class="text-center">Pending</th>
-                                            <th style="min-width: 130px;">Receive Now</th>
-                                            <th style="min-width: 150px;">Batch No.</th>
-                                            <th style="min-width: 140px;">Mfg Date</th>
-                                            <th style="min-width: 140px;">Expiry Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($purchaseOrder->items as $item)
-                                            @if ($item->pending_quantity > 0)
-                                                <tr>
-                                                    <td class="px-3">
-                                                        <span
-                                                            class="badge bg-secondary">{{ $item->product->upc ?? 'N/A' }}</span>
-                                                    </td>
-                                                    <td class="px-3">
-                                                        <span
-                                                            class="fw-semibold text-dark">{{ $item->product->product_name }}</span><br>
-                                                        <small class="text-muted">UPC:
-                                                            {{ $item->product->upc }}</small>
-                                                    </td>
-                                                    <td class="text-center fw-medium">{{ $item->requested_quantity }}
-                                                    </td>
-                                                    <td class="text-center text-danger fw-bold pending-qty"
-                                                        data-pending="{{ $item->pending_quantity }}">
-                                                        {{ $item->pending_quantity }}</td>
-                                                    <td>
-                                                        <input type="number"
-                                                            name="items[{{ $item->id }}][receive_qty]"
-                                                            class="form-control form-control-sm text-center fw-bold text-primary receive-qty-input"
-                                                            max="{{ $item->pending_quantity }}" min="0"
-                                                            value="0">
-                                                    </td>
-                                                    <td>
-                                                        <input type="text"
-                                                            name="items[{{ $item->id }}][batch_number]"
-                                                            class="form-control form-control-sm"
-                                                            placeholder="Auto if empty">
-                                                    </td>
-                                                    <td>
-                                                        <input type="date"
-                                                            name="items[{{ $item->id }}][mfg_date]"
-                                                            class="form-control form-control-sm">
-                                                    </td>
-                                                    <td>
-                                                        <input type="date"
-                                                            name="items[{{ $item->id }}][expiry_date]"
-                                                            class="form-control form-control-sm"
-                                                            min="{{ date('Y-m-d') }}">
-                                                    </td>
-                                                </tr>
-                                            @endif
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="d-flex justify-content-end mt-4">
-                                <button type="submit" class="btn btn-primary shadow-sm px-4">
-                                    <i class="mdi mdi-check-all me-1"></i> Process Receive
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            @else
-                <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
-                    <i class="mdi mdi-lock-alert me-3 fs-4"></i>
-                    <div>
-                        <strong>Access Restricted:</strong> Only Inventory Managers can receive stock.
-                    </div>
-                </div>
-            @endif
-        @endif
 
         {{-- ITEMS LIST (READ ONLY) --}}
         <div class="card border-0 shadow-sm">

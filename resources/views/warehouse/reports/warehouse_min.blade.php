@@ -21,7 +21,7 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-4">SKU</th>
+                                <th class="ps-4">UPC</th>
                                 <th>Product Name</th>
                                 <th>Category</th>
                                 <th class="text-end">Current Stock</th>
@@ -38,7 +38,7 @@
                                     $deficit = $minLevel - $currentQty;
                                 @endphp
                                 <tr>
-                                    <td class="ps-4"><span class="badge bg-secondary">{{ $item->sku }}</span></td>
+                                    <td class="ps-4"><span class="badge bg-secondary">{{ $item->upc }}</span></td>
                                     <td class="fw-semibold">{{ $item->product_name }}</td>
                                     <td>{{ $item->category->name ?? 'Uncategorized' }}</td>
                                     <td class="text-end fw-bold text-danger">{{ number_format($currentQty, 2) }}</td>

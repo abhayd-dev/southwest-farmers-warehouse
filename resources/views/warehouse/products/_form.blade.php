@@ -106,13 +106,13 @@
 
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">UPC</label>
+                <label class="form-label fw-semibold">UPC <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
                         <i class="mdi mdi-barcode text-muted"></i>
                     </span>
                     <input type="text" name="upc" id="upcInput" class="form-control border-start-0"
-                        value="{{ old('upc', $product->upc ?? '') }}" placeholder="Scan or generate UPC">
+                        value="{{ old('upc', $product->upc ?? '') }}" placeholder="Scan or generate UPC" required>
                     <button class="btn btn-outline-secondary" type="button" id="generateUpcBtn" title="Generate UPC">
                         <i class="mdi mdi-refresh"></i>
                     </button>
@@ -145,18 +145,30 @@
                     </span>
                     <select name="unit" class="form-select border-start-0" required>
                         <option value="">Select Unit</option>
+                        <option value="doz" {{ isset($product) && $product->unit == 'doz' ? 'selected' : '' }}>
+                            Dozen (doz)</option>
+                        <option value="ea" {{ isset($product) && $product->unit == 'ea' ? 'selected' : '' }}>Each
+                            (ea)</option>
+                        <option value="gal" {{ isset($product) && $product->unit == 'gal' ? 'selected' : '' }}>
+                            Gallon (gal)</option>
+                        <option value="g" {{ isset($product) && $product->unit == 'g' ? 'selected' : '' }}>Grams
+                            (g)</option>
+                        <option value="in" {{ isset($product) && $product->unit == 'in' ? 'selected' : '' }}>Inch
+                            (in)</option>
                         <option value="kg" {{ isset($product) && $product->unit == 'kg' ? 'selected' : '' }}>
-                            Kilogram (KG)
-                        </option>
-                        <option value="pcs" {{ isset($product) && $product->unit == 'pcs' ? 'selected' : '' }}>
-                            Pieces (PCS)
-                        </option>
-                        <option value="ltr" {{ isset($product) && $product->unit == 'ltr' ? 'selected' : '' }}>
-                            Liter (LTR)
-                        </option>
-                        <option value="box" {{ isset($product) && $product->unit == 'box' ? 'selected' : '' }}>
-                            Box
-                        </option>
+                            Kilograms (kg)</option>
+                        <option value="lt" {{ isset($product) && $product->unit == 'lt' ? 'selected' : '' }}>
+                            Liters (lt)</option>
+                        <option value="oz" {{ isset($product) && $product->unit == 'oz' ? 'selected' : '' }}>Ounce
+                            (oz)</option>
+                        <option value="pk" {{ isset($product) && $product->unit == 'pk' ? 'selected' : '' }}>Pack
+                            (pk)</option>
+                        <option value="pc" {{ isset($product) && $product->unit == 'pc' ? 'selected' : '' }}>Piece
+                            (pc)</option>
+                        <option value="pt" {{ isset($product) && $product->unit == 'pt' ? 'selected' : '' }}>Pint
+                            (pt)</option>
+                        <option value="lb" {{ isset($product) && $product->unit == 'lb' ? 'selected' : '' }}>Pound
+                            (lb)</option>
                     </select>
                 </div>
                 <div class="invalid-feedback">Please select a unit.</div>
@@ -169,20 +181,22 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Tax Percentage (%)</label>
+                <label class="form-label fw-semibold">Tax Percentage (%) <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">%</span>
                     <input type="number" step="0.01" name="tax_percent" class="form-control border-start-0"
-                        value="{{ old('tax_percent', $product->tax_percent ?? '0.00') }}" placeholder="0.00">
+                        value="{{ old('tax_percent', $product->tax_percent ?? '0.00') }}" placeholder="0.00"
+                        required>
                 </div>
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Warehouse Cost (WHSE Cost)</label>
+                <label class="form-label fw-semibold">Warehouse Cost (WHSE Cost) <span
+                        class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
                     <input type="number" step="0.01" name="cost_price" class="form-control border-start-0"
-                        value="{{ old('cost_price', $product->cost_price ?? '') }}" placeholder="0.00">
+                        value="{{ old('cost_price', $product->cost_price ?? '') }}" placeholder="0.00" required>
                 </div>
             </div>
 
@@ -198,11 +212,11 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Retail Price</label>
+                <label class="form-label fw-semibold">Retail Price <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
                     <input type="number" step="0.01" name="retail_price" class="form-control border-start-0"
-                        value="{{ old('retail_price', $product->retail_price ?? '') }}" placeholder="0.00">
+                        value="{{ old('retail_price', $product->retail_price ?? '') }}" placeholder="0.00" required>
                 </div>
             </div>
 
@@ -218,11 +232,11 @@
                     <div class="col-12 mt-4">
                         <hr>
                         <h6 class="fw-semibold text-primary mb-3"><i class="mdi mdi-package-variant-closed"></i>
-                            Pallet Arrangement & Carton Details</h6>
+                            Pallet Arrangement & Case Details</h6>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Carton Length (in)</label>
+                        <label class="form-label fw-semibold">Case Length (in)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i
                                     class="mdi mdi-arrow-left-right text-muted"></i></span>
@@ -233,7 +247,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Carton Width (in)</label>
+                        <label class="form-label fw-semibold">Case Width (in)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i
                                     class="mdi mdi-arrow-expand-horizontal text-muted"></i></span>
@@ -244,7 +258,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Carton Height (in)</label>
+                        <label class="form-label fw-semibold">Case Height (in)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i
                                     class="mdi mdi-arrow-up-down text-muted"></i></span>
@@ -255,7 +269,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Units Per Carton <span
+                        <label class="form-label fw-semibold">Units Per Case <span
                                 class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i

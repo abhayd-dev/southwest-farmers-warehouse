@@ -2,14 +2,13 @@
     <div class="container-fluid">
         @include('warehouse.partials.breadcrumb', [
             'title' => 'Sales By Price Point',
-            'items' => [
-                ['name' => 'Reports', 'url' => route('warehouse.reports.index')]
-            ]
+            'items' => [['name' => 'Reports', 'url' => route('warehouse.reports.index')]],
         ])
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body py-3 d-flex justify-content-between align-items-center">
-                <form action="{{ route('warehouse.reports.sales-by-price-point') }}" method="GET" class="d-flex align-items-center gap-3">
+                <form action="{{ route('warehouse.reports.sales-by-price-point') }}" method="GET"
+                    class="d-flex align-items-center gap-3">
                     <label class="form-label fw-bold mb-0">Timeframe:</label>
                     <select name="days" class="form-select w-auto" onchange="this.form.submit()">
                         <option value="7" {{ $days == 7 ? 'selected' : '' }}>Last 7 Days</option>
@@ -35,21 +34,27 @@
             <div class="card-body p-0">
                 <div class="accordion" id="pricePointAccordion">
                     @forelse($groupedProducts as $productId => $group)
-                        @php 
-                            $firstItem = $group->first(); 
+                        @php
+                            $firstItem = $group->first();
                             $product = $firstItem->product;
-                            if(!$product) continue;
+                            if (!$product) {
+                                continue;
+                            }
                         @endphp
                         <div class="accordion-item border-0 border-bottom">
                             <h2 class="accordion-header" id="heading-{{ $productId }}">
-                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $productId }}">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-{{ $productId }}">
                                     <div class="d-flex justify-content-between w-100 pe-3">
-                                        <span class="fw-bold text-dark">{{ $product->product_name }} <small class="text-muted ms-2">({{ $product->sku }})</small></span>
-                                        <span class="badge bg-secondary rounded-pill">{{ $group->count() }} Price Points</span>
+                                        <span class="fw-bold text-dark">{{ $product->product_name }} <small
+                                                class="text-muted ms-2">({{ $product->upc }})</small></span>
+                                        <span class="badge bg-secondary rounded-pill">{{ $group->count() }} Price
+                                            Points</span>
                                     </div>
                                 </button>
                             </h2>
-                            <div id="collapse-{{ $productId }}" class="accordion-collapse collapse" data-bs-parent="#pricePointAccordion">
+                            <div id="collapse-{{ $productId }}" class="accordion-collapse collapse"
+                                data-bs-parent="#pricePointAccordion">
                                 <div class="accordion-body p-0">
                                     <table class="table table-sm table-hover mb-0 align-middle">
                                         <thead class="table-light">
@@ -60,19 +65,26 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($group as $item)
+                                            @foreach ($group as $item)
                                                 <tr>
-                                                    <td class="ps-4 fw-bold text-success">${{ number_format($item->unit_price, 2) }}</td>
-                                                    <td class="text-end fw-semibold">{{ number_format($item->total_qty, 2) }} {{ $product->unit ?? 'units' }}</td>
-                                                    <td class="text-end pe-4">${{ number_format($item->revenue, 2) }}</td>
+                                                    <td class="ps-4 fw-bold text-success">
+                                                        ${{ number_format($item->unit_price, 2) }}</td>
+                                                    <td class="text-end fw-semibold">
+                                                        {{ number_format($item->total_qty, 2) }}
+                                                        {{ $product->unit ?? 'units' }}</td>
+                                                    <td class="text-end pe-4">${{ number_format($item->revenue, 2) }}
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot class="table-light">
                                             <tr>
                                                 <th class="ps-4">Total Aggregate</th>
-                                                <th class="text-end text-primary fw-bold">{{ number_format($group->sum('total_qty'), 2) }} {{ $product->unit ?? 'units' }}</th>
-                                                <th class="text-end pe-4 text-primary fw-bold">${{ number_format($group->sum('revenue'), 2) }}</th>
+                                                <th class="text-end text-primary fw-bold">
+                                                    {{ number_format($group->sum('total_qty'), 2) }}
+                                                    {{ $product->unit ?? 'units' }}</th>
+                                                <th class="text-end pe-4 text-primary fw-bold">
+                                                    ${{ number_format($group->sum('revenue'), 2) }}</th>
                                             </tr>
                                         </tfoot>
                                     </table>

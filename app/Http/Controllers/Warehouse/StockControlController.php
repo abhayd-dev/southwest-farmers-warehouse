@@ -120,7 +120,7 @@ class StockControlController extends Controller
             ->select([
                 'products.id',
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 'products.cost_price',
                 'products.department_id', // Select for relation
                 DB::raw('COALESCE(SUM(product_stocks.quantity), 0) as warehouse_qty'),
@@ -131,7 +131,7 @@ class StockControlController extends Controller
             ])
             ->leftJoin('product_stocks', 'products.id', '=', 'product_stocks.product_id')
             ->leftJoin('store_stocks', 'products.id', '=', 'store_stocks.product_id')
-            ->groupBy('products.id', 'products.product_name', 'products.sku', 'products.cost_price', 'products.department_id');
+            ->groupBy('products.id', 'products.product_name', 'products.upc', 'products.cost_price', 'products.department_id');
 
         // Added Department Filter
         if ($request->filled('department_id')) {
@@ -191,7 +191,7 @@ class StockControlController extends Controller
             ->join('products', 'store_stocks.product_id', '=', 'products.id')
             ->select([
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 'store_stocks.quantity',
                 DB::raw('store_stocks.quantity * products.cost_price as value')
             ])

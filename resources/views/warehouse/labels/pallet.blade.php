@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,13 +10,16 @@
     <style>
         @media print {
             @page {
-                size: 4in 6in; /* Standard Thermal Label Size */
+                size: 4in 6in;
+                /* Standard Thermal Label Size */
                 margin: 0;
             }
+
             body {
                 margin: 0;
                 padding: 0;
             }
+
             .no-print {
                 display: none !important;
             }
@@ -31,7 +35,8 @@
         }
 
         .label-container {
-            width: 3.8in; /* Slightly less than 4in for padding safely */
+            width: 3.8in;
+            /* Slightly less than 4in for padding safely */
             height: 5.8in;
             background: white;
             padding: 0.1in;
@@ -40,7 +45,8 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            overflow: hidden; /* Ensure nothing spills out anyway */
+            overflow: hidden;
+            /* Ensure nothing spills out anyway */
         }
 
         .header {
@@ -102,7 +108,7 @@
             width: 80%;
             height: 40px;
         }
-        
+
         .barcode-text {
             font-size: 10px;
             margin-top: 2px;
@@ -122,17 +128,22 @@
             font-weight: bold;
             letter-spacing: 1px;
             margin-bottom: 5px;
-            white-space: nowrap; /* Prevent ID from wrapping awkwardly */
+            white-space: nowrap;
+            /* Prevent ID from wrapping awkwardly */
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         /* --- FIX: Barcode Constraint --- */
         #pallet_barcode {
-            max-width: 100%; /* Force barcode to fit within container width */
-            height: 50px;    /* Maintain aspect ratio if width shrinks */
-            display: inline-block; /* Ensures it respects text-align: center */
+            max-width: 100%;
+            /* Force barcode to fit within container width */
+            height: 50px;
+            /* Maintain aspect ratio if width shrinks */
+            display: inline-block;
+            /* Ensures it respects text-align: center */
         }
+
         /* ------------------------------- */
 
         /* Print Button Style */
@@ -147,11 +158,15 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .print-btn:hover { background: #0056b3; }
+
+        .print-btn:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
+
 <body>
 
     <button class="print-btn no-print" onclick="window.print()">Print Label</button>
@@ -174,17 +189,17 @@
             </div>
 
             {{-- Product Barcode Section --}}
-            @if(isset($data['product_barcode']))
-            <div class="barcode-section">
-                <svg id="product_barcode"></svg>
-                <div class="barcode-text">Product: {{ $data['product_barcode'] }}</div>
-            </div>
+            @if (isset($data['product_barcode']))
+                <div class="barcode-section">
+                    <svg id="product_barcode"></svg>
+                    <div class="barcode-text">Product: {{ $data['product_barcode'] }}</div>
+                </div>
             @endif
 
             <div class="row">
                 <div>
-                    <div class="label">SKU</div>
-                    <div class="value">{{ $data['sku'] }}</div>
+                    <div class="label">UPC</div>
+                    <div class="value">{{ $data['upc'] }}</div>
                 </div>
                 <div style="text-align: right;">
                     <div class="label">Category</div>
@@ -228,26 +243,27 @@
         JsBarcode("#pallet_barcode", "{{ $data['pallet_id'] }}", {
             format: "CODE128",
             lineColor: "#000",
-            width: 2, 
+            width: 2,
             height: 50,
             displayValue: false,
             margin: 0
         });
 
         // Generate Product Barcode (if exists)
-        @if(isset($data['product_barcode']))
-        JsBarcode("#product_barcode", "{{ $data['product_barcode'] }}", {
-            format: "CODE128",
-            lineColor: "#000",
-            width: 1.5,
-            height: 40,
-            displayValue: false,
-            margin: 0
-        });
+        @if (isset($data['product_barcode']))
+            JsBarcode("#product_barcode", "{{ $data['product_barcode'] }}", {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 1.5,
+                height: 40,
+                displayValue: false,
+                margin: 0
+            });
         @endif
 
         // Auto print logic (optional)
         // window.onload = function() { window.print(); }
     </script>
 </body>
+
 </html>

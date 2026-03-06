@@ -51,10 +51,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WarehouseController::class, 'dashboard'])->name('dashboard');
 
     // User Profile & Activity
-    Route::middleware(['auth', 'permission'])->group(function () {
+    Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+        // Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
         // Notification & Activity Logs
         Route::get('/notifications', function () {
             return view('notifications.index');
@@ -124,12 +124,14 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('roles', RoleController::class)
             ->names('warehouse.roles')
-            ->middleware('permission:manage_roles');
+            ->middleware('permission:manage_roles')
+            ->except(['show']);
 
         Route::post('staff/status', [StaffController::class, 'changeStatus'])->name('warehouse.staff.status')->middleware('permission:manage_staff');
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff')
-            ->middleware('permission:manage_staff');
+            ->middleware('permission:manage_staff')
+            ->except(['show']);
 
         Route::post('stores/update-status', [StoreController::class, 'updateStatus'])->name('warehouse.stores.update-status');
         Route::get('stores/{id}/analytics', [StoreController::class, 'analytics'])->name('warehouse.stores.analytics');
@@ -218,7 +220,9 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-        Route::resource('vendors', VendorController::class)->names('warehouse.vendors');
+        Route::resource('vendors', VendorController::class)
+            ->names('warehouse.vendors')
+            ->except(['show']);
         Route::post('vendors/status', [VendorController::class, 'changeStatus'])->name('warehouse.vendors.status');
         Route::resource('purchase-orders', PurchaseOrderController::class)->names('warehouse.purchase-orders');
         Route::post('purchase-orders/bulk-store-draft', [PurchaseOrderController::class, 'bulkStoreDraft'])->name('warehouse.purchase-orders.bulk-store-draft');
@@ -228,6 +232,8 @@ Route::middleware('auth')->group(function () {
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
         Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
         Route::post('purchase-orders/{purchase_order}/send-to-vendor', [PurchaseOrderController::class, 'sendToVendor'])->name('warehouse.purchase-orders.send-to-vendor');
+        Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('warehouse.purchase-orders.cancel');
+        Route::post('purchase-orders/{purchase_order}/send-approval', [PurchaseOrderController::class, 'sendApproval'])->name('warehouse.purchase-orders.send-approval');
 
         // PO Approval Routes (signed URLs for email approval)
         Route::get('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'handleApproval'])
@@ -239,6 +245,7 @@ Route::middleware('auth')->group(function () {
 
         Route::controller(ReceivingController::class)->prefix('receiving')->name('warehouse.receiving.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/{purchaseOrder}', 'show')->name('show');
             Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
         });
 

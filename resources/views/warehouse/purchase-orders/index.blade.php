@@ -53,22 +53,14 @@
                         <input type="text" class="form-control form-control-sm" id="filter_po"
                             placeholder="e.g. PO-123">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label small text-muted mb-1">Status</label>
                         <select class="form-select form-select-sm" id="filter_status">
                             <option value="all">All</option>
-                            <option value="ordered">Ordered</option>
-                            <option value="partial">In Transit</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small text-muted mb-1">Approval</label>
-                        <select class="form-select form-select-sm" id="filter_approval">
-                            <option value="all">All</option>
+                            <option value="draft">Draft</option>
+                            <option value="pending_approval">Waiting for Approval</option>
                             <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="ordered">Ordered</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -102,8 +94,7 @@
                                 <th>Vendor</th>
                                 <th>Date</th>
                                 <th>Amount</th>
-                                <th>Approval</th>
-                                <th>Receiving Progress</th>
+                                <th>Order progress</th>
                                 <th>Status</th>
                                 <th class="text-end px-4">Action</th>
                             </tr>
@@ -125,7 +116,6 @@
                     url: "{{ route('warehouse.purchase-orders.index') }}",
                     data: function(d) {
                         d.status = $('#filter_status').val();
-                        d.approval_status = $('#filter_approval').val();
                         d.po_number = $('#filter_po').val();
                         d.vendor = $('#filter_vendor').val();
                         d.date_from = $('#filter_date_from').val();
@@ -149,12 +139,7 @@
                         data: 'total_amount',
                         name: 'total_amount'
                     },
-                    {
-                        data: 'approval_badge',
-                        name: 'approval_status',
-                        orderable: false,
-                        searchable: false
-                    },
+
                     {
                         data: 'progress',
                         name: 'progress',

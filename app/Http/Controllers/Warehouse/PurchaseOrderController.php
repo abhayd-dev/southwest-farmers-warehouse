@@ -56,13 +56,15 @@ class PurchaseOrderController extends Controller
 
             if ($request->filled('status') && $request->status !== 'all') {
                 $status = $request->status;
-                if ($status === 'in_transit') {
-                    $status = 'partial'; // Mapping for UI
+                if ($status === 'pending_approval') {
+                    $query->where('status', 'draft')->where('approval_status', 'pending');
+                } elseif ($status === 'approved') {
+                    $query->where('status', 'draft')->where('approval_status', 'approved');
+                } elseif ($status === 'draft') {
+                    $query->where('status', 'draft')->whereNull('approval_status');
+                } else {
+                    $query->where('status', $status);
                 }
-                $query->where('status', $status);
-            }
-            if ($request->filled('approval_status') && $request->approval_status !== 'all') {
-                $query->where('approval_status', $request->approval_status);
             }
             if ($request->filled('po_number')) {
                 $query->where('po_number', 'like', '%' . $request->po_number . '%');
@@ -97,30 +99,35 @@ class PurchaseOrderController extends Controller
                     if ($row->status === 'completed' && $row->progress < 100) {
                         return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">PARTIAL COMPLETED</span>';
                     }
-                    $badges = [
-                        'draft' => 'secondary',
-                        'ordered' => 'info',
-                        'partial' => 'warning',
-                        'completed' => 'success',
-                        'cancelled' => 'danger'
-                    ];
+
                     $displayStatus = strtoupper($row->status);
-                    if ($row->status === 'partial') {
+                    $color = 'secondary';
+
+                    if ($row->status === 'draft') {
+                        if ($row->approval_status === 'pending') {
+                            $displayStatus = 'WAITING FOR APPROVAL';
+                            $color = 'warning';
+                        } elseif ($row->approval_status === 'approved') {
+                            $displayStatus = 'APPROVED';
+                            $color = 'primary';
+                        } else {
+                            $displayStatus = 'DRAFT';
+                            $color = 'secondary';
+                        }
+                    } elseif ($row->status === 'ordered') {
+                        $color = 'info';
+                    } elseif ($row->status === 'partial') {
                         $displayStatus = 'IN TRANSIT';
-                    }
-                    return '<span class="badge bg-' . ($badges[$row->status] ?? 'secondary') . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
-                })
-                ->addColumn('approval_badge', function ($row) {
-                    $badges = ['approved' => 'success', 'rejected' => 'danger'];
-
-                    if ($row->approval_status === 'approved' || $row->approval_status === 'rejected') {
-                        $color = $badges[$row->approval_status] ?? 'secondary';
-                        $icon = $row->approval_status === 'approved' ? '✓' : '✗';
-                        return '<span class="badge bg-' . $color . ' px-2 py-1">' . $icon . ' ' . strtoupper($row->approval_status) . '</span>';
+                        $color = 'warning';
+                    } elseif ($row->status === 'completed') {
+                        $color = 'success';
+                    } elseif ($row->status === 'cancelled') {
+                        $color = 'danger';
                     }
 
-                    return ''; // Do not show N/A or pending per client request
+                    return '<span class="badge bg-' . $color . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
                 })
+
                 ->addColumn('action', function ($row) {
                     $viewUrl = route('warehouse.purchase-orders.show', $row->id);
                     return '<div class="action-btns">
@@ -129,7 +136,7 @@ class PurchaseOrderController extends Controller
                                 </a>
                             </div>';
                 })
-                ->rawColumns(['progress', 'status_badge', 'approval_badge', 'action'])
+                ->rawColumns(['progress', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -172,6 +179,8 @@ class PurchaseOrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost' => 'required|numeric|min:0',
+            'approval_email' => 'nullable|email',
+            'approver_phone' => 'nullable|string|max:20',
         ]);
 
         try {
@@ -248,10 +257,42 @@ class PurchaseOrderController extends Controller
         NotificationService::sendToAdmins(
             'PO Ordered',
             "PO #{$purchaseOrder->po_number} marked as ordered.",
-            'success',
+            'info',
             route('warehouse.purchase-orders.show', $purchaseOrder->id)
         );
-        return back()->with('success', 'PO marked as Ordered. Sent to Vendor.');
+
+        return back()->with('success', 'Purchase Order marked as Ordered successfully.');
+    }
+
+    public function cancel(PurchaseOrder $purchaseOrder)
+    {
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('approve_po')) {
+            abort(403, 'Unauthorized');
+        }
+        if ($purchaseOrder->status !== 'ordered' && $purchaseOrder->status !== 'draft') abort(403);
+
+        $purchaseOrder->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Purchase Order has been cancelled.');
+    }
+
+    public function sendApproval(PurchaseOrder $purchaseOrder)
+    {
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('approve_po') && !auth()->user()->hasPermission('create_po')) {
+            abort(403, 'Unauthorized');
+        }
+
+        try {
+            if (!$purchaseOrder->approval_email) {
+                return back()->with('error', 'No approval email set for this PO. Please edit the PO to add one.');
+            }
+            $this->approvalService->sendApprovalEmail($purchaseOrder);
+            $purchaseOrder->update(['approval_status' => 'pending']);
+            return back()->with('success', 'Approval email sent successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to send approval email: ' . $e->getMessage());
+            return back()->with('error', 'Failed to send approval email: ' . $e->getMessage());
+        }
     }
 
     public function markCompleted(PurchaseOrder $purchaseOrder)

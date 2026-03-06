@@ -70,7 +70,7 @@ class RecallController extends Controller
             ->select([
                 'product_batches.*',
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 DB::raw('(product_batches.expiry_date - CURRENT_DATE) as days_left')
             ])
             ->where('product_batches.warehouse_id', 1)
@@ -119,7 +119,7 @@ class RecallController extends Controller
             route('warehouse.stock-control.recall.show', $recall->id)
         );
 
-        
+
         return redirect()->route('warehouse.stock-control.recall')->with('success', 'Recall request sent to Store.');
     }
 

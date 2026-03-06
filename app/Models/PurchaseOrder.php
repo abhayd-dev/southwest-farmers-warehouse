@@ -29,6 +29,7 @@ class PurchaseOrder extends Model
         'created_by',
         'approved_by',
         'approval_email',
+        'approver_phone',
         'approval_status',
         'approved_by_email',
         'approved_at',

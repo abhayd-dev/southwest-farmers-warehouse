@@ -94,7 +94,7 @@
                                             <td class="py-3">
                                                 <div class="fw-semibold text-dark">{{ $item->product->product_name }}
                                                 </div>
-                                                <small class="text-muted">{{ $item->product->sku }}</small>
+                                                <small class="text-muted">{{ $item->product->upc }}</small>
                                             </td>
                                             <td class="py-3 text-center fw-bold">{{ $item->requested_qty }}</td>
                                             <td class="py-3 text-center text-success fw-bold">

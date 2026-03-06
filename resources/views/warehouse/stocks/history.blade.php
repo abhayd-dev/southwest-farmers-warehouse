@@ -13,7 +13,7 @@
                     <i class="mdi mdi-history text-primary"></i> {{ $product->product_name }}
                 </h4>
                 <div class="small text-muted mt-1">
-                    SKU: <span class="text-dark fw-bold">{{ $product->sku }}</span> |
+                    UPC: <span class="text-dark fw-bold">{{ $product->upc }}</span> |
                     Current Stock: <span class="badge bg-success fs-6">{{ $product->stock->quantity ?? 0 }}
                         {{ $product->unit }}</span>
                 </div>

@@ -11,8 +11,8 @@
                     <div class="card-body">
                         <form action="{{ route('warehouse.market-prices.index') }}" method="GET"
                             class="row align-items-center">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Select Market to manage prices:</label>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Select Market:</label>
                                 <select name="market_id" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Choose Market --</option>
                                     @foreach ($markets as $market)
@@ -22,6 +22,22 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Product Name / UPC:</label>
+                                <input type="text" name="search" class="form-control"
+                                    value="{{ request('search') }}" placeholder="Search name or UPC">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Last Updated Date:</label>
+                                <input type="date" name="last_updated" class="form-control"
+                                    value="{{ request('last_updated') }}">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary"><i class="mdi mdi-filter"></i>
+                                    Filter</button>
+                                <a href="{{ route('warehouse.market-prices.index', ['market_id' => request('market_id')]) }}"
+                                    class="btn btn-outline-secondary"><i class="mdi mdi-refresh"></i></a>
                             </div>
                         </form>
                     </div>
@@ -47,8 +63,7 @@
                                             <tr>
                                                 <th>UPC CODE</th>
                                                 <th>Product Name</th>
-                                                <th>Warehouse Cost (WHSE Cost)</th>
-                                                <th>Warehouse Price (WHSE Price)</th>
+
                                                 <th style="width: 150px;">Market Cost Price</th>
                                                 <th style="width: 150px;">Market Selling Price</th>
                                                 <th style="width: 120px;">Promotion</th>
@@ -76,7 +91,8 @@
                                                         );
                                                 @endphp
                                                 <tr>
-                                                    <td><span class="badge bg-secondary">{{ $product->upc }}</span></td>
+                                                    <td><span class="badge bg-secondary">{{ $product->upc }}</span>
+                                                    </td>
                                                     <td class="fw-semibold">
                                                         {{ $product->product_name }}
                                                         @if ($hasPromo)
@@ -85,8 +101,7 @@
                                                                 ${{ number_format($marketPrice->promotion_price, 2) }}</span>
                                                         @endif
                                                     </td>
-                                                    <td>${{ number_format($product->cost_price, 2) }}</td>
-                                                    <td>${{ number_format($product->price, 2) }}</td>
+
                                                     <td>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text">$</span>
@@ -118,7 +133,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="7" class="text-center text-muted">No products found.
+                                                    <td colspan="5" class="text-center text-muted">No products found.
                                                     </td>
                                                 </tr>
                                             @endforelse
@@ -128,8 +143,11 @@
                             </div>
 
                             @if ($products->count() > 0)
-                                <div class="card-footer bg-white text-end">
-                                    <button type="submit" class="btn btn-primary">Save All Prices</button>
+                                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {{ $products->links('pagination::bootstrap-5') }}
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save All Prices on this Page</button>
                                 </div>
                             @endif
                         </form>
@@ -150,13 +168,15 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p class="mb-3 text-muted">Setting promotion for <strong id="promo_product_name"
-                                                class="text-dark"></strong> in {{ $selectedMarket->name }}.</p>
+                                        <p class="mb-3 text-muted">Setting promotion for <strong
+                                                id="promo_product_name" class="text-dark"></strong> in
+                                            {{ $selectedMarket->name }}.</p>
 
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Promotional Price ($)</label>
-                                            <input type="number" step="0.01" min="0" name="promotion_price"
-                                                id="promo_price" class="form-control" placeholder="0.00">
+                                            <input type="number" step="0.01" min="0"
+                                                name="promotion_price" id="promo_price" class="form-control"
+                                                placeholder="0.00">
                                             <small class="text-muted">Leave blank to remove overide.</small>
                                         </div>
                                         <div class="mb-3">

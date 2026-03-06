@@ -5,9 +5,10 @@
             <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 0.7rem;">From Source</small>
             <span class="fw-bold text-dark fs-6">{{ $transfer->fromStore->store_name }}</span>
         </div>
-        
+
         <div class="text-center px-3">
-            <div class="avatar-sm bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto">
+            <div
+                class="avatar-sm bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto">
                 <i class="mdi mdi-arrow-right text-primary fs-4"></i>
             </div>
             @php
@@ -15,11 +16,12 @@
                     'pending' => 'warning',
                     'in_transit' => 'info',
                     'completed' => 'success',
-                    'rejected' => 'danger'
+                    'rejected' => 'danger',
                 ];
                 $statusColor = $badges[$transfer->status] ?? 'secondary';
             @endphp
-            <span class="badge bg-{{ $statusColor }} mt-2">{{ ucfirst(str_replace('_', ' ', $transfer->status)) }}</span>
+            <span
+                class="badge bg-{{ $statusColor }} mt-2">{{ ucfirst(str_replace('_', ' ', $transfer->status)) }}</span>
         </div>
 
         <div class="text-end">
@@ -42,7 +44,7 @@
             <thead class="bg-light text-uppercase small text-muted">
                 <tr>
                     <th class="ps-3">Product Name</th>
-                    <th>SKU</th>
+                    <th>UPC</th>
                     <th class="text-center">Transferred Qty</th>
                 </tr>
             </thead>
@@ -52,7 +54,7 @@
                         {{ $transfer->product->product_name ?? 'Unknown Product' }}
                     </td>
                     <td class="text-muted">
-                        {{ $transfer->product->sku ?? '-' }}
+                        {{ $transfer->product->upc ?? '-' }}
                     </td>
                     <td class="text-center">
                         <span class="badge bg-primary fs-6">
@@ -70,10 +72,10 @@
             <i class="mdi mdi-information-outline text-info mt-1"></i>
             <div class="small text-muted">
                 <div><strong>Created On:</strong> {{ $transfer->created_at->format('d M Y, h:i A') }}</div>
-                @if($transfer->notes)
+                @if ($transfer->notes)
                     <div class="mt-1"><strong>Note:</strong> {{ $transfer->notes }}</div>
                 @endif
-                @if($transfer->creator)
+                @if ($transfer->creator)
                     <div class="mt-1"><strong>Initiated By:</strong> {{ $transfer->creator->name }}</div>
                 @endif
             </div>

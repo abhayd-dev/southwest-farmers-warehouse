@@ -166,7 +166,7 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th class="ps-4 text-uppercase text-muted small fw-bold">Product</th>
-                                                <th class="text-uppercase text-muted small fw-bold">SKU</th>
+                                                <th class="text-uppercase text-muted small fw-bold">UPC</th>
                                                 <th class="text-uppercase text-muted small fw-bold">Department</th>
                                                 {{-- Added --}}
                                                 <th class="text-center text-uppercase text-muted small fw-bold">Whse
@@ -304,7 +304,7 @@
                             className: 'ps-4 fw-semibold'
                         },
                         {
-                            data: 'sku',
+                            data: 'upc',
                             className: 'text-muted small'
                         },
                         {

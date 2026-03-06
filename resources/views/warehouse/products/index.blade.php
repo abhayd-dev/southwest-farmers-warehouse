@@ -123,6 +123,7 @@
                                 <th class="py-3 text-muted fw-semibold small">ICON & NAME</th>
                                 <th class="py-3 text-muted fw-semibold small">CATEGORY</th>
                                 <th class="py-3 text-muted fw-semibold small">SUB-CATEGORY</th>
+                                <th class="py-3 text-muted fw-semibold small">SKU</th>
                                 <th class="py-3 text-muted fw-semibold small">COST</th>
                                 <th class="py-3 text-muted fw-semibold small">PRICE</th>
                                 <th class="py-3 text-muted fw-semibold small text-center">STATUS</th>
@@ -169,6 +170,9 @@
                                         <small class="text-muted">{{ $product->subcategory->name ?? '-' }}</small>
                                     </td>
                                     <td class="py-3">
+                                        <small class="text-muted">{{ $product->sku ?? '-' }}</small>
+                                    </td>
+                                    <td class="py-3">
                                         @if ($product->cost_price)
                                             <span
                                                 class="fw-semibold text-warning">${{ number_format($product->cost_price, 2) }}</span>
@@ -186,8 +190,8 @@
                                     </td>
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input status-toggle" type="checkbox" role="switch"
-                                                data-id="{{ $product->id }}"
+                                            <input class="form-check-input status-toggle" type="checkbox"
+                                                role="switch" data-id="{{ $product->id }}"
                                                 {{ $product->is_active ? 'checked' : '' }}
                                                 {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products') ? '' : 'disabled' }}>
                                         </div>

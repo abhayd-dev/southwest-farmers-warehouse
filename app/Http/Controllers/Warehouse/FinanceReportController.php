@@ -60,7 +60,7 @@ class FinanceReportController extends Controller
         $chartLabels = [];
         $procurementData = [];
         $dispatchData = [];
-        
+
         $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
         foreach ($period as $date) {
             $fDate = $date->format('Y-m-d');
@@ -84,12 +84,16 @@ class FinanceReportController extends Controller
         $pieData = $categoryDistribution->pluck('total_value');
 
         return view('warehouse.finance.index', compact(
-            'totalProcurement', 
-            'totalDispatchValue', 
+            'totalProcurement',
+            'totalDispatchValue',
             'currentInventoryValue',
-            'startDate', 'endDate',
-            'chartLabels', 'procurementData', 'dispatchData', // Line Chart
-            'pieLabels', 'pieData' // Pie Chart
+            'startDate',
+            'endDate',
+            'chartLabels',
+            'procurementData',
+            'dispatchData', // Line Chart
+            'pieLabels',
+            'pieData' // Pie Chart
         ));
     }
 
@@ -116,15 +120,15 @@ class FinanceReportController extends Controller
                         'return' => ['color' => 'danger', 'icon' => 'mdi-alert-circle'],
                     ];
                     $config = $badges[$row->type] ?? ['color' => 'primary', 'icon' => 'mdi-circle'];
-                    
-                    return '<span class="badge bg-'.$config['color'].' bg-opacity-10 text-'.$config['color'].' px-2 py-1">
-                                <i class="mdi '.$config['icon'].' me-1"></i> '.strtoupper(str_replace('_', ' ', $row->type)).'
+
+                    return '<span class="badge bg-' . $config['color'] . ' bg-opacity-10 text-' . $config['color'] . ' px-2 py-1">
+                                <i class="mdi ' . $config['icon'] . ' me-1"></i> ' . strtoupper(str_replace('_', ' ', $row->type)) . '
                             </span>';
                 })
-                ->addColumn('product_details', function($row) {
+                ->addColumn('product_details', function ($row) {
                     return '<div>
-                                <span class="fw-bold text-dark">'.$row->product->product_name.'</span><br>
-                                <small class="text-muted">SKU: '.$row->product->sku.'</small>
+                                <span class="fw-bold text-dark">' . $row->product->product_name . '</span><br>
+                                <small class="text-muted">UPC: ' . $row->product->upc . '</small>
                             </div>';
                 })
                 ->addColumn('quantity', function ($row) {
@@ -132,8 +136,8 @@ class FinanceReportController extends Controller
                     $sign = $row->quantity_change > 0 ? '+' : '';
                     return '<span class="fw-bold fs-6 ' . $color . '">' . $sign . $row->quantity_change . '</span>';
                 })
-                ->addColumn('balance', fn($row) => '<span class="fw-bold text-dark">'.number_format($row->running_balance).'</span>')
-                ->addColumn('reference', fn($row) => '<span class="font-monospace text-muted">'.$row->reference_id.'</span>')
+                ->addColumn('balance', fn($row) => '<span class="fw-bold text-dark">' . number_format($row->running_balance) . '</span>')
+                ->addColumn('reference', fn($row) => '<span class="font-monospace text-muted">' . $row->reference_id . '</span>')
                 ->addColumn('user', fn($row) => $row->user->name ?? 'System')
                 ->rawColumns(['type_badge', 'product_details', 'quantity', 'balance', 'reference'])
                 ->make(true);
@@ -156,11 +160,11 @@ class FinanceReportController extends Controller
         $transactions = $query->latest()->get();
 
         $headers = ["Content-type" => "text/csv", "Content-Disposition" => "attachment; filename=$fileName", "Pragma" => "no-cache", "Cache-Control" => "must-revalidate, post-check=0, pre-check=0", "Expires" => "0"];
-        $callback = function() use($transactions) {
+        $callback = function () use ($transactions) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Date', 'Type', 'Product', 'SKU', 'Qty Change', 'Balance', 'Ref ID', 'User']);
+            fputcsv($file, ['Date', 'Type', 'Product', 'UPC', 'Qty Change', 'Balance', 'Ref ID', 'User']);
             foreach ($transactions as $row) {
-                fputcsv($file, [$row->created_at, $row->type, $row->product->product_name, $row->product->sku, $row->quantity_change, $row->running_balance, $row->reference_id, $row->user->name ?? 'System']);
+                fputcsv($file, [$row->created_at, $row->type, $row->product->product_name, $row->product->upc, $row->quantity_change, $row->running_balance, $row->reference_id, $row->user->name ?? 'System']);
             }
             fclose($file);
         };

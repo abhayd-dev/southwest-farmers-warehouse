@@ -14,15 +14,34 @@ class MarketPriceController extends Controller
     {
         $markets = Market::active()->get();
         $selectedMarket = $request->market_id ? Market::find($request->market_id) : null;
-        
+
         $products = collect();
         if ($selectedMarket) {
-            $products = Product::whereNull('store_id')->where('is_active', true)
-                ->with(['marketPrices' => function($q) use ($selectedMarket) {
+            $query = Product::whereNull('store_id')->where('is_active', true)
+                ->with(['marketPrices' => function ($q) use ($selectedMarket) {
                     $q->where('market_id', $selectedMarket->id);
-                }])->get();
+                }]);
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('product_name', 'ilike', '%' . $search . '%')
+                        ->orWhere('upc', 'ilike', '%' . $search . '%')
+                        ->orWhere('barcode', 'ilike', '%' . $search . '%');
+                });
+            }
+
+            if ($request->filled('last_updated')) {
+                $date = $request->last_updated;
+                $query->whereHas('marketPrices', function ($q) use ($selectedMarket, $date) {
+                    $q->where('market_id', $selectedMarket->id)
+                        ->whereDate('updated_at', $date);
+                });
+            }
+
+            $products = $query->paginate(30)->appends($request->query());
         }
-        
+
         return view('warehouse.market-prices.index', compact('markets', 'selectedMarket', 'products'));
     }
 
@@ -36,17 +55,19 @@ class MarketPriceController extends Controller
         $marketId = $request->market_id;
 
         foreach ($request->prices as $productId => $priceData) {
-            if (isset($priceData['cost_price']) && isset($priceData['sale_price']) && 
-                $priceData['cost_price'] !== '' && $priceData['sale_price'] !== '') {
-                
+            if (
+                isset($priceData['cost_price']) && isset($priceData['sale_price']) &&
+                $priceData['cost_price'] !== '' && $priceData['sale_price'] !== ''
+            ) {
+
                 $cost = (float)$priceData['cost_price'];
                 $sale = (float)$priceData['sale_price'];
-                
+
                 $margin = 0;
                 if ($cost > 0) {
                     $margin = (($sale - $cost) / $cost) * 100;
                 }
-                
+
                 ProductMarketPrice::updateOrCreate(
                     ['product_id' => $productId, 'market_id' => $marketId],
                     [
@@ -74,7 +95,7 @@ class MarketPriceController extends Controller
         $marketPrice = ProductMarketPrice::where('product_id', $request->product_id)
             ->where('market_id', $request->market_id)
             ->first();
-            
+
         if (!$marketPrice) {
             // Need a base price first
             return back()->with('error', 'Please set a base market selling price before applying a promotion.');

@@ -28,7 +28,7 @@ class ProductStockController extends Controller
                 $s = $request->search;
                 $q->whereHas('product', function ($p) use ($s) {
                     $p->where('product_name', 'ilike', "%$s%")
-                        ->orWhere('sku', 'ilike', "%$s%")
+                        ->orWhere('upc', 'ilike', "%$s%")
                         ->orWhere('barcode', 'ilike', "%$s%");
                 });
             })
@@ -49,14 +49,14 @@ class ProductStockController extends Controller
         // Calculate Transit Stock for the displayed items
         $productIds = $stocks->pluck('product_id')->toArray();
         $transitStocks = \App\Models\StorePurchaseOrderItem::whereIn('product_id', $productIds)
-            ->whereHas('storePurchaseOrder', function($q) {
+            ->whereHas('storePurchaseOrder', function ($q) {
                 $q->whereIn('status', ['approved', 'dispatched']);
             })
             ->selectRaw('product_id, SUM(pending_qty) as total')
             ->groupBy('product_id')
             ->pluck('total', 'product_id');
 
-        $stocks->getCollection()->transform(function($stock) use ($transitStocks) {
+        $stocks->getCollection()->transform(function ($stock) use ($transitStocks) {
             $stock->in_transit_qty = $transitStocks[$stock->product_id] ?? 0;
             return $stock;
         });
@@ -192,7 +192,7 @@ class ProductStockController extends Controller
     public function adjust()
     {
         $products = Product::where('is_active', true)
-            ->select('id', 'product_name', 'sku', 'unit')
+            ->select('id', 'product_name', 'upc', 'unit')
             ->orderBy('product_name')
             ->get();
 

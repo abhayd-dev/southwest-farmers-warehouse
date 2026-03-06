@@ -2,17 +2,19 @@
     <div class="container-fluid p-3 p-md-4">
 
         {{-- HEADER SECTION --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-clipboard-list text-primary"></i> Stock & Inventory
                 </h4>
                 <small class="text-muted">Real-time stock levels across warehouse</small>
             </div>
-            
+
             <div class="d-flex flex-wrap gap-2 w-100 w-md-auto justify-content-end">
                 {{-- Adjustment Button --}}
-                <a href="{{ route('warehouse.stocks.adjust') }}" class="btn btn-warning text-dark flex-fill flex-md-grow-0">
+                <a href="{{ route('warehouse.stocks.adjust') }}"
+                    class="btn btn-warning text-dark flex-fill flex-md-grow-0">
                     <i class="mdi mdi-scale-balance me-1"></i> Stock Adjustment
                 </a>
 
@@ -27,14 +29,14 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <form method="GET" action="{{ route('warehouse.stocks.index') }}" class="row g-3 align-items-end">
-                    
+
                     {{-- Search --}}
                     <div class="col-12 col-md-4">
                         <label class="form-label small fw-bold text-muted">Search Product</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="mdi mdi-magnify"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0" 
-                                   placeholder="Name, SKU, Barcode..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control border-start-0"
+                                placeholder="Name, UPC, Barcode..." value="{{ request('search') }}">
                         </div>
                     </div>
 
@@ -44,7 +46,8 @@
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                <option value="{{ $cat->id }}"
+                                    {{ request('category') == $cat->id ? 'selected' : '' }}>
                                     {{ $cat->name }}
                                 </option>
                             @endforeach
@@ -58,7 +61,8 @@
                             <button type="submit" class="btn btn-primary flex-grow-1 text-nowrap">
                                 <i class="mdi mdi-filter me-1"></i> Apply
                             </button>
-                            <a href="{{ route('warehouse.stocks.index') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                            <a href="{{ route('warehouse.stocks.index') }}" class="btn btn-outline-secondary"
+                                title="Reset Filters">
                                 <i class="mdi mdi-refresh"></i>
                             </a>
                         </div>
@@ -73,16 +77,16 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 text-nowrap">
-                                <th class="px-3 py-2">Product Info</th>
-                                <th class="py-2">Category</th>
-                                <th class="py-2">Sub-category</th>
-                                <th class="py-2">Bin Loc</th>
-                                <th class="text-center py-2">Current stock quantity</th>
-                                <th class="text-center py-2">Transit stock</th>
-                                <th class="text-end px-3 py-2">Cost</th>
-                                <th class="text-end px-3 py-2">Total inventory value</th>
-                                <th class="text-end px-3 py-2">Action</th>
-                            </tr>
+                        <th class="px-3 py-2">Product Info</th>
+                        <th class="py-2">Category</th>
+                        <th class="py-2">Sub-category</th>
+                        <th class="py-2">Bin Loc</th>
+                        <th class="text-center py-2">Current stock quantity</th>
+                        <th class="text-center py-2">Transit stock</th>
+                        <th class="text-end px-3 py-2">Cost</th>
+                        <th class="text-end px-3 py-2">Total inventory value</th>
+                        <th class="text-end px-3 py-2">Action</th>
+                        </tr>
                         </thead>
                         <tbody>
                             @forelse($stocks as $stock)
@@ -91,14 +95,17 @@
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="bg-light rounded p-1 border flex-shrink-0">
                                                 <img src="{{ $stock->product->icon ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
-                                                    class="rounded bg-light border object-fit-cover" width="40" height="40">
+                                                    class="rounded bg-light border object-fit-cover" width="40"
+                                                    height="40">
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">{{ $stock->product->product_name }}</div>
+                                                <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">
+                                                    {{ $stock->product->product_name }}</div>
                                                 <div class="small text-muted">
-                                                    SKU: {{ $stock->product->sku ?? 'N/A' }} 
+                                                    UPC: {{ $stock->product->upc ?? 'N/A' }}
                                                     <span class="mx-1">|</span>
-                                                    Unit: <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $stock->product->unit }}</span>
+                                                    Unit: <span
+                                                        class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $stock->product->unit }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -114,8 +121,9 @@
                                         </span>
                                     </td>
                                     <td class="py-2">
-                                        @if($stock->bin_location)
-                                            <span class="badge bg-warning border text-dark">{{ $stock->bin_location }}</span>
+                                        @if ($stock->bin_location)
+                                            <span
+                                                class="badge bg-warning border text-dark">{{ $stock->bin_location }}</span>
                                         @else
                                             <span class="text-muted small fst-italic">--</span>
                                         @endif
@@ -123,7 +131,8 @@
                                     <td class="text-center py-2">
                                         @php
                                             $isLow = $stock->quantity <= ($stock->min_stock_level ?? 0);
-                                            $color = $stock->quantity == 0 ? 'danger' : ($isLow ? 'warning' : 'success');
+                                            $color =
+                                                $stock->quantity == 0 ? 'danger' : ($isLow ? 'warning' : 'success');
                                         @endphp
                                         <h5 class="mb-0 text-{{ $color }} fw-bold">
                                             {{ number_format($stock->quantity, 2) }}
@@ -162,9 +171,11 @@
                                 <tr>
                                     <td colspan="9" class="text-center py-5">
                                         <div class="d-flex flex-column align-items-center">
-                                            <i class="mdi mdi-package-variant-closed text-muted opacity-25" style="font-size: 4rem;"></i>
+                                            <i class="mdi mdi-package-variant-closed text-muted opacity-25"
+                                                style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-2 fw-medium">No stock data found.</p>
-                                            <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-primary btn-sm px-4">
+                                            <a href="{{ route('warehouse.stocks.create') }}"
+                                                class="btn btn-primary btn-sm px-4">
                                                 <i class="mdi mdi-plus me-1"></i> Add First Stock
                                             </a>
                                         </div>
@@ -175,8 +186,8 @@
                     </table>
                 </div>
             </div>
-            
-            @if($stocks->hasPages())
+
+            @if ($stocks->hasPages())
                 <div class="card-footer bg-white border-top py-3">
                     {{ $stocks->withQueryString()->links() }}
                 </div>

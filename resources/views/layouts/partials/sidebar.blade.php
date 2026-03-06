@@ -178,42 +178,40 @@
                         auth()->user()->hasPermission('view_po') ||
                         auth()->user()->hasPermission('view_vendors'))
                     <li class="menu-title mt-2">Procurement</li>
-                    <li>
-                        <a href="#sidebarProcurement" data-bs-toggle="collapse"
-                            class="{{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
-                            <iconify-icon icon="tabler:truck-delivery"></iconify-icon>
-                            <span class="sidebar-text">Purchases & Supply</span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse {{ request()->routeIs('warehouse.vendors.*') || request()->routeIs('warehouse.purchase-orders.*') ? 'show' : '' }}"
-                            id="sidebarProcurement">
-                            <ul class="nav-second-level">
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_vendors'))
-                                    <li>
-                                        <a href="{{ route('warehouse.vendors.index') }}"
-                                            class="{{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-account-group-outline me-2"></i> Vendors
-                                        </a>
-                                    </li>
-                                @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
-                                    <li>
-                                        <a href="{{ route('warehouse.purchase-orders.index') }}"
-                                            class="{{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-file-document-outline me-2"></i> Purchase Orders
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ route('warehouse.receiving.index') }}"
-                                            class="{{ request()->routeIs('warehouse.receiving.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-truck-check-outline me-2"></i> Receiving Orders
-                                        </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </li>
+                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_vendors'))
+                        <li>
+                            <a href="{{ route('warehouse.vendors.index') }}"
+                                class="tp-link {{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
+                                <iconify-icon icon="tabler:users"></iconify-icon>
+                                <span class="sidebar-text">Vendors</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
+                        <li>
+                            <a href="{{ route('warehouse.purchase-orders.index') }}"
+                                class="tp-link {{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
+                                <iconify-icon icon="tabler:file-invoice"></iconify-icon>
+                                <span class="sidebar-text">Purchase Orders</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('warehouse.receiving.index') }}"
+                                class="tp-link {{ request()->routeIs('warehouse.receiving.*') ? 'active' : '' }}">
+                                <iconify-icon icon="tabler:truck-loading"></iconify-icon>
+                                <span class="sidebar-text">Receiving Orders</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('warehouse.completed-orders.index') }}"
+                                class="tp-link {{ request()->routeIs('warehouse.completed-orders.*') ? 'active' : '' }}">
+                                <iconify-icon icon="tabler:clipboard-check"></iconify-icon>
+                                <span class="sidebar-text">Completed Orders</span>
+                            </a>
+                        </li>
+                    @endif
                 @endif
 
                 {{-- ================= FULFILLMENT & DISPATCH ================= --}}

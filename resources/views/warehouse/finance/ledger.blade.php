@@ -1,9 +1,10 @@
 <x-app-layout title="Transaction Ledger">
     <div class="container-fluid">
-        
+
         {{-- HEADER WITH EXPORT --}}
         <div class="bg-white border-bottom p-4 mb-4 shadow-sm">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                 <div>
                     <h4 class="fw-bold mb-0 text-dark">
                         <i class="mdi mdi-book-open-page-variant text-primary me-2"></i> Transaction Ledger
@@ -52,8 +53,9 @@
                         <label class="form-label fw-bold text-muted small text-uppercase">Search Product</label>
                         <select id="filter_product" class="form-select shadow-sm">
                             <option value="">All Products</option>
-                            @foreach($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->sku }})</option>
+                            @foreach ($products as $product)
+                                <option value="{{ $product->id }}">{{ $product->product_name }} ({{ $product->upc }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -97,65 +99,93 @@
     </div>
 
     @push('scripts')
-    <script>
-        $(document).ready(function() {
-            // Initialize DataTable
-            let table = $('#ledgerTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('warehouse.finance.ledger') }}",
-                    data: function(d) {
-                        d.start_date = $('#filter_start').val();
-                        d.end_date = $('#filter_end').val();
-                        d.type = $('#filter_type').val();
-                        d.product_id = $('#filter_product').val();
-                    }
-                },
-                columns: [
-                    { data: 'date', name: 'created_at', className: 'ps-4 text-muted' },
-                    { data: 'type_badge', name: 'type' },
-                    { data: 'product_details', name: 'product.product_name', className: 'fw-semibold text-dark' },
-                    { data: 'quantity', name: 'quantity_change', className: 'text-end fw-bold' },
-                    { data: 'balance', name: 'running_balance', className: 'text-end text-muted' },
-                    { data: 'reference', name: 'reference_id', className: 'font-monospace small' },
-                    { data: 'user', name: 'user.name', className: 'pe-4 small' }
-                ],
-                order: [[0, 'desc']],
-                pageLength: 20,
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search records...",
-                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
-                },
-                dom: '<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"l>rt<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"ip>'
-            });
-
-            // Apply Filters
-            $('#applyFilters').click(function() {
-                table.draw();
-            });
-
-            // Reset Filters
-            $('#resetFilters').click(function() {
-                $('#filter_start').val('');
-                $('#filter_end').val('');
-                $('#filter_type').val('');
-                $('#filter_product').val('');
-                table.draw();
-            });
-
-            // Export Logic
-            $('#exportBtn').click(function() {
-                let params = $.param({
-                    start_date: $('#filter_start').val(),
-                    end_date: $('#filter_end').val(),
-                    type: $('#filter_type').val(),
-                    product_id: $('#filter_product').val()
+        <script>
+            $(document).ready(function() {
+                // Initialize DataTable
+                let table = $('#ledgerTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ route('warehouse.finance.ledger') }}",
+                        data: function(d) {
+                            d.start_date = $('#filter_start').val();
+                            d.end_date = $('#filter_end').val();
+                            d.type = $('#filter_type').val();
+                            d.product_id = $('#filter_product').val();
+                        }
+                    },
+                    columns: [{
+                            data: 'date',
+                            name: 'created_at',
+                            className: 'ps-4 text-muted'
+                        },
+                        {
+                            data: 'type_badge',
+                            name: 'type'
+                        },
+                        {
+                            data: 'product_details',
+                            name: 'product.product_name',
+                            className: 'fw-semibold text-dark'
+                        },
+                        {
+                            data: 'quantity',
+                            name: 'quantity_change',
+                            className: 'text-end fw-bold'
+                        },
+                        {
+                            data: 'balance',
+                            name: 'running_balance',
+                            className: 'text-end text-muted'
+                        },
+                        {
+                            data: 'reference',
+                            name: 'reference_id',
+                            className: 'font-monospace small'
+                        },
+                        {
+                            data: 'user',
+                            name: 'user.name',
+                            className: 'pe-4 small'
+                        }
+                    ],
+                    order: [
+                        [0, 'desc']
+                    ],
+                    pageLength: 20,
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search records...",
+                        processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+                    },
+                    dom: '<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"l>rt<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"ip>'
                 });
-                window.location.href = "{{ route('warehouse.finance.ledger.export') }}?" + params;
+
+                // Apply Filters
+                $('#applyFilters').click(function() {
+                    table.draw();
+                });
+
+                // Reset Filters
+                $('#resetFilters').click(function() {
+                    $('#filter_start').val('');
+                    $('#filter_end').val('');
+                    $('#filter_type').val('');
+                    $('#filter_product').val('');
+                    table.draw();
+                });
+
+                // Export Logic
+                $('#exportBtn').click(function() {
+                    let params = $.param({
+                        start_date: $('#filter_start').val(),
+                        end_date: $('#filter_end').val(),
+                        type: $('#filter_type').val(),
+                        product_id: $('#filter_product').val()
+                    });
+                    window.location.href = "{{ route('warehouse.finance.ledger.export') }}?" + params;
+                });
             });
-        });
-    </script>
+        </script>
     @endpush
 </x-app-layout>

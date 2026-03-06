@@ -56,13 +56,6 @@
             </button>
         @endif
 
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
-            <a href="{{ route('warehouse.product-options.index') }}"
-                class="btn btn-primary text-white d-flex align-items-center gap-1">
-                <i class="mdi mdi-cogs"></i>
-                <span class="d-none d-lg-inline">Product Options</span>
-            </a>
-        @endif
 
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))

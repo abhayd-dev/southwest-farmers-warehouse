@@ -87,7 +87,7 @@
             display: block;
         }
 
-        .sku-badge {
+        .upc-badge {
             background-color: #000;
             color: #fff;
             padding: 3px 6px;
@@ -183,7 +183,7 @@
                                         <div class="product-name">
                                             {{ Str::limit($item->product->product_name, 45) }}
                                         </div>
-                                        <span class="sku-badge">{{ $item->product->sku }}</span>
+                                        <span class="upc-badge">{{ $item->product->upc }}</span>
                                     </td>
                                 </tr>
 
@@ -208,7 +208,7 @@
                                 <tr class="barcode-row">
                                     <td colspan="2">
                                         @php
-                                        $code = $item->product->sku ?? $item->product->id ?? 'N/A';
+                                            $code = $item->product->upc ?? ($item->product->id ?? 'N/A');
                                         @endphp
 
                                         @if ($code !== 'N/A')

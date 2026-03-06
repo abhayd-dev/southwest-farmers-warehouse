@@ -4,7 +4,8 @@
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="{{ route('warehouse.stock-control.valuation') }}">Valuation</a></li>
+                        <li class="breadcrumb-item"><a
+                                href="{{ route('warehouse.stock-control.valuation') }}">Valuation</a></li>
                         <li class="breadcrumb-item active">{{ $store->store_name }}</li>
                     </ol>
                 </nav>
@@ -48,7 +49,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4">Product</th>
-                                        <th>SKU</th>
+                                        <th>UPC</th>
                                         <th class="text-center">Qty</th>
                                         <th class="text-end pe-4">Value</th>
                                     </tr>
@@ -57,13 +58,15 @@
                                     @forelse($topProducts as $p)
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $p->product_name }}</td>
-                                            <td>{{ $p->sku }}</td>
+                                            <td>{{ $p->upc }}</td>
                                             <td class="text-center">{{ $p->quantity }}</td>
-                                            <td class="text-end pe-4 fw-bold text-success">$ {{ number_format($p->value, 2) }}</td>
+                                            <td class="text-end pe-4 fw-bold text-success">$
+                                                {{ number_format($p->value, 2) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted">No stock data available.</td>
+                                            <td colspan="4" class="text-center py-4 text-muted">No stock data
+                                                available.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -87,40 +90,52 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        // Prepare Data for Chart
-        const dates = @json($trend->pluck('date'));
-        const counts = @json($trend->pluck('transactions'));
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            // Prepare Data for Chart
+            const dates = @json($trend->pluck('date'));
+            const counts = @json($trend->pluck('transactions'));
 
-        var options = {
-            series: [{
-                name: 'Transactions',
-                data: counts
-            }],
-            chart: {
-                type: 'bar',
-                height: 300,
-                toolbar: { show: false }
-            },
-            plotOptions: {
-                bar: { borderRadius: 4, columnWidth: '50%' }
-            },
-            dataLabels: { enabled: false },
-            xaxis: {
-                categories: dates,
-                labels: { show: false } // Hide dense labels
-            },
-            colors: ['#6f42c1'],
-            title: {
-                text: 'Stock Movement Count',
-                align: 'center',
-                style: { fontSize: '14px', color: '#666' }
-            }
-        };
+            var options = {
+                series: [{
+                    name: 'Transactions',
+                    data: counts
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 300,
+                    toolbar: {
+                        show: false
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        columnWidth: '50%'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                xaxis: {
+                    categories: dates,
+                    labels: {
+                        show: false
+                    } // Hide dense labels
+                },
+                colors: ['#6f42c1'],
+                title: {
+                    text: 'Stock Movement Count',
+                    align: 'center',
+                    style: {
+                        fontSize: '14px',
+                        color: '#666'
+                    }
+                }
+            };
 
-        var chart = new ApexCharts(document.querySelector("#trendChart"), options);
-        chart.render();
-    </script>
+            var chart = new ApexCharts(document.querySelector("#trendChart"), options);
+            chart.render();
+        </script>
     @endpush
 </x-app-layout>

@@ -6,7 +6,7 @@
         <div class="bg-white border-bottom shadow-sm mb-4">
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    
+
                     {{-- LEFT: TITLE --}}
                     <div class="d-flex flex-column gap-2">
                         <h4 class="fw-bold mb-0 text-dark">
@@ -18,20 +18,21 @@
 
                     {{-- RIGHT: SEARCH & RESET --}}
                     <div class="flex-shrink-0">
-                        <form method="GET" action="{{ route('warehouse.stock-requests.index') }}" class="d-flex gap-2 align-items-center">
-                            @if(request('status'))
+                        <form method="GET" action="{{ route('warehouse.stock-requests.index') }}"
+                            class="d-flex gap-2 align-items-center">
+                            @if (request('status'))
                                 <input type="hidden" name="status" value="{{ request('status') }}">
                             @endif
                             <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="Search by ID, Store, Product, SKU..." 
-                                       value="{{ request('search') }}">
+                                <input type="text" name="search" class="form-control"
+                                    placeholder="Search by ID, Store, Product, UPC..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-primary" type="submit">
                                     <i class="mdi mdi-magnify"></i>
                                 </button>
                             </div>
-                            @if(request('search'))
-                                <a href="{{ route('warehouse.stock-requests.index', ['status' => request('status') ?? 'pending']) }}" 
-                                   class="btn btn-outline-secondary">
+                            @if (request('search'))
+                                <a href="{{ route('warehouse.stock-requests.index', ['status' => request('status') ?? 'pending']) }}"
+                                    class="btn btn-outline-secondary">
                                     <i class="mdi mdi-refresh"></i> Reset
                                 </a>
                             @endif
@@ -46,15 +47,15 @@
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <a class="nav-link {{ request('status') == 'pending' || !request('status') ? 'active fw-bold' : '' }}"
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">Pending</a>
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'pending']) }}">Pending</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request('status') == 'in_transit' ? 'active fw-bold' : '' }}"
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'in_transit']) }}">In Transit</a>
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'in_transit']) }}">In Transit</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request('status') == 'history' ? 'active fw-bold' : '' }}"
-                   href="{{ route('warehouse.stock-requests.index', ['status' => 'history']) }}">History</a>
+                    href="{{ route('warehouse.stock-requests.index', ['status' => 'history']) }}">History</a>
             </li>
         </ul>
 
@@ -65,7 +66,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-clock-outline text-warning fs-4"></i>
                                 </div>
                             </div>
@@ -83,7 +85,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-truck text-info fs-4"></i>
                                 </div>
                             </div>
@@ -101,7 +104,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-check-circle text-success fs-4"></i>
                                 </div>
                             </div>
@@ -119,7 +123,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="avatar-sm rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <div
+                                    class="avatar-sm rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center">
                                     <i class="mdi mdi-close-circle text-danger fs-4"></i>
                                 </div>
                             </div>
@@ -141,7 +146,7 @@
                     Requests List
                 </h5>
             </div>
-            
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -161,7 +166,7 @@
                             @forelse($requests as $req)
                                 <tr class="border-bottom">
                                     <td class="px-4 py-3 text-muted">
-                                        {{ $loop->iteration + ($requests->currentPage()-1)*$requests->perPage() }}
+                                        {{ $loop->iteration + ($requests->currentPage() - 1) * $requests->perPage() }}
                                     </td>
                                     <td class="px-4 py-3 fw-bold">#{{ $req->id }}</td>
                                     <td class="py-3">
@@ -170,7 +175,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="fw-semibold text-dark">{{ $req->product->product_name }}</div>
-                                        <small class="text-muted">{{ $req->product->sku }}</small>
+                                        <small class="text-muted">{{ $req->product->upc }}</small>
                                     </td>
                                     <td class="py-3 text-center">{{ $req->requested_quantity }}</td>
                                     <td class="py-3 text-center">
@@ -189,17 +194,20 @@
                                     <td class="px-4 py-3 text-end">
                                         <x-action-buttons>
                                             <a href="{{ route('warehouse.stock-requests.show', $req->id) }}"
-                                               class="btn btn-sm btn-outline-info btn-view" title="Manage">
+                                                class="btn btn-sm btn-outline-info btn-view" title="Manage">
                                                 <i class="mdi mdi-cog"></i>
                                             </a>
                                             @if ($req->status == 'pending')
-                                                <button class="btn btn-sm btn-outline-primary btn-edit" title="Change Status"
+                                                <button class="btn btn-sm btn-outline-primary btn-edit"
+                                                    title="Change Status"
                                                     onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
                                                     <i class="mdi mdi-swap-horizontal"></i>
                                                 </button>
                                             @elseif($req->status == 'dispatched')
                                                 @php $proof = $req->store_payment_proof ? Storage::url($req->store_payment_proof) : ''; @endphp
-                                                <button class="btn btn-sm btn-outline-success" style="color: #10b981; border-color: #10b981;" title="Verify Payment"
+                                                <button class="btn btn-sm btn-outline-success"
+                                                    style="color: #10b981; border-color: #10b981;"
+                                                    title="Verify Payment"
                                                     onclick="openVerifyModal({{ $req->id }}, '{{ $proof }}')">
                                                     <i class="mdi mdi-check-decagram"></i>
                                                 </button>
@@ -222,11 +230,12 @@
                 </div>
             </div>
 
-            @if($requests->hasPages())
+            @if ($requests->hasPages())
                 <div class="card-footer bg-white border-top py-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="text-muted small">
-                            Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of {{ $requests->total() }} entries
+                            Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of
+                            {{ $requests->total() }} entries
                         </div>
                         <div>
                             {{ $requests->appends(request()->query())->links() }}
@@ -262,11 +271,13 @@
                     </div>
                     <div class="mb-3" id="dispatch_qty_div">
                         <label class="form-label">Quantity to Dispatch <span class="text-danger">*</span></label>
-                        <input type="number" name="dispatch_quantity" id="dispatch_qty" class="form-control" min="1">
+                        <input type="number" name="dispatch_quantity" id="dispatch_qty" class="form-control"
+                            min="1">
                         <div class="invalid-feedback">Must be greater than 0 and less than requested.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Remarks <span id="admin_note_star" class="text-danger d-none">*</span></label>
+                        <label class="form-label">Remarks <span id="admin_note_star"
+                                class="text-danger d-none">*</span></label>
                         <textarea name="admin_note" id="admin_note" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
@@ -294,7 +305,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Warehouse Payment Proof <span class="text-danger">*</span></label>
-                        <input type="file" name="warehouse_payment_proof" class="form-control" required accept="image/*,.pdf">
+                        <input type="file" name="warehouse_payment_proof" class="form-control" required
+                            accept="image/*,.pdf">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Remarks <span class="text-danger">*</span></label>
@@ -310,152 +322,160 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        let maxQty = 0;
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            let maxQty = 0;
 
-        function openDispatchModal(id, store, qty) {
-            document.getElementById('dispatch_req_id').value = id;
-            document.getElementById('dispatch_store').value = store;
-            document.getElementById('dispatch_qty').value = qty;
-            maxQty = parseInt(qty);
+            function openDispatchModal(id, store, qty) {
+                document.getElementById('dispatch_req_id').value = id;
+                document.getElementById('dispatch_store').value = store;
+                document.getElementById('dispatch_qty').value = qty;
+                maxQty = parseInt(qty);
 
-            document.getElementById('dispatch_status').value = 'dispatched';
-            document.getElementById('dispatch_qty_div').style.display = 'block';
-            document.getElementById('dispatch_qty').setAttribute('required', 'true');
-            document.getElementById('admin_note_star').classList.add('d-none');
-            document.getElementById('admin_note').removeAttribute('required');
+                document.getElementById('dispatch_status').value = 'dispatched';
+                document.getElementById('dispatch_qty_div').style.display = 'block';
+                document.getElementById('dispatch_qty').setAttribute('required', 'true');
+                document.getElementById('admin_note_star').classList.add('d-none');
+                document.getElementById('admin_note').removeAttribute('required');
 
-            const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
-            modal.show();
-        }
-
-        function openVerifyModal(id, proofUrl) {
-            document.getElementById('verify_req_id').value = id;
-            const container = document.getElementById('storeProofContainer');
-
-            if (proofUrl && proofUrl !== '') {
-                container.innerHTML = `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
-            } else {
-                container.innerHTML = `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
+                const modal = new bootstrap.Modal(document.getElementById('dispatchModal'));
+                modal.show();
             }
 
-            new bootstrap.Modal(document.getElementById('verifyModal')).show();
-        }
+            function openVerifyModal(id, proofUrl) {
+                document.getElementById('verify_req_id').value = id;
+                const container = document.getElementById('storeProofContainer');
 
-        function submitAjaxForm(url, formElement) {
-            const formData = new FormData(formElement);
-
-            fetch(url, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.text().then(text => ({response, text})))
-            .then(({response, text}) => {
-                let data = {};
-                if (text.trim()) {
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('Server returned invalid response');
-                    }
-                }
-
-                if (!response.ok) {
-                    let msg = data.message || 'Server error';
-                    if (data.errors) {
-                        msg = Object.values(data.errors).flat().join('<br>');
-                    }
-                    throw new Error(msg);
-                }
-
-                return data;
-            })
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        html: data.message || 'Operation completed',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => location.reload());
+                if (proofUrl && proofUrl !== '') {
+                    container.innerHTML =
+                        `<a href="${proofUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="mdi mdi-eye me-1"></i> View Store Proof</a>`;
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Failed',
-                        html: data.message || 'Operation failed'
-                    });
+                    container.innerHTML =
+                        `<span class="text-danger small"><i class="mdi mdi-alert-circle me-1"></i> No payment proof uploaded by store.</span>`;
                 }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    html: error.message || 'An unexpected error occurred'
-                });
-            });
-        }
 
-        const dispatchForm = document.getElementById('dispatchForm');
-        if (dispatchForm) {
-            dispatchForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+                new bootstrap.Modal(document.getElementById('verifyModal')).show();
+            }
 
-                const status = document.getElementById('dispatch_status').value;
-                const qtyInput = document.getElementById('dispatch_qty');
-                const qty = parseInt(qtyInput.value);
+            function submitAjaxForm(url, formElement) {
+                const formData = new FormData(formElement);
 
-                if (status === 'dispatched') {
-                    if (qty <= 0 || qty > maxQty || isNaN(qty)) {
-                        qtyInput.classList.add('is-invalid');
-                        let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
-                        if (errorSpan) {
-                            errorSpan.style.display = 'block';
-                            errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                fetch(url, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
-                        return;
+                    })
+                    .then(response => response.text().then(text => ({
+                        response,
+                        text
+                    })))
+                    .then(({
+                        response,
+                        text
+                    }) => {
+                        let data = {};
+                        if (text.trim()) {
+                            try {
+                                data = JSON.parse(text);
+                            } catch (e) {
+                                throw new Error('Server returned invalid response');
+                            }
+                        }
+
+                        if (!response.ok) {
+                            let msg = data.message || 'Server error';
+                            if (data.errors) {
+                                msg = Object.values(data.errors).flat().join('<br>');
+                            }
+                            throw new Error(msg);
+                        }
+
+                        return data;
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                html: data.message || 'Operation completed',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed',
+                                html: data.message || 'Operation failed'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: error.message || 'An unexpected error occurred'
+                        });
+                    });
+            }
+
+            const dispatchForm = document.getElementById('dispatchForm');
+            if (dispatchForm) {
+                dispatchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const status = document.getElementById('dispatch_status').value;
+                    const qtyInput = document.getElementById('dispatch_qty');
+                    const qty = parseInt(qtyInput.value);
+
+                    if (status === 'dispatched') {
+                        if (qty <= 0 || qty > maxQty || isNaN(qty)) {
+                            qtyInput.classList.add('is-invalid');
+                            let errorSpan = document.querySelector('#dispatch_qty_div .invalid-feedback');
+                            if (errorSpan) {
+                                errorSpan.style.display = 'block';
+                                errorSpan.innerText = "Quantity must be > 0 and <= " + maxQty;
+                            }
+                            return;
+                        }
+                        qtyInput.classList.remove('is-invalid');
                     }
-                    qtyInput.classList.remove('is-invalid');
-                }
 
-                submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
-            });
-        }
+                    submitAjaxForm("{{ route('warehouse.stock-requests.change-status') }}", this);
+                });
+            }
 
-        const verifyFormIndex = document.getElementById('verifyForm');
-        if (verifyFormIndex) {
-            verifyFormIndex.addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
-            });
-        }
+            const verifyFormIndex = document.getElementById('verifyForm');
+            if (verifyFormIndex) {
+                verifyFormIndex.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitAjaxForm("{{ route('warehouse.stock-requests.verify-payment') }}", this);
+                });
+            }
 
-        const dispatchStatus = document.getElementById('dispatch_status');
-        if (dispatchStatus) {
-            dispatchStatus.addEventListener('change', function() {
-                const qtyDiv = document.getElementById('dispatch_qty_div');
-                const qtyInput = document.getElementById('dispatch_qty');
-                const star = document.getElementById('admin_note_star');
-                const note = document.getElementById('admin_note');
+            const dispatchStatus = document.getElementById('dispatch_status');
+            if (dispatchStatus) {
+                dispatchStatus.addEventListener('change', function() {
+                    const qtyDiv = document.getElementById('dispatch_qty_div');
+                    const qtyInput = document.getElementById('dispatch_qty');
+                    const star = document.getElementById('admin_note_star');
+                    const note = document.getElementById('admin_note');
 
-                if (this.value === 'rejected') {
-                    qtyDiv.style.display = 'none';
-                    qtyInput.removeAttribute('required');
-                    star.classList.remove('d-none');
-                    note.setAttribute('required', 'true');
-                } else {
-                    qtyDiv.style.display = 'block';
-                    qtyInput.setAttribute('required', 'true');
-                    star.classList.add('d-none');
-                    note.removeAttribute('required');
-                }
-            });
-        }
-    </script>
+                    if (this.value === 'rejected') {
+                        qtyDiv.style.display = 'none';
+                        qtyInput.removeAttribute('required');
+                        star.classList.remove('d-none');
+                        note.setAttribute('required', 'true');
+                    } else {
+                        qtyDiv.style.display = 'block';
+                        qtyInput.setAttribute('required', 'true');
+                        star.classList.add('d-none');
+                        note.removeAttribute('required');
+                    }
+                });
+            }
+        </script>
     @endpush
 </x-app-layout>

@@ -82,7 +82,7 @@ class ReceivingController extends Controller
                     return '<span class="badge bg-' . ($badges[$row->status] ?? 'secondary') . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $viewUrl = route('warehouse.purchase-orders.show', $row->id) . '?source=receiving';
+                    $viewUrl = route('warehouse.receiving.show', $row->id);
                     return '<div class="action-btns">
                                 <a href="' . $viewUrl . '" class="btn btn-sm btn-primary btn-view" title="Receive / View">
                                     <i class="mdi mdi-truck-check"></i> Receive
@@ -94,6 +94,18 @@ class ReceivingController extends Controller
         }
 
         return view('warehouse.receiving.index');
+    }
+
+    public function show(PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->load(['vendor', 'items.product', 'creator']);
+
+        // Check if the PO is eligible for receiving
+        if ($purchaseOrder->status === 'draft' || $purchaseOrder->status === 'cancelled') {
+            return redirect()->route('warehouse.receiving.index')->with('error', 'This order cannot be received at this time.');
+        }
+
+        return view('warehouse.receiving.show', compact('purchaseOrder'));
     }
 
     public function receipt(PurchaseOrder $purchaseOrder)

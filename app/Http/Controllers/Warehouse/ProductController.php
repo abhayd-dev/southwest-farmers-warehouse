@@ -74,12 +74,13 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
-                'tax_percent' => 'nullable|numeric|min:0',
-                'cost_price' => 'nullable|numeric|min:0',
-                'retail_price' => 'nullable|numeric|min:0',
-                'upc' => 'nullable|string|max:255',
-                'barcode' => 'required|string|unique:products,barcode|max:255', // Changed to required and unique
+                'tax_percent' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'retail_price' => 'required|numeric|min:0',
+                'upc' => 'required|string|max:255',
+                'barcode' => 'required|string|unique:products,barcode|max:255',
                 'sku' => 'nullable|string|max:100|unique:products,sku',
+                'units_per_carton' => 'required|integer|min:1',
                 'icon' => 'nullable|image|max:2048',
             ]);
 
@@ -158,12 +159,13 @@ class ProductController extends Controller
                 'product_name' => 'required',
                 'unit' => 'required',
                 'price' => 'required|numeric',
-                'tax_percent' => 'nullable|numeric|min:0',
-                'cost_price' => 'nullable|numeric|min:0',
-                'retail_price' => 'nullable|numeric|min:0',
-                'upc' => 'nullable|string|max:255',
-                'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id, // Added unique check ignoring current id
-                'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id, // Added sku validation
+                'tax_percent' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'retail_price' => 'required|numeric|min:0',
+                'upc' => 'required|string|max:255',
+                'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id,
+                'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id,
+                'units_per_carton' => 'required|integer|min:1',
                 'icon' => 'nullable|image|max:2048',
             ]);
 

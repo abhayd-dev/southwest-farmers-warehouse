@@ -17,9 +17,9 @@ class MinMaxController extends Controller
         // Get products for the dropdown
         $products = Product::where('is_active', true)
             ->whereNull('store_id')
-            ->select('id', 'product_name', 'sku')
+            ->select('id', 'product_name', 'upc')
             ->get();
-            
+
         return view('warehouse.stock-control.minmax.index', compact('products'));
     }
 
@@ -33,7 +33,7 @@ class MinMaxController extends Controller
             ->select([
                 'products.id', // This is the Product ID
                 'products.product_name',
-                'products.sku',
+                'products.upc',
                 'product_categories.name as category_name',
                 DB::raw('COALESCE(product_min_max_levels.min_level, 5) as min_level'),
                 DB::raw('COALESCE(product_min_max_levels.max_level, 100) as max_level'),

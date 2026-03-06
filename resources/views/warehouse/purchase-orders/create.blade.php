@@ -86,6 +86,16 @@
                                 <small class="text-muted">If provided, an approval email will be sent to this
                                     address</small>
                             </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Approver Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i
+                                            class="mdi mdi-phone-outline"></i></span>
+                                    <input type="tel" name="approver_phone" class="form-control border-start-0"
+                                        placeholder="+1 234 567 8900">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -149,20 +159,20 @@
             const products = @json($products);
             let rowIdx = 0;
 
-            function addRow() {
-                let options = '<option value="">Select Product</option>';
-                products.forEach(p => {
-                    // Show Barcode first, then product name
-                    const barcode = p.barcode || 'NO-BARCODE';
-                    options +=
-                        `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
-                });
+            // Pre-generate the options HTML once
+            let productOptionsHtml = '<option value="">Select Product</option>';
+            products.forEach(p => {
+                const barcode = p.barcode || 'NO-BARCODE';
+                productOptionsHtml +=
+                    `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
+            });
 
+            function addRow() {
                 const html = `
                 <tr id="row-${rowIdx}">
                     <td>
                         <select name="items[${rowIdx}][product_id]" class="form-select product-select border-0 bg-light" onchange="updateCost(${rowIdx})" required>
-                            ${options}
+                            ${productOptionsHtml}
                         </select>
                     </td>
                     <td>

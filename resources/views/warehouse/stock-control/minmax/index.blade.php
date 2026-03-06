@@ -27,7 +27,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Product</th>
-                                <th>SKU</th>
+                                <th>UPC</th>
                                 <th>Category</th>
                                 <th>Min Level</th>
                                 <th>Max Level</th>
@@ -63,7 +63,7 @@
                                         <option value="">Select Product</option>
                                         @foreach ($products as $product)
                                             <option value="{{ $product->id }}">
-                                                {{ $product->product_name }} ({{ $product->sku }})
+                                                {{ $product->product_name }} ({{ $product->upc }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -119,7 +119,7 @@
                             data: 'product_name'
                         },
                         {
-                            data: 'sku'
+                            data: 'upc'
                         },
                         {
                             data: 'category_name'

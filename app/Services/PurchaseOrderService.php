@@ -24,6 +24,7 @@ class PurchaseOrderService
                 'order_date' => $data['order_date'],
                 'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
                 'approval_email' => $data['approval_email'] ?? null,
+                'approver_phone' => $data['approver_phone'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'vendor_notes' => $data['vendor_notes'] ?? null,
                 'status' => PurchaseOrder::STATUS_DRAFT,
