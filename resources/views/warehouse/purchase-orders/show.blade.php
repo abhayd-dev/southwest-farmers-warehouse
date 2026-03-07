@@ -90,9 +90,13 @@
                                         method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-info text-white shadow-sm" type="submit">
-                                            <i class="mdi mdi-email-send me-1"></i> Send For Approval
+                                            <i class="mdi mdi-email-send me-1"></i> Send for Order for approval
                                         </button>
                                     </form>
+                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
+                                        class="btn btn-danger shadow-sm">
+                                        <i class="mdi mdi-close me-1"></i> Reject
+                                    </a>
                                 @endif
                                 <a href="{{ route('warehouse.purchase-orders.edit', $purchaseOrder->id) }}"
                                     class="btn btn-primary shadow-sm">

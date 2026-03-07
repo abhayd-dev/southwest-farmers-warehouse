@@ -10,6 +10,12 @@
                     <i class="mdi mdi-truck-check text-primary me-2"></i> Receive Order: {{ $purchaseOrder->po_number }}
                 </h4>
                 <div class="d-flex gap-2">
+                    @if ($purchaseOrder->status == 'completed')
+                        <a href="{{ route('warehouse.receiving.receipt', $purchaseOrder->id) }}" target="_blank"
+                            class="btn btn-outline-primary shadow-sm">
+                            <i class="mdi mdi-printer me-1"></i> Print Receiving Order
+                        </a>
+                    @endif
                     <a href="{{ route('warehouse.receiving.index') }}" class="btn btn-outline-secondary shadow-sm">
                         <i class="mdi mdi-arrow-left me-1"></i> Back to Received Orders
                     </a>
@@ -17,7 +23,7 @@
             </div>
         </div>
 
-        @include('layouts.partials.alerts')
+
 
         <div class="row">
             <div class="col-12">
@@ -150,18 +156,59 @@
                             </button>
                         </div>
                         <div class="card-body p-4">
+                            {{-- SCANNER INPUT --}}
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white border-primary">
+                                            <i class="mdi mdi-barcode-scan"></i>
+                                        </span>
+                                        <input type="text" id="scannerInput" class="form-control border-primary"
+                                            placeholder="Scan Barcode / UPC (Supports Long UPC codes)...">
+                                    </div>
+                                    <small class="text-muted mt-1 d-block"><i class="mdi mdi-information-outline me-1"></i>
+                                        Scan item to automatically find and focus it in the list.</small>
+                                </div>
+                            </div>
+
                             <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}"
                                 method="POST">
                                 @csrf
 
                                 <div class="row mb-4">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label fw-semibold">Vendor Invoice Number <span
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i class="mdi mdi-receipt"></i></span>
                                             <input type="text" name="invoice_number" class="form-control" required
                                                 placeholder="e.g. INV-9988">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Duties ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i
+                                                    class="mdi mdi-currency-usd"></i></span>
+                                            <input type="number" name="duties" class="form-control" step="0.01"
+                                                min="0" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Shipping Cost ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i
+                                                    class="mdi mdi-truck-delivery"></i></span>
+                                            <input type="number" name="shipping_cost" class="form-control"
+                                                step="0.01" min="0" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Taxes ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="mdi mdi-percent"></i></span>
+                                            <input type="number" name="taxes" class="form-control" step="0.01"
+                                                min="0" value="0">
                                         </div>
                                     </div>
                                 </div>
@@ -172,9 +219,10 @@
                                             <tr>
                                                 <th class="px-3">UPC</th>
                                                 <th class="px-3">Product</th>
-                                                <th class="text-center">Ordered</th>
-                                                <th class="text-center">Pending</th>
-                                                <th style="min-width: 130px;">Receive Now</th>
+                                                <th class="text-center">Ordered Qty</th>
+                                                <th class="text-center">PO Price ($)</th>
+                                                <th style="min-width: 130px;">Receive Qty</th>
+                                                <th style="min-width: 130px;">Receiving Price ($)</th>
                                                 <th style="min-width: 150px;">Batch No.</th>
                                                 <th style="min-width: 140px;">Mfg Date</th>
                                                 <th style="min-width: 140px;">Expiry Date</th>
@@ -193,20 +241,30 @@
                                                         <td class="px-3">
                                                             <span
                                                                 class="fw-semibold text-dark">{{ $item->product->product_name }}</span><br>
-                                                            <small class="text-muted">UPC:
-                                                                {{ $item->product->upc }}</small>
+                                                            <small class="text-muted">
+                                                                UPC: {{ $item->product->upc }}
+                                                                @if ($item->product->plu_code)
+                                                                    | PLU: {{ $item->product->plu_code }}
+                                                                @endif
+                                                            </small>
                                                         </td>
-                                                        <td class="text-center fw-medium">{{ $item->requested_quantity }}
-                                                        </td>
-                                                        <td class="text-center text-danger fw-bold pending-qty"
-                                                            data-pending="{{ $item->pending_quantity }}">
-                                                            {{ $item->pending_quantity }}</td>
-                                                        <td>
+                                                        <td class="text-center fw-medium">$
+                                                            {{ number_format($item->unit_cost, 2) }}</td>
+                                                        <td class="text-center">
                                                             <input type="number"
                                                                 name="items[{{ $item->id }}][receive_qty]"
                                                                 class="form-control form-control-sm text-center fw-bold text-primary receive-qty-input"
                                                                 max="{{ $item->pending_quantity }}" min="0"
                                                                 value="0">
+                                                            <small class="text-muted">Pending:
+                                                                {{ $item->pending_quantity }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number"
+                                                                name="items[{{ $item->id }}][receiving_price]"
+                                                                class="form-control form-control-sm text-center fw-bold text-primary"
+                                                                step="0.01" min="0"
+                                                                value="{{ $item->unit_cost }}">
                                                         </td>
                                                         <td>
                                                             <input type="text"
@@ -329,6 +387,45 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Scanner Logic
+            const scannerInput = document.getElementById('scannerInput');
+            if (scannerInput) {
+                scannerInput.focus();
+                scannerInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const barcode = this.value.trim();
+                        if (!barcode) return;
+
+                        let found = false;
+                        document.querySelectorAll('.receive-qty-input').closest('tr').forEach(row => {
+                            const upcText = row.querySelector('small.text-muted')?.innerText || '';
+                            if (upcText.includes(barcode)) {
+                                found = true;
+                                // Highlight row
+                                row.classList.add('table-primary');
+                                setTimeout(() => row.classList.remove('table-primary'), 2000);
+
+                                // Scroll & Focus
+                                row.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                                const qtyInput = row.querySelector('.receive-qty-input');
+                                if (qtyInput) {
+                                    qtyInput.focus();
+                                    qtyInput.select();
+                                }
+                            }
+                        });
+
+                        if (found) {
+                            this.value = '';
+                        }
+                    }
+                });
+            }
+
             const receiveAllBtn = document.getElementById('receiveAllBtn');
             if (receiveAllBtn) {
                 receiveAllBtn.addEventListener('click', function() {

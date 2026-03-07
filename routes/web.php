@@ -249,6 +249,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
         });
 
+        Route::controller(\App\Http\Controllers\Warehouse\CompletedOrderController::class)->prefix('completed-orders')->name('warehouse.completed-orders.')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
         Route::controller(DiscrepancyController::class)->group(function () {
             Route::get('/discrepancy', 'index')->name('warehouse.discrepancy.index');
             Route::get('/discrepancy/transfer-issues', 'transferIssues')->name('warehouse.discrepancy.transfer-issues');
@@ -317,6 +321,17 @@ Route::middleware('auth')->group(function () {
                 Route::get('/top-dispatched', 'topDispatched')->name('top-dispatched');
                 Route::get('/warehouse-min', 'warehouseMin')->name('warehouse-min');
                 Route::get('/sales-by-price-point', 'salesByPricePoint')->name('sales-by-price-point');
+
+                // New Reports
+                Route::get('/master-inventory', 'masterInventory')->name('master-inventory');
+                Route::get('/open-purchase-orders', 'openPurchaseOrders')->name('open-purchase-orders');
+                Route::get('/receiving-variance', 'receivingVariance')->name('receiving-variance');
+                Route::get('/receiving-history', 'receivingHistory')->name('receiving-history');
+                Route::get('/vendor-performance', 'vendorPerformance')->name('vendor-performance');
+                Route::get('/purchase-price-variance', 'purchasePriceVariance')->name('purchase-price-variance');
+                Route::get('/grni', 'grni')->name('grni');
+                Route::get('/reorder-suggestion', 'reorderSuggestion')->name('reorder-suggestion');
+                Route::get('/export', 'export')->name('export');
             });
 
         // ===== FREE WEIGHT SYSTEM (Phase 5) =====

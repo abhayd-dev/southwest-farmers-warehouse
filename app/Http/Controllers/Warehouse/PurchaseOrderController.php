@@ -12,6 +12,7 @@ use App\Services\PurchaseOrderService;
 use App\Services\ApprovalService;
 use App\Services\VendorCommunicationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -247,7 +248,7 @@ class PurchaseOrderController extends Controller
 
     public function markOrdered(PurchaseOrder $purchaseOrder)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('approve_po')) {
+        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po')) {
             abort(403, 'Unauthorized');
         }
         if ($purchaseOrder->status !== 'draft') abort(403);
@@ -266,7 +267,7 @@ class PurchaseOrderController extends Controller
 
     public function cancel(PurchaseOrder $purchaseOrder)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('approve_po')) {
+        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po')) {
             abort(403, 'Unauthorized');
         }
         if ($purchaseOrder->status !== 'ordered' && $purchaseOrder->status !== 'draft') abort(403);
@@ -278,7 +279,7 @@ class PurchaseOrderController extends Controller
 
     public function sendApproval(PurchaseOrder $purchaseOrder)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('approve_po') && !auth()->user()->hasPermission('create_po')) {
+        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po') && !\Auth::user()->hasPermission('create_po')) {
             abort(403, 'Unauthorized');
         }
 
@@ -297,7 +298,7 @@ class PurchaseOrderController extends Controller
 
     public function markCompleted(PurchaseOrder $purchaseOrder)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('receive_po')) {
+        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('receive_po')) {
             abort(403, 'Unauthorized');
         }
         if ($purchaseOrder->status !== 'partial') abort(403);
@@ -319,19 +320,30 @@ class PurchaseOrderController extends Controller
 
         $request->validate([
             'invoice_number' => 'required|string',
+            'duties' => 'nullable|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'taxes' => 'nullable|numeric|min:0',
             'items' => 'required|array',
         ]);
 
         try {
-            $this->poService->receiveItems($purchaseOrder->id, $request->items, $request->invoice_number);
+            $this->poService->receiveItems(
+                $purchaseOrder->id,
+                $request->items,
+                $request->invoice_number,
+                $request->input('duties', 0),
+                $request->input('shipping_cost', 0),
+                $request->input('taxes', 0)
+            );
 
             NotificationService::sendToAdmins(
-                'Stock Received',
-                "Received items for PO #{$purchaseOrder->po_number}. Status: " . ucfirst($purchaseOrder->status),
-                'success',
-                route('warehouse.purchase-orders.show', $purchaseOrder->id)
+                'Inventory Updated',
+                "Stock for PO #{$purchaseOrder->po_number} has been received.",
+                'success'
             );
-            return back()->with('success', 'Stock received successfully!');
+
+            return redirect()->route('warehouse.receiving.show', $purchaseOrder->id)
+                ->with('success', 'Inventory updated successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Receive failed: ' . $e->getMessage());
         }

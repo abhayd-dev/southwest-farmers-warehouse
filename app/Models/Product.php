@@ -29,16 +29,19 @@ class Product extends Model
         'product_name',
         'sku',
         'upc',
+        'plu_code',
         'barcode',
         'unit',
         'purchase_unit',
         'conversion_factor',
         'is_batch_active',
-        'tax_percent',
+        'warehouse_markup_percentage',
+        'store_markup_percentage',
         'price',
         'cost_price',
         'promotion_price',
-        'retail_price',
+        'store_retail_price',
+        'manual_override_price',
         'promotion_start_date',
         'promotion_end_date',
         'icon',
@@ -98,6 +101,11 @@ class Product extends Model
     public function transactions()
     {
         return $this->hasMany(StockTransaction::class)->latest();
+    }
+
+    public function minMaxLevel()
+    {
+        return $this->hasOne(ProductMinMaxLevel::class);
     }
 
     public function user()

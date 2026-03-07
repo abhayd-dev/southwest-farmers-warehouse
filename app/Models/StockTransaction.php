@@ -45,7 +45,22 @@ class StockTransaction extends Model
     {
         return $this->belongsTo(StoreDetail::class, 'store_id');
     }
-    
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'reference_id', 'po_number');
+    }
+
+    public function getVendorAttribute()
+    {
+        return $this->purchaseOrder ? $this->purchaseOrder->vendor : null;
+    }
+
+    public function getReferenceNoAttribute()
+    {
+        return $this->reference_id;
+    }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');

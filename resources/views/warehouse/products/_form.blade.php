@@ -103,9 +103,31 @@
                 <div class="invalid-feedback">Please enter a product name.</div>
             </div>
 
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                    SKU (Optional)
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="mdi mdi-identifier text-muted"></i>
+                    </span>
+                    <input type="text" name="sku" class="form-control border-start-0"
+                        value="{{ old('sku', $product->sku ?? '') }}" placeholder="Enter SKU">
+                </div>
+            </div>
 
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">PLU Code (Optional)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="mdi mdi-numeric text-muted"></i>
+                    </span>
+                    <input type="text" name="plu_code" class="form-control border-start-0"
+                        value="{{ old('plu_code', $product->plu_code ?? '') }}" placeholder="Enter PLU code">
+                </div>
+            </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label fw-semibold">UPC <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
@@ -113,7 +135,8 @@
                     </span>
                     <input type="text" name="upc" id="upcInput" class="form-control border-start-0"
                         value="{{ old('upc', $product->upc ?? '') }}" placeholder="Scan or generate UPC" required>
-                    <button class="btn btn-outline-secondary" type="button" id="generateUpcBtn" title="Generate UPC">
+                    <button class="btn btn-outline-secondary" type="button" id="generateUpcBtn"
+                        title="Generate UPC">
                         <i class="mdi mdi-refresh"></i>
                     </button>
                 </div>
@@ -125,7 +148,8 @@
                     <span class="input-group-text bg-light border-end-0">
                         <i class="mdi mdi-barcode-scan text-muted"></i>
                     </span>
-                    <input type="text" name="barcode" id="barcodeInput" class="form-control border-start-0 bg-light"
+                    <input type="text" name="barcode" id="barcodeInput"
+                        class="form-control border-start-0 bg-light"
                         value="{{ old('barcode', $product->barcode ?? '') }}" placeholder="Auto-generated from UPC"
                         readonly required>
                 </div>
@@ -181,12 +205,14 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Tax Percentage (%) <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">Warehouse Markup Percentage (%) <span
+                        class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">%</span>
-                    <input type="number" step="0.01" name="tax_percent" class="form-control border-start-0"
-                        value="{{ old('tax_percent', $product->tax_percent ?? '0.00') }}" placeholder="0.00"
-                        required>
+                    <input type="number" step="0.01" name="warehouse_markup_percentage"
+                        id="warehouseMarkupInput" class="form-control border-start-0"
+                        value="{{ old('warehouse_markup_percentage', $product->warehouse_markup_percentage ?? '0.00') }}"
+                        placeholder="0.00" required>
                 </div>
             </div>
 
@@ -195,7 +221,8 @@
                         class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
-                    <input type="number" step="0.01" name="cost_price" class="form-control border-start-0"
+                    <input type="number" step="0.01" name="cost_price" id="costPriceInput"
+                        class="form-control border-start-0"
                         value="{{ old('cost_price', $product->cost_price ?? '') }}" placeholder="0.00" required>
                 </div>
             </div>
@@ -205,18 +232,44 @@
                         class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
-                    <input type="number" step="0.01" name="price" class="form-control border-start-0"
-                        value="{{ old('price', $product->price ?? '') }}" placeholder="0.00" required>
+                    <input type="number" step="0.01" name="price" id="warehousePriceInput"
+                        class="form-control border-start-0" value="{{ old('price', $product->price ?? '') }}"
+                        placeholder="0.00" required>
                 </div>
                 <div class="invalid-feedback">Please enter a price.</div>
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-semibold">Retail Price <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">Store Markup Percentage (%) <span
+                        class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">%</span>
+                    <input type="number" step="0.01" name="store_markup_percentage" id="storeMarkupInput"
+                        class="form-control border-start-0"
+                        value="{{ old('store_markup_percentage', $product->store_markup_percentage ?? '0.00') }}"
+                        placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Store Retail Price <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">$</span>
-                    <input type="number" step="0.01" name="retail_price" class="form-control border-start-0"
-                        value="{{ old('retail_price', $product->retail_price ?? '') }}" placeholder="0.00" required>
+                    <input type="number" step="0.01" name="store_retail_price" id="storeRetailPriceInput"
+                        class="form-control border-start-0"
+                        value="{{ old('store_retail_price', $product->store_retail_price ?? '') }}"
+                        placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Manual Override Price</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">$</span>
+                    <input type="number" step="0.01" name="manual_override_price"
+                        class="form-control border-start-0"
+                        value="{{ old('manual_override_price', $product->manual_override_price ?? '') }}"
+                        placeholder="0.00">
                 </div>
             </div>
 
@@ -228,78 +281,74 @@
                     </span>
                     <textarea name="description" class="form-control border-start-0" rows="3"
                         placeholder="Enter product description (optional)">{{ old('description', $product->description ?? '') }}</textarea>
-
-                    <div class="col-12 mt-4">
-                        <hr>
-                        <h6 class="fw-semibold text-primary mb-3"><i class="mdi mdi-package-variant-closed"></i>
-                            Pallet Arrangement & Case Details</h6>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Case Length (in)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i
-                                    class="mdi mdi-arrow-left-right text-muted"></i></span>
-                            <input type="number" step="0.01" name="carton_length"
-                                class="form-control border-start-0"
-                                value="{{ old('carton_length', $product->carton_length ?? '') }}" placeholder="0.00">
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Case Width (in)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i
-                                    class="mdi mdi-arrow-expand-horizontal text-muted"></i></span>
-                            <input type="number" step="0.01" name="carton_width"
-                                class="form-control border-start-0"
-                                value="{{ old('carton_width', $product->carton_width ?? '') }}" placeholder="0.00">
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Case Height (in)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i
-                                    class="mdi mdi-arrow-up-down text-muted"></i></span>
-                            <input type="number" step="0.01" name="carton_height"
-                                class="form-control border-start-0"
-                                value="{{ old('carton_height', $product->carton_height ?? '') }}" placeholder="0.00">
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Units Per Case <span
-                                class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i
-                                    class="mdi mdi-apps text-muted"></i></span>
-                            <input type="number" min="1" step="1" name="units_per_carton"
-                                class="form-control border-start-0"
-                                value="{{ old('units_per_carton', $product->units_per_carton ?? '1') }}" required>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check form-switch fs-5 mb-1">
-                            <input class="form-check-input" type="checkbox" name="is_stackable" value="1"
-                                id="isStackableSwitch"
-                                {{ old('is_stackable', $product->is_stackable ?? true) ? 'checked' : '' }}>
-                            <label class="form-check-label fs-6 fw-semibold" for="isStackableSwitch">Is
-                                Stackable?</label>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check form-switch fs-5 mb-1">
-                            <input class="form-check-input" type="checkbox" name="is_fragile" value="1"
-                                id="isFragileSwitch"
-                                {{ old('is_fragile', $product->is_fragile ?? false) ? 'checked' : '' }}>
-                            <label class="form-check-label fs-6 fw-semibold text-danger" for="isFragileSwitch">Is
-                                Fragile?</label>
-                        </div>
-                    </div>
-
                 </div>
             </div>
-        </div>
+
+            <div class="col-12 mt-2">
+                <hr>
+                <h6 class="fw-semibold text-primary mb-3"><i class="mdi mdi-package-variant-closed"></i>
+                    Pallet Arrangement & Case Details</h6>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Case Length (in)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i
+                            class="mdi mdi-arrow-left-right text-muted"></i></span>
+                    <input type="number" step="0.01" name="carton_length" class="form-control border-start-0"
+                        value="{{ old('carton_length', $product->carton_length ?? '') }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Case Width (in)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i
+                            class="mdi mdi-arrow-expand-horizontal text-muted"></i></span>
+                    <input type="number" step="0.01" name="carton_width" class="form-control border-start-0"
+                        value="{{ old('carton_width', $product->carton_width ?? '') }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Case Height (in)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i
+                            class="mdi mdi-arrow-up-down text-muted"></i></span>
+                    <input type="number" step="0.01" name="carton_height" class="form-control border-start-0"
+                        value="{{ old('carton_height', $product->carton_height ?? '') }}" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Units Per Case <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i
+                            class="mdi mdi-apps text-muted"></i></span>
+                    <input type="number" min="1" step="1" name="units_per_carton"
+                        class="form-control border-start-0"
+                        value="{{ old('units_per_carton', $product->units_per_carton ?? '1') }}" required>
+                </div>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check form-switch fs-5 mb-1">
+                    <input class="form-check-input" type="checkbox" name="is_stackable" value="1"
+                        id="isStackableSwitch"
+                        {{ old('is_stackable', $product->is_stackable ?? true) ? 'checked' : '' }}>
+                    <label class="form-check-label fs-6 fw-semibold" for="isStackableSwitch">Is Stackable?</label>
+                </div>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check form-switch fs-5 mb-1">
+                    <input class="form-check-input" type="checkbox" name="is_fragile" value="1"
+                        id="isFragileSwitch" {{ old('is_fragile', $product->is_fragile ?? false) ? 'checked' : '' }}>
+                    <label class="form-check-label fs-6 fw-semibold text-danger" for="isFragileSwitch">Is
+                        Fragile?</label>
+                </div>
+            </div>
+
+        </div> {{-- End Row --}}
+    </div> {{-- End Card Body --}}
+</div> {{-- End Card --}}

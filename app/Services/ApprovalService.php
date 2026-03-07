@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PurchaseOrder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
@@ -37,7 +38,7 @@ class ApprovalService
             'rejectUrl' => $rejectUrl,
         ], function ($message) use ($po) {
             $message->to($po->approval_email)
-                    ->subject("Purchase Order #{$po->po_number} - Approval Required");
+                ->subject("Purchase Order #{$po->po_number} - Approval Required");
         });
 
         return true;
@@ -51,7 +52,15 @@ class ApprovalService
         if ($action === 'approve') {
             $po->approve($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'approved', $reason);
-            
+
+            // Automatically send to vendor upon approval
+            try {
+                $vendorComm = app(\App\Services\VendorCommunicationService::class);
+                $vendorComm->sendPOToVendor($po, true, false); // Send email by default
+            } catch (\Exception $e) {
+                \Log::error("Failed to auto-send PO #{$po->po_number} to vendor: " . $e->getMessage());
+            }
+
             \App\Services\NotificationService::sendToAdmins(
                 'PO Approved',
                 "Purchase Order #{$po->po_number} has been approved by external approver.",

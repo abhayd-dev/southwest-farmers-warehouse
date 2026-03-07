@@ -252,6 +252,38 @@
                 });
             }
 
+            // Pricing Calculations
+            const warehouseMarkup = document.getElementById('warehouseMarkupInput');
+            const costPrice = document.getElementById('costPriceInput');
+            const warehousePrice = document.getElementById('warehousePriceInput');
+            const storeMarkup = document.getElementById('storeMarkupInput');
+            const storeRetailPrice = document.getElementById('storeRetailPriceInput');
+
+            function calculateWarehousePrice() {
+                const markup = parseFloat(warehouseMarkup.value) || 0;
+                const cost = parseFloat(costPrice.value) || 0;
+                const price = cost * (1 + markup / 100);
+                warehousePrice.value = price.toFixed(2);
+                calculateStorePrice();
+            }
+
+            function calculateStorePrice() {
+                const markup = parseFloat(storeMarkup.value) || 0;
+                const whPrice = parseFloat(warehousePrice.value) || 0;
+                const retailPrice = whPrice * (1 + markup / 100);
+                storeRetailPrice.value = retailPrice.toFixed(2);
+            }
+
+            if (warehouseMarkup && costPrice) {
+                warehouseMarkup.addEventListener('input', calculateWarehousePrice);
+                costPrice.addEventListener('input', calculateWarehousePrice);
+            }
+
+            if (storeMarkup && warehousePrice) {
+                storeMarkup.addEventListener('input', calculateStorePrice);
+                warehousePrice.addEventListener('input', calculateStorePrice);
+            }
+
         });
 
         function previewImage(event) {

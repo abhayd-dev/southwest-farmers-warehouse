@@ -55,10 +55,18 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0)
     {
-        return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber) {
+        return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes) {
             $po = PurchaseOrder::findOrFail($poId);
+
+            // Update additional costs
+            $po->update([
+                'duties' => $duties,
+                'shipping_cost' => $shippingCost,
+                'taxes' => $taxes,
+            ]);
+
             $allCompleted = true;
 
             foreach ($receivedItems as $itemId => $data) {
@@ -113,6 +121,7 @@ class PurchaseOrderService
                 ]);
 
                 $poItem->received_quantity += $qtyToReceive;
+                $poItem->receiving_unit_cost = $data['receiving_price'] ?? $poItem->unit_cost;
                 $poItem->save();
 
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
