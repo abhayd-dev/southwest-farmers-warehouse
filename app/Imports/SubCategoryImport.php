@@ -6,7 +6,7 @@ use App\Models\ProductSubcategory;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class ProductSubcategoryImport implements ToModel, WithHeadingRow
+class SubCategoryImport implements ToModel, WithHeadingRow
 {
     protected $categoryId;
 
@@ -17,12 +17,14 @@ class ProductSubcategoryImport implements ToModel, WithHeadingRow
 
     public function model(array $row)
     {
+        if (empty($row['name'])) return null;
 
         return new ProductSubcategory([
             'category_id' => $this->categoryId,
             'name'        => $row['name'],
             'code'        => $row['code'],
             'is_active'   => 1,
+            'store_id'    => null,
         ]);
     }
 }

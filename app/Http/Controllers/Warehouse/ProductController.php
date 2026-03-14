@@ -11,6 +11,7 @@ use App\Models\ProductStock;
 use App\Models\Department;
 use App\Imports\ProductImport;
 use App\Exports\ProductExport;
+use App\Exports\Samples\ProductSampleExport;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -236,7 +237,7 @@ class ProductController extends Controller
                 'subcategory_id' => 'required',
             ]);
 
-            // Pass department_id to Import Class (Assuming Import Class constructor is updated)
+            // Excel::import(new ProductImport($request->categoryId, $request->subcategoryId, $request->departmentId), $request->file);
             Excel::import(new ProductImport($request->category_id, $request->subcategory_id, $request->department_id), $request->file);
 
             return back()->with('success', 'Imported successfully');
@@ -252,7 +253,7 @@ class ProductController extends Controller
 
     public function sample()
     {
-        return response()->download(storage_path('app/samples/products-sample.xlsx'));
+        return Excel::download(new ProductSampleExport, 'products-sample.xlsx');
     }
 
     public function generateBarcode()

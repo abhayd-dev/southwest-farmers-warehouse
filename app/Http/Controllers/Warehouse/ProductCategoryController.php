@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
-use App\Imports\ProductCategoryImport;
+use App\Imports\CategoryImport;
 use App\Exports\ProductCategoryExport;
+use App\Exports\Samples\CategorySampleExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
@@ -122,7 +123,7 @@ class ProductCategoryController extends Controller
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,csv']);
-        Excel::import(new ProductCategoryImport, $request->file);
+        Excel::import(new CategoryImport, $request->file);
         return back()->with('success', 'Imported successfully');
     }
 
@@ -133,6 +134,6 @@ class ProductCategoryController extends Controller
     
     public function sample()
     {
-         return response()->download(storage_path('app/samples/categories-sample.xlsx'));
+         return Excel::download(new CategorySampleExport, 'categories-sample.xlsx');
     }
 }

@@ -53,14 +53,20 @@
             }
 
             // Initial Render
-            if (upcInput && !barcodeInput.value) {
-                barcodeInput.value = upcInput.value;
+            if (barcodeInput) {
+                if (upcInput && !barcodeInput.value) {
+                    barcodeInput.value = upcInput.value;
+                }
+                renderBarcode(barcodeInput.value);
             }
-            renderBarcode(barcodeInput.value);
         });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const catSelect = document.getElementById('categorySelect');
+            const detailsCard = document.getElementById('productDetailsCard');
+            const toggleManualBtn = document.getElementById('toggleManualEntry');
+            const optionSelect = document.getElementById('productOptionSelect');
 
             const fetchSubcategories = (categoryId, targetSelectId, selectedSubId = null) => {
                 const target = document.getElementById(targetSelectId);
@@ -75,7 +81,7 @@
                     return Promise.resolve();
                 }
 
-                const url = "{{ url('warehouse/fetch-subcategories') }}/" + categoryId;
+                const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', categoryId);
 
                 return fetch(url)
                     .then(res => res.json())
@@ -88,6 +94,9 @@
                                 `<option value="${sub.id}" ${isSelected}>${sub.name}</option>`;
                         });
                         target.disabled = false;
+                        if (window.jQuery && $(target).data('select2')) {
+                            $(target).trigger('change');
+                        }
                     })
                     .catch(err => {
                         console.error('Error fetching subcategories:', err);
@@ -96,68 +105,61 @@
                     });
             };
 
-            const catSelect = document.getElementById('categorySelect');
-            if (catSelect) {
-                catSelect.addEventListener('change', function() {
-                    fetchSubcategories(this.value, 'subcategorySelect');
-                });
-            }
+            // Use jQuery for event listeners to ensure compatibility with Select2
+            $(document).on('change', '#categorySelect', function() {
+                fetchSubcategories(this.value, 'subcategorySelect');
+            });
 
-            const catSelectModal = document.getElementById('categorySelectModal');
-            if (catSelectModal) {
-                catSelectModal.addEventListener('change', function() {
-                    fetchSubcategories(this.value, 'subcategorySelectModal');
-                });
-            }
+            $(document).on('change', '#categorySelectModal', function() {
+                fetchSubcategories(this.value, 'subcategorySelectModal');
+            });
 
             const setValue = (selector, value) => {
                 const el = document.querySelector(selector);
-                if (el) el.value = value ?? '';
+                if (el) {
+                    el.value = value ?? '';
+                    if (window.jQuery && $(el).data('select2')) {
+                        $(el).trigger('change');
+                    }
+                }
             };
 
-            const optionSelect = document.getElementById('productOptionSelect');
-            const detailsCard = document.getElementById('productDetailsCard');
-            const toggleManualBtn = document.getElementById('toggleManualEntry');
+            $(document).on('change', '#productOptionSelect', function() {
+                const id = this.value;
+                if (!id) {
+                    if (detailsCard) detailsCard.style.display = 'none';
+                    return;
+                }
 
-            if (optionSelect) {
-                optionSelect.addEventListener('change', function() {
-                    const id = this.value;
-                    if (!id) {
-                        detailsCard.style.display = 'none';
-                        return;
-                    }
+                if (detailsCard) detailsCard.style.display = 'block';
 
-                    detailsCard.style.display = 'block';
+                const url = "{{ route('warehouse.products.fetch-option', ':id') }}".replace(':id', id);
 
-                    const url = "{{ route('warehouse.products.fetch-option', ':id') }}".replace(':id', id);
+                fetch(url)
+                    .then(res => res.json())
+                    .then(o => {
+                        if (!o) return;
 
-                    fetch(url)
-                        .then(res => res.json())
-                        .then(o => {
-                            if (!o) return;
+                        setValue('[name=product_name]', o.option_name);
+                        setValue('[name=sku]', o.sku);
+                        setValue('[name=unit]', o.unit);
+                        setValue('[name=price]', o.base_price);
+                        setValue('[name=barcode]', o.barcode);
 
-                            setValue('[name=product_name]', o.option_name);
-                            setValue('[name=sku]', o.sku);
-                            setValue('[name=unit]', o.unit);
-                            setValue('[name=price]', o.base_price);
-                            setValue('[name=barcode]', o.barcode);
-
-                            if (o.category_id && catSelect) {
-                                catSelect.value = o.category_id;
-                                fetchSubcategories(o.category_id, 'subcategorySelect', o
-                                    .subcategory_id);
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Failed to fetch product option', err);
-                        });
-                });
-            }
+                        if (o.category_id) {
+                            setValue('#categorySelect', o.category_id);
+                            fetchSubcategories(o.category_id, 'subcategorySelect', o.subcategory_id);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to fetch product option', err);
+                    });
+            });
 
             if (toggleManualBtn) {
                 toggleManualBtn.addEventListener('click', function() {
-                    optionSelect.value = "";
-                    detailsCard.style.display = 'block';
+                    if (optionSelect) optionSelect.value = "";
+                    if (detailsCard) detailsCard.style.display = 'block';
 
                     setValue('[name=product_name]', '');
                     setValue('[name=sku]', '');
@@ -165,7 +167,7 @@
                     setValue('[name=price]', '');
                     setValue('[name=barcode]', '');
 
-                    if (catSelect) catSelect.value = "";
+                    setValue('#categorySelect', '');
                     const subSelect = document.getElementById('subcategorySelect');
                     if (subSelect) subSelect.innerHTML = '<option value="">Select Subcategory</option>';
                 });

@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Warehouse;
 use App\Http\Controllers\Controller;
 use App\Models\ProductSubcategory;
 use App\Models\ProductCategory;
-use App\Imports\ProductSubcategoryImport;
+use App\Imports\SubCategoryImport;
 use App\Exports\ProductSubcategoryExport;
+use App\Exports\Samples\SubCategorySampleExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
@@ -125,7 +126,7 @@ class ProductSubcategoryController extends Controller
             'category_id' => 'required|exists:product_categories,id'
         ]);
 
-        Excel::import(new ProductSubcategoryImport($request->category_id), $request->file);
+        Excel::import(new SubCategoryImport($request->category_id), $request->file);
 
         return back()->with('success', 'Imported successfully');
     }
@@ -137,6 +138,6 @@ class ProductSubcategoryController extends Controller
 
     public function sample()
     {
-        return response()->download(storage_path('app/samples/subcategories-sample.xlsx'));
+        return Excel::download(new SubCategorySampleExport, 'subcategories-sample.xlsx');
     }
 }

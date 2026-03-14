@@ -189,12 +189,16 @@
                     subSelect.html('<option value="">Loading...</option>');
 
                     if (catId) {
-                        $.get('/warehouse/fetch-subcategories/' + catId, function(data) {
+                        const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', catId);
+                        $.get(url, function(data) {
                             let html = '<option value="">All Subcategories</option>';
                             if (Array.isArray(data)) {
                                 data.forEach(i => html += `<option value="${i.id}">${i.name}</option>`);
                             }
                             subSelect.html(html);
+                            if (window.jQuery && subSelect.data('select2')) {
+                                subSelect.trigger('change');
+                            }
                         }).fail(function() {
                             subSelect.html('<option value="">Error loading</option>');
                         });

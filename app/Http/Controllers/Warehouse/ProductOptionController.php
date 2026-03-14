@@ -11,6 +11,7 @@ use App\Exports\ProductOptionExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProductOptionController extends Controller
 {
@@ -143,8 +144,8 @@ class ProductOptionController extends Controller
             if ($request->hasFile('icon')) {
 
                 // delete old icon
-                if ($productOption->icon && \Storage::disk('public')->exists($productOption->icon)) {
-                    \Storage::disk('public')->delete($productOption->icon);
+                if ($productOption->icon && Storage::disk('public')->exists($productOption->icon)) {
+                    Storage::disk('public')->delete($productOption->icon);
                 }
 
                 $data['icon'] = $request->file('icon')->store('product-options', 'public');

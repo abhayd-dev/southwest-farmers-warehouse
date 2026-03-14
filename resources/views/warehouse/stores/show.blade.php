@@ -638,6 +638,9 @@
                                 sub.innerHTML = '<option value="" selected>All Subcategories</option>' + d
                                     .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
                                 sub.disabled = false;
+                                if (window.jQuery && $(sub).data('select2')) {
+                                    $(sub).trigger('change');
+                                }
                             });
                     } else {
                         sub.innerHTML = '<option value="" selected>Select Category First</option>';

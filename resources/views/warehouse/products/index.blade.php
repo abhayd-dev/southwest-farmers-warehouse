@@ -350,7 +350,8 @@
                     subSelect.disabled = true;
 
                     if (id) {
-                        fetch("{{ url('warehouse/fetch-subcategories') }}/" + id)
+                        const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', id);
+                        fetch(url)
                             .then(res => res.json())
                             .then(data => {
                                 subSelect.innerHTML =
@@ -360,6 +361,9 @@
                                         `<option value="${sub.id}">${sub.name}</option>`;
                                 });
                                 subSelect.disabled = false;
+                                if (window.jQuery && $(subSelect).data('select2')) {
+                                    $(subSelect).trigger('change');
+                                }
                             });
                     } else {
                         subSelect.innerHTML = '<option value="">Select Category First</option>';
