@@ -248,6 +248,9 @@
                                                                 @endif
                                                             </small>
                                                         </td>
+                                                        <td class="text-center fw-medium">
+                                                            {{ $item->requested_quantity }}
+                                                        </td>
                                                         <td class="text-center fw-medium">$
                                                             {{ number_format($item->unit_cost, 2) }}</td>
                                                         <td class="text-center">
@@ -257,7 +260,7 @@
                                                                 max="{{ $item->pending_quantity }}" min="0"
                                                                 value="0">
                                                             <small class="text-muted">Pending:
-                                                                {{ $item->pending_quantity }}</small>
+                                                                <span class="pending-qty" data-pending="{{ $item->pending_quantity }}">{{ $item->pending_quantity }}</span></small>
                                                         </td>
                                                         <td>
                                                             <input type="number"

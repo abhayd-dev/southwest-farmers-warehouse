@@ -14,7 +14,7 @@ class CompletedOrderController extends Controller
     {
         if ($request->ajax()) {
             $query = PurchaseOrder::with(['vendor', 'items'])
-                ->whereIn('status', ['completed', 'cancelled', 'partial'])
+                ->whereIn('status', ['completed', 'cancelled'])
                 ->latest();
 
             // Handle "partial completed" which means status is completed but progress < 100

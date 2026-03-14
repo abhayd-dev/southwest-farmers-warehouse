@@ -16,8 +16,7 @@ class ReceivingController extends Controller
         if ($request->ajax()) {
             $query = PurchaseOrder::with(['vendor', 'items'])->whereIn('status', [
                 PurchaseOrder::STATUS_ORDERED,
-                PurchaseOrder::STATUS_PARTIAL,
-                PurchaseOrder::STATUS_COMPLETED
+                PurchaseOrder::STATUS_PARTIAL
             ])->latest();
 
             if ($request->filled('status') && $request->status !== 'all') {

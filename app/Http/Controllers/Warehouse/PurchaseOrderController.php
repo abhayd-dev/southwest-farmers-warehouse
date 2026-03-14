@@ -66,6 +66,9 @@ class PurchaseOrderController extends Controller
                 } else {
                     $query->where('status', $status);
                 }
+            } else {
+                // Default view: exclude completed and cancelled
+                $query->whereNotIn('status', ['completed', 'cancelled']);
             }
             if ($request->filled('po_number')) {
                 $query->where('po_number', 'like', '%' . $request->po_number . '%');

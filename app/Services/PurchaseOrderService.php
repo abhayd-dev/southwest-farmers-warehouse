@@ -68,13 +68,26 @@ class PurchaseOrderService
             ]);
 
             $allCompleted = true;
+            $productIds = [];
+            foreach ($receivedItems as $itemId => $data) {
+                $poItem = PurchaseOrderItem::findOrFail($itemId);
+                $productIds[] = $poItem->product_id;
+                // Add product_id to data for later loop
+                $receivedItems[$itemId]['product_id'] = $poItem->product_id;
+                $receivedItems[$itemId]['poItemModel'] = $poItem;
+            }
+
+            // Pre-fetch warehouse stocks
+            $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+                ->where('warehouse_id', 1)
+                ->get()->keyBy('product_id');
 
             foreach ($receivedItems as $itemId => $data) {
-                $qtyToReceive = intval($data['receive_qty']);
+                $qtyToReceive = intval($data['receive_qty'] ?? 0);
 
                 if ($qtyToReceive <= 0) continue;
 
-                $poItem = PurchaseOrderItem::findOrFail($itemId);
+                $poItem = $data['poItemModel'];
 
                 // Generate batch number if not provided
                 $batchNumber = $data['batch_number'] ?? null;
@@ -93,9 +106,7 @@ class PurchaseOrderService
                     'is_active' => true
                 ]);
 
-                $stock = ProductStock::where('product_id', $poItem->product_id)
-                    ->where('warehouse_id', 1)
-                    ->first();
+                $stock = $warehouseStocks->get($poItem->product_id);
 
                 if ($stock) {
                     $stock->quantity += $qtyToReceive;
@@ -106,6 +117,7 @@ class PurchaseOrderService
                         'warehouse_id' => 1,
                         'quantity' => $qtyToReceive
                     ]);
+                    $warehouseStocks->put($poItem->product_id, $stock);
                 }
 
                 StockTransaction::create([

@@ -67,24 +67,34 @@ class StorePurchaseOrderController extends Controller
     {
         $storeOrder->load(['store', 'items.product.stock', 'creator', 'approver']);
 
+        $productIds = $storeOrder->items->pluck('product_id')->toArray();
+
+        // Pre-fetch warehouse stock
+        $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+            ->where('warehouse_id', 1)
+            ->select('product_id', DB::raw('SUM(quantity) as total_qty'))
+            ->groupBy('product_id')
+            ->pluck('total_qty', 'product_id');
+
+        // Pre-fetch in-transit
+        $inTransitQs = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
+            $q->where('store_id', $storeOrder->store_id)
+                ->whereIn('status', ['approved', 'dispatched']);
+        })
+            ->whereIn('product_id', $productIds)
+            ->where('id', '!=', $storeOrder->items->pluck('id'))
+            ->select('product_id', DB::raw('SUM(pending_qty) as total_transit'))
+            ->groupBy('product_id')
+            ->pluck('total_transit', 'product_id');
+
+        // Pre-fetch min-max
+        $minMaxLevels = ProductMinMaxLevel::whereIn('product_id', $productIds)->get()->keyBy('product_id');
+
         // For each item, get warehouse stock & in-transit qty
         foreach ($storeOrder->items as $item) {
-            $warehouseQty = ProductStock::where('product_id', $item->product_id)
-                ->where('warehouse_id', 1)
-                ->sum('quantity');
-
-            $inTransitQty = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
-                $q->where('store_id', $storeOrder->store_id)
-                    ->whereIn('status', ['approved', 'dispatched']);
-            })
-                ->where('product_id', $item->product_id)
-                ->where('id', '!=', $item->id)
-                ->sum('pending_qty');
-
-            $minMax = ProductMinMaxLevel::where('product_id', $item->product_id)->first();
-
-            $item->warehouse_qty  = $warehouseQty;
-            $item->in_transit_qty = $inTransitQty;
+            $item->warehouse_qty  = $warehouseStocks->get($item->product_id, 0);
+            $item->in_transit_qty = $inTransitQs->get($item->product_id, 0);
+            $minMax = $minMaxLevels->get($item->product_id);
             $item->min_level      = $minMax?->min_level ?? 0;
             $item->max_level      = $minMax?->max_level ?? 0;
         }
@@ -102,11 +112,35 @@ class StorePurchaseOrderController extends Controller
         }
 
         DB::transaction(function () use ($storeOrder, $request) {
+            $productIds = $storeOrder->items->pluck('product_id')->toArray();
+
+            // Pre-fetch duplicate open PO items
+            $duplicateProductIds = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
+                $q->where('store_id', $storeOrder->store_id)
+                    ->whereIn('status', [StorePurchaseOrder::STATUS_PENDING, StorePurchaseOrder::STATUS_APPROVED, StorePurchaseOrder::STATUS_DISPATCHED])
+                    ->where('id', '!=', $storeOrder->id);
+            })
+                ->whereIn('product_id', $productIds)
+                ->whereIn('status', [StorePurchaseOrderItem::STATUS_PENDING, StorePurchaseOrderItem::STATUS_APPROVED, StorePurchaseOrderItem::STATUS_DISPATCHED])
+                ->pluck('product_id')->toArray();
+
+            $duplicateProductIds = array_flip($duplicateProductIds); // For fast isset lookup
+
+            // Pre-fetch warehouse stock
+            $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+                ->where('warehouse_id', 1)
+                ->select('product_id', DB::raw('SUM(quantity) as total_qty'))
+                ->groupBy('product_id')
+                ->pluck('total_qty', 'product_id');
+
+            // Pre-fetch min-max
+            $minMaxLevels = ProductMinMaxLevel::whereIn('product_id', $productIds)->get()->keyBy('product_id');
+
             // Apply rationing logic per item
             // Also check for duplicate open POs per item
             foreach ($storeOrder->items as $item) {
                 // ── Duplicate blocking: skip if another open PO has this product for this store ──
-                $hasDuplicate = AutoPOGenerationService::hasPendingPO($storeOrder->store_id, $item->product_id)
+                $hasDuplicate = isset($duplicateProductIds[$item->product_id])
                     && $item->status === StorePurchaseOrderItem::STATUS_PENDING;
 
                 if ($hasDuplicate) {
@@ -118,11 +152,8 @@ class StorePurchaseOrderController extends Controller
                     continue;
                 }
 
-                $warehouseQty = ProductStock::where('product_id', $item->product_id)
-                    ->where('warehouse_id', 1)
-                    ->sum('quantity');
-
-                $minMax = ProductMinMaxLevel::where('product_id', $item->product_id)->first();
+                $warehouseQty = $warehouseStocks->get($item->product_id, 0);
+                $minMax = $minMaxLevels->get($item->product_id);
                 $warehouseMin = $minMax?->min_level ?? 0;
 
                 // Rationing: if warehouse stock <= min, dispatch only 25%
@@ -249,20 +280,27 @@ class StorePurchaseOrderController extends Controller
         }
 
         DB::transaction(function () use ($storeOrder, $approvedItems) {
+            $productIds = $approvedItems->pluck('product_id')->toArray();
+
+            // Pre-fetch warehouse stock
+            $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+                ->where('warehouse_id', 1)
+                ->get()
+                ->keyBy('product_id');
+
             foreach ($approvedItems as $item) {
                 $qtyToDispatch = $item->pending_qty;
                 if ($qtyToDispatch <= 0) continue;
 
                 // Deduct from warehouse stock
-                $warehouseStock = ProductStock::where('product_id', $item->product_id)
-                    ->where('warehouse_id', 1)
-                    ->first();
+                $warehouseStock = $warehouseStocks->get($item->product_id);
 
                 if (!$warehouseStock || $warehouseStock->quantity < $qtyToDispatch) {
                     throw new \Exception("Insufficient stock for product ID {$item->product_id}. Available: " . ($warehouseStock?->quantity ?? 0));
                 }
 
                 $warehouseStock->decrement('quantity', $qtyToDispatch);
+                $warehouseStock->quantity -= $qtyToDispatch; // Update runtime object state if needed in subsequent iterations
 
                 // Update item
                 $item->update([
