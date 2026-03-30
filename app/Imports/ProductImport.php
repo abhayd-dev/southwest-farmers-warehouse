@@ -81,6 +81,10 @@ class ProductImport implements ToCollection, WithHeadingRow
                     'warehouse_id' => 1,
                     'quantity' => 0
                 ]);
+
+                // Generate Barcode Images
+                $option->generateBarcodeImage();
+                $product->generateBarcodeImage();
             });
         }
     }

@@ -128,6 +128,10 @@ class ProductController extends Controller
                     'quantity' => 0
                 ]);
 
+                // Generate Barcode Images
+                if (isset($option)) $option->generateBarcodeImage();
+                $product->generateBarcodeImage();
+
                 return redirect()->route('warehouse.products.index')
                     ->with('success', 'Product created successfully');
             });
@@ -187,6 +191,7 @@ class ProductController extends Controller
             }
 
             $product->update($data);
+            $product->generateBarcodeImage();
 
             return back()->with('success', 'Product updated successfully');
         } catch (\Exception $e) {
@@ -246,9 +251,9 @@ class ProductController extends Controller
         }
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ProductExport, 'products.xlsx');
+        return Excel::download(new ProductExport($request->all()), 'products.xlsx');
     }
 
     public function sample()

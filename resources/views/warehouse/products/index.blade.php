@@ -141,7 +141,12 @@
                                         @if ($product->upc)
                                             <div class="fw-bold mb-1">{{ $product->upc }}</div>
                                         @endif
-                                        @if ($product->barcode)
+                                        @if ($product->barcode_image)
+                                            <div class="d-flex flex-column align-items-start">
+                                                <img src="{{ Storage::url($product->barcode_image) }}"
+                                                    alt="Barcode" class="img-fluid" style="height: 35px; min-width: 100px; object-fit: contain;">
+                                            </div>
+                                        @elseif ($product->barcode)
                                             <div class="d-flex flex-column align-items-start">
                                                 <svg class="barcode-svg" data-code="{{ $product->barcode }}"></svg>
                                             </div>

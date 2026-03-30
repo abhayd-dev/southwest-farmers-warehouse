@@ -94,30 +94,30 @@
                                     <td class="px-3 py-2">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="bg-light rounded p-1 border flex-shrink-0">
-                                                <img src="{{ $stock->product->icon ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
+                                                <img src="{{ ($stock->product?->icon) ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
                                                     class="rounded bg-light border object-fit-cover" width="40"
                                                     height="40">
                                             </div>
                                             <div>
                                                 <div class="fw-bold text-dark text-wrap" style="max-width: 250px;">
-                                                    {{ $stock->product->product_name }}</div>
+                                                    {{ $stock->product?->product_name ?? 'Unknown Product' }}</div>
                                                 <div class="small text-muted">
-                                                    UPC: {{ $stock->product->upc ?? 'N/A' }}
+                                                    UPC: {{ $stock->product?->upc ?? 'N/A' }}
                                                     <span class="mx-1">|</span>
                                                     Unit: <span
-                                                        class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $stock->product->unit }}</span>
+                                                        class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $stock->product?->unit ?? 'N/A' }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="py-2">
                                         <span class="badge bg-primary bg-opacity-10 text-primary">
-                                            {{ $stock->product->category->name ?? 'N/A' }}
+                                            {{ $stock->product?->category->name ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="py-2">
                                         <span class="badge bg-info bg-opacity-10 text-info">
-                                            {{ $stock->product->subcategory->name ?? 'N/A' }}
+                                            {{ $stock->product?->subcategory->name ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="py-2">
@@ -150,12 +150,12 @@
                                     </td>
                                     <td class="text-end px-3 py-2">
                                         <div class="fw-semibold text-dark">
-                                            ${{ number_format($stock->product->cost_price ?? 0, 2) }}
+                                            ${{ number_format($stock->product?->cost_price ?? 0, 2) }}
                                         </div>
                                     </td>
                                     <td class="text-end px-3 py-2">
                                         <div class="fw-semibold text-dark">
-                                            ${{ number_format($stock->quantity * ($stock->product->cost_price ?? 0), 2) }}
+                                            ${{ number_format($stock->quantity * ($stock->product?->cost_price ?? 0), 2) }}
                                         </div>
                                     </td>
                                     <td class="text-end px-3 py-2">

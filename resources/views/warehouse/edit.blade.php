@@ -274,38 +274,6 @@
                             {{-- MAP CONTAINER --}}
                             <div id="map" class="mb-3"></div>
 
-                            {{-- COORDINATES DISPLAY --}}
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <label class="form-label fw-semibold small text-muted">
-                                        <i class="mdi mdi-latitude"></i> Latitude
-                                    </label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-light">
-                                            <i class="mdi mdi-map-marker-radius text-muted"></i>
-                                        </span>
-                                        <input type="text" id="latitudeDisplay" 
-                                               class="form-control bg-light" 
-                                               value="{{ $warehouse->latitude ?? '' }}" 
-                                               readonly>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label fw-semibold small text-muted">
-                                        <i class="mdi mdi-longitude"></i> Longitude
-                                    </label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-light">
-                                            <i class="mdi mdi-map-marker-radius text-muted"></i>
-                                        </span>
-                                        <input type="text" id="longitudeDisplay" 
-                                               class="form-control bg-light" 
-                                               value="{{ $warehouse->longitude ?? '' }}" 
-                                               readonly>
-                                    </div>
-                                </div>
-                            </div>
-
                             {{-- HIDDEN INPUTS --}}
                             <input type="hidden" name="latitude" id="latitude" 
                                    value="{{ old('latitude', $warehouse->latitude) }}">
@@ -423,16 +391,12 @@
                 const updateInputs = (lat, lng, fetchAddr = true) => {
                     const latInput = document.getElementById('latitude');
                     const lngInput = document.getElementById('longitude');
-                    const latDisplay = document.getElementById('latitudeDisplay');
-                    const lngDisplay = document.getElementById('longitudeDisplay');
                     
                     const latFixed = lat.toFixed(7);
                     const lngFixed = lng.toFixed(7);
                     
                     if(latInput) latInput.value = latFixed;
                     if(lngInput) lngInput.value = lngFixed;
-                    if(latDisplay) latDisplay.value = latFixed;
-                    if(lngDisplay) lngDisplay.value = lngFixed;
 
                     if(fetchAddr) {
                         fetchAddress(lat, lng);

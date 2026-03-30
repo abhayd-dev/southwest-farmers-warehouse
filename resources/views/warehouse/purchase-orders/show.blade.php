@@ -53,11 +53,11 @@
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
-                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']) }}"
+                                    <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']) }}"
                                         class="btn btn-success shadow-sm">
                                         <i class="mdi mdi-check me-1"></i> Approve
                                     </a>
-                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
+                                    <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
                                         class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-close me-1"></i> Reject
                                     </a>
@@ -93,7 +93,7 @@
                                             <i class="mdi mdi-email-send me-1"></i> Send for Order for approval
                                         </button>
                                     </form>
-                                    <a href="{{ route('warehouse.purchase-orders.approve', ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
+                                    <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
                                         class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-close me-1"></i> Reject
                                     </a>

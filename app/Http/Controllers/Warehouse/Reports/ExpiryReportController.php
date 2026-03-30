@@ -40,15 +40,18 @@ class ExpiryReportController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('product_name', function($row) {
+                    $name = $row->product?->product_name ?? '-';
+                    $sku = $row->product?->sku ?? '-';
                     return '<div>
-                                <div class="fw-bold text-dark">'.$row->product->product_name.'</div>
-                                <small class="text-muted">'.$row->product->sku.'</small>
+                                <div class="fw-bold text-dark">'.$name.'</div>
+                                <small class="text-muted">'.$sku.'</small>
                             </div>';
                 })
-                ->addColumn('department', fn($row) => $row->product->department->name ?? '-')
+                ->addColumn('department', fn($row) => $row->product?->department->name ?? '-')
                 ->addColumn('batch_info', fn($row) => '<span class="font-monospace">'.$row->batch_number.'</span>')
-                ->addColumn('expiry_date', fn($row) => Carbon::parse($row->expiry_date)->format('d M Y'))
+                ->addColumn('expiry_date', fn($row) => $row->expiry_date ? Carbon::parse($row->expiry_date)->format('d M Y') : '-')
                 ->addColumn('days_left', function($row) {
+                    if (!$row->expiry_date) return '-';
                     $days = Carbon::now()->diffInDays(Carbon::parse($row->expiry_date), false);
                     $days = (int)$days; // Cast to int
 
@@ -57,7 +60,7 @@ class ExpiryReportController extends Controller
                     if ($days <= 90) return '<span class="badge bg-warning text-dark">WARNING ('.$days.' days)</span>';
                     return '<span class="badge bg-success bg-opacity-10 text-success">SAFE ('.$days.' days)</span>';
                 })
-                ->addColumn('stock_value', fn($row) => '$'.number_format($row->quantity * $row->product->cost_price, 2))
+                ->addColumn('stock_value', fn($row) => '$'.number_format($row->quantity * ($row->product?->cost_price ?? 0), 2))
                 ->rawColumns(['product_name', 'days_left', 'batch_info'])
                 ->make(true);
         }

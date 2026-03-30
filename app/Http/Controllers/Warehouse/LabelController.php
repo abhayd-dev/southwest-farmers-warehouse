@@ -33,6 +33,7 @@ class LabelController extends Controller
                     ? ($transaction->product->box_weight * abs($transaction->quantity_change)) . ' kg'
                     : 'N/A',
                 'product_barcode' => $transaction->product->barcode,
+                'barcode_image' => $transaction->product->barcode_image,
             ];
         } elseif ($request->has('product_id')) {
             // Manual Label Generation from Product List
@@ -53,6 +54,7 @@ class LabelController extends Controller
                 'date' => now()->format('d/m/Y H:i'),
                 'weight' => $product->box_weight ? ($product->box_weight * $qty) . ' kg' : 'N/A',
                 'product_barcode' => $product->barcode,
+                'barcode_image' => $product->barcode_image,
             ];
         } else {
             abort(404, 'No data source provided');

@@ -23,7 +23,7 @@ class ProductStockController extends Controller
     public function index(Request $request)
     {
         // Fetch products with their total stock quantity
-        $stocks = ProductStock::with(['product', 'product.category', 'product.subcategory'])
+        $stocks = ProductStock::has('product')->with(['product', 'product.category', 'product.subcategory'])
             ->when($request->search, function ($q) use ($request) {
                 $s = $request->search;
                 $q->whereHas('product', function ($p) use ($s) {

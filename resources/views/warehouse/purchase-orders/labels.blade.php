@@ -209,17 +209,17 @@
                                     <td colspan="2">
                                         @php
                                             $code = $item->product->upc ?? ($item->product->id ?? 'N/A');
+                                            $barcodeBase64 = null;
+                                            if ($item->product->barcode_image && Storage::disk('public')->exists($item->product->barcode_image)) {
+                                                $barcodeBase64 = base64_encode(Storage::disk('public')->get($item->product->barcode_image));
+                                            } elseif ($code !== 'N/A') {
+                                                $barcodeData = $generator->getBarcode((string) $code, $generator::TYPE_CODE_128);
+                                                $barcodeBase64 = base64_encode($barcodeData);
+                                            }
                                         @endphp
 
-                                        @if ($code !== 'N/A')
-                                            @php
-                                                $barcodeData = $generator->getBarcode(
-                                                    (string) $code,
-                                                    $generator::TYPE_CODE_128,
-                                                );
-                                                $base64 = base64_encode($barcodeData);
-                                            @endphp
-                                            <img src="data:image/png;base64,{{ $base64 }}" class="barcode-img">
+                                        @if ($barcodeBase64)
+                                            <img src="data:image/png;base64,{{ $barcodeBase64 }}" class="barcode-img">
                                         @endif
 
                                         <div class="barcode-num">{{ $code }}</div>

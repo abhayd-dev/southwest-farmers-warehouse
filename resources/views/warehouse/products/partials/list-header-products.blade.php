@@ -40,7 +40,7 @@
         @if (auth()->user()->isSuperAdmin() ||
                 auth()->user()->hasPermission('manage_products') ||
                 auth()->user()->hasPermission('export_reports'))
-            <a href="{{ route('warehouse.products.export') }}"
+            <a href="{{ route('warehouse.products.export', request()->all()) }}"
                 class="btn btn-outline-primary d-flex align-items-center gap-1">
                 <i class="mdi mdi-download"></i>
                 <span class="d-none d-lg-inline">Export</span>

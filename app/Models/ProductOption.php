@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\LogsActivity;
+use App\Traits\HasBarcodeImage;
 
 class ProductOption extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasBarcodeImage;
 
     protected $fillable = [
         'category_id',
@@ -24,6 +25,7 @@ class ProductOption extends Model
         'description',
         'icon',
         'is_active',
+        'barcode_image',
     ];
 
     public function category()

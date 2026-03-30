@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use App\Traits\LogsActivity;
+use App\Traits\HasBarcodeImage;
 
 class Product extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasBarcodeImage;
 
     protected $casts = [
         'store_id' => 'integer',
@@ -59,6 +60,7 @@ class Product extends Model
         'units_per_carton',
         'is_stackable',
         'is_fragile',
+        'barcode_image',
     ];
 
     // ===== RELATIONSHIPS =====

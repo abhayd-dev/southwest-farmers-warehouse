@@ -189,7 +189,13 @@
             </div>
 
             {{-- Product Barcode Section --}}
-            @if (isset($data['product_barcode']))
+            @if (isset($data['barcode_image']) && $data['barcode_image'])
+                <div class="barcode-section">
+                    <img src="{{ Storage::disk('public')->url($data['barcode_image']) }}"
+                        style="max-width: 90%; height: 50px; object-fit: contain;">
+                    <div class="barcode-text">Product: {{ $data['product_barcode'] }}</div>
+                </div>
+            @elseif (isset($data['product_barcode']))
                 <div class="barcode-section">
                     <svg id="product_barcode"></svg>
                     <div class="barcode-text">Product: {{ $data['product_barcode'] }}</div>
