@@ -169,6 +169,10 @@
                     </span>
                     <select name="unit" class="form-select border-start-0" required>
                         <option value="">Select Unit</option>
+                        <option value="box" {{ isset($product) && $product->unit == 'box' ? 'selected' : '' }}>
+                            Box (box)</option>
+                        <option value="cs" {{ isset($product) && $product->unit == 'cs' ? 'selected' : '' }}>Case
+                            (cs)</option>
                         <option value="doz" {{ isset($product) && $product->unit == 'doz' ? 'selected' : '' }}>
                             Dozen (doz)</option>
                         <option value="ea" {{ isset($product) && $product->unit == 'ea' ? 'selected' : '' }}>Each

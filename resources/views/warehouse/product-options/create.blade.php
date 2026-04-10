@@ -131,6 +131,8 @@
                                         </span>
                                         <select name="unit" class="form-select border-start-0" required>
                                             <option value="">Select Unit</option>
+                                            <option value="box">Box (box)</option>
+                                            <option value="cs">Case (cs)</option>
                                             <option value="kg">Kilogram (KG)</option>
                                             <option value="pcs">Pieces (PCS)</option>
                                         </select>

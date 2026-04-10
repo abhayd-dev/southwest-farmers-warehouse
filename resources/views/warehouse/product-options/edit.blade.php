@@ -139,6 +139,12 @@
                                         </span>
                                         <select name="unit" class="form-select border-start-0" required>
                                             <option value="">Select Unit</option>
+                                            <option value="box" {{ $productOption->unit == 'box' ? 'selected' : '' }}>
+                                                Box (box)
+                                            </option>
+                                            <option value="cs" {{ $productOption->unit == 'cs' ? 'selected' : '' }}>
+                                                Case (cs)
+                                            </option>
                                             <option value="kg" {{ $productOption->unit == 'kg' ? 'selected' : '' }}>
                                                 Kilogram (KG)
                                             </option>
