@@ -86,7 +86,7 @@ class ProductOptionController extends Controller
             $data = $request->except('icon');
 
             if ($request->hasFile('icon')) {
-                $data['icon'] = $request->file('icon')->store('product-options', 'public');
+                $data['icon'] = $request->file('icon')->store('product-options', 'r2');
             }
 
             $data['is_active'] = 1;
@@ -144,11 +144,11 @@ class ProductOptionController extends Controller
             if ($request->hasFile('icon')) {
 
                 // delete old icon
-                if ($productOption->icon && Storage::disk('public')->exists($productOption->icon)) {
-                    Storage::disk('public')->delete($productOption->icon);
+                if ($productOption->icon && Storage::disk('r2')->exists($productOption->icon)) {
+                    Storage::disk('r2')->delete($productOption->icon);
                 }
 
-                $data['icon'] = $request->file('icon')->store('product-options', 'public');
+                $data['icon'] = $request->file('icon')->store('product-options', 'r2');
             }
 
             $productOption->update($data);

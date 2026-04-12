@@ -151,7 +151,7 @@ class StockRequestService
                 throw new \Exception("Invalid status for verification. Request must be Dispatched first.");
             }
 
-            $path = $requestData->file('warehouse_payment_proof')->store('payment_proofs', 'public');
+            $path = $requestData->file('warehouse_payment_proof')->store('payment_proofs', 'r2');
 
             $request->update([
                 'status' => StockRequest::STATUS_COMPLETED,

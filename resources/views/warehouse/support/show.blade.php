@@ -121,7 +121,8 @@
                                         @if ($msg->attachments->count() > 0)
                                             <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
                                                 @foreach ($msg->attachments as $att)
-                                                    <a href="{{ Storage::url($att->file_path) }}" target="_blank"
+                                                    <a href="{{ Storage::disk('r2')->url($att->file_path) }}"
+                                                        target="_blank"
                                                         class="d-inline-flex align-items-center badge bg-white text-dark border p-2 me-1 text-decoration-none">
                                                         <i class="mdi mdi-paperclip me-1"></i> {{ $att->file_name }}
                                                     </a>
@@ -136,52 +137,54 @@
 
                     {{-- Reply Form (Protected) --}}
                     @if ($ticket->status !== 'closed')
-                        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
-                        <div class="card-footer bg-white p-3">
-                            <form action="{{ route('warehouse.support.reply', $ticket->id) }}" method="POST"
-                                enctype="multipart/form-data">
-                                @csrf
-                                <label class="form-label fw-bold text-muted small">Write a Reply</label>
-                                <textarea name="message" class="form-control mb-3" rows="3" placeholder="Type your response here..." required></textarea>
+                        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
+                            <div class="card-footer bg-white p-3">
+                                <form action="{{ route('warehouse.support.reply', $ticket->id) }}" method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    <label class="form-label fw-bold text-muted small">Write a Reply</label>
+                                    <textarea name="message" class="form-control mb-3" rows="3" placeholder="Type your response here..." required></textarea>
 
-                                <div
-                                    class="d-flex justify-content-between align-items-center bg-light p-2 rounded border">
-                                    <div class="d-flex align-items-center gap-3">
-                                        {{-- File Upload --}}
-                                        <div class="position-relative">
-                                            <button type="button" class="btn btn-sm btn-light border"
-                                                onclick="document.getElementById('attInput').click()">
-                                                <i class="mdi mdi-paperclip me-1"></i> Attach Files
-                                            </button>
-                                            <input type="file" id="attInput" name="attachments[]" multiple
-                                                class="d-none"
-                                                onchange="document.getElementById('fileCount').innerText = this.files.length + ' files selected'">
-                                            <span id="fileCount" class="small text-muted ms-1"></span>
+                                    <div
+                                        class="d-flex justify-content-between align-items-center bg-light p-2 rounded border">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {{-- File Upload --}}
+                                            <div class="position-relative">
+                                                <button type="button" class="btn btn-sm btn-light border"
+                                                    onclick="document.getElementById('attInput').click()">
+                                                    <i class="mdi mdi-paperclip me-1"></i> Attach Files
+                                                </button>
+                                                <input type="file" id="attInput" name="attachments[]" multiple
+                                                    class="d-none"
+                                                    onchange="document.getElementById('fileCount').innerText = this.files.length + ' files selected'">
+                                                <span id="fileCount" class="small text-muted ms-1"></span>
+                                            </div>
+
+                                            {{-- Internal Checkbox --}}
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="is_internal"
+                                                    id="internalCheck">
+                                                <label class="form-check-label small fw-bold text-warning"
+                                                    for="internalCheck">Internal Note</label>
+                                            </div>
                                         </div>
 
-                                        {{-- Internal Checkbox --}}
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="is_internal"
-                                                id="internalCheck">
-                                            <label class="form-check-label small fw-bold text-warning"
-                                                for="internalCheck">Internal Note</label>
-                                        </div>
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="mdi mdi-send me-1"></i> Send Reply
+                                        </button>
                                     </div>
-
-                                    <button type="submit" class="btn btn-primary px-4">
-                                        <i class="mdi mdi-send me-1"></i> Send Reply
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                                </form>
+                            </div>
                         @else
-                        <div class="card-footer bg-light text-center py-3">
-                            <span class="text-muted"><i class="mdi mdi-lock me-1"></i> You do not have permission to reply.</span>
-                        </div>
+                            <div class="card-footer bg-light text-center py-3">
+                                <span class="text-muted"><i class="mdi mdi-lock me-1"></i> You do not have permission to
+                                    reply.</span>
+                            </div>
                         @endif
                     @else
                         <div class="card-footer bg-light text-center py-3">
-                            <span class="text-muted"><i class="mdi mdi-lock me-1"></i> This ticket is closed. No further
+                            <span class="text-muted"><i class="mdi mdi-lock me-1"></i> This ticket is closed. No
+                                further
                                 replies allowed.</span>
                         </div>
                     @endif
@@ -192,50 +195,56 @@
             <div class="col-lg-4">
 
                 {{-- Action Card (Protected) --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="fw-bold mb-0">Ticket Actions</h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('warehouse.support.update', $ticket->id) }}" method="POST"
-                            id="ticketUpdateForm">
-                            @csrf @method('PUT')
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <h6 class="fw-bold mb-0">Ticket Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('warehouse.support.update', $ticket->id) }}" method="POST"
+                                id="ticketUpdateForm">
+                                @csrf @method('PUT')
 
-                            {{-- Status Change --}}
-                            <div class="mb-4">
-                                <label class="form-label small text-muted fw-bold text-uppercase">Current
-                                    Status</label>
-                                <select name="status" class="form-select action-select" data-type="status">
-                                    <option value="open" {{ $ticket->status == 'open' ? 'selected' : '' }}>Open</option>
-                                    <option value="in_progress" {{ $ticket->status == 'in_progress' ? 'selected' : '' }}>In
-                                        Progress</option>
-                                    <option value="waiting" {{ $ticket->status == 'waiting' ? 'selected' : '' }}>Waiting on
-                                        Store</option>
-                                    <option value="resolved" {{ $ticket->status == 'resolved' ? 'selected' : '' }}>Resolved
-                                    </option>
-                                    <option value="closed" {{ $ticket->status == 'closed' ? 'selected' : '' }}>Closed
-                                    </option>
-                                </select>
-                            </div>
+                                {{-- Status Change --}}
+                                <div class="mb-4">
+                                    <label class="form-label small text-muted fw-bold text-uppercase">Current
+                                        Status</label>
+                                    <select name="status" class="form-select action-select" data-type="status">
+                                        <option value="open" {{ $ticket->status == 'open' ? 'selected' : '' }}>Open
+                                        </option>
+                                        <option value="in_progress"
+                                            {{ $ticket->status == 'in_progress' ? 'selected' : '' }}>In
+                                            Progress</option>
+                                        <option value="waiting" {{ $ticket->status == 'waiting' ? 'selected' : '' }}>
+                                            Waiting on
+                                            Store</option>
+                                        <option value="resolved"
+                                            {{ $ticket->status == 'resolved' ? 'selected' : '' }}>Resolved
+                                        </option>
+                                        <option value="closed" {{ $ticket->status == 'closed' ? 'selected' : '' }}>
+                                            Closed
+                                        </option>
+                                    </select>
+                                </div>
 
-                            {{-- Assign Staff --}}
-                            <div class="mb-3">
-                                <label class="form-label small text-muted fw-bold text-uppercase">Assigned
-                                    Staff</label>
-                                <select name="assigned_to_id" class="form-select action-select"
-                                    data-type="assignment">
-                                    <option value="">-- Unassigned --</option>
-                                    @foreach ($staff as $u)
-                                        <option value="{{ $u->id }}"
-                                            {{ $ticket->assigned_to_id == $u->id ? 'selected' : '' }}>{{ $u->name }}
-                                        option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </form>
+                                {{-- Assign Staff --}}
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted fw-bold text-uppercase">Assigned
+                                        Staff</label>
+                                    <select name="assigned_to_id" class="form-select action-select"
+                                        data-type="assignment">
+                                        <option value="">-- Unassigned --</option>
+                                        @foreach ($staff as $u)
+                                            <option value="{{ $u->id }}"
+                                                {{ $ticket->assigned_to_id == $u->id ? 'selected' : '' }}>
+                                                {{ $u->name }}
+                                                option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
                 @endif
 
                 {{-- SLA Info Card --}}
@@ -282,7 +291,7 @@
                 const selects = document.querySelectorAll('.action-select');
                 const form = document.getElementById('ticketUpdateForm');
 
-                if(selects.length > 0) {
+                if (selects.length > 0) {
                     selects.forEach(select => {
                         // Store initial value
                         select.dataset.original = select.value;

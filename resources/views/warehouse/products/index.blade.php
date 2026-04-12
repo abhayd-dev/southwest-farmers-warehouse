@@ -143,7 +143,7 @@
                                         @endif
                                         @if ($product->barcode_image)
                                             <div class="d-flex flex-column align-items-start">
-                                                <img src="{{ Storage::url($product->barcode_image) }}"
+                                                <img src="{{ Storage::disk('r2')->url($product->barcode_image) }}"
                                                     alt="Barcode" class="img-fluid" style="height: 35px; min-width: 100px; object-fit: contain;">
                                             </div>
                                         @elseif ($product->barcode)
@@ -156,7 +156,7 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <img src="{{ $product->icon ? Storage::url($product->icon) : asset('assets/images/placeholder.svg') }}"
+                                            <img src="{{ $product->icon ? Storage::disk('r2')->url($product->icon) : asset('assets/images/placeholder.svg') }}"
                                                 class="rounded bg-light border object-fit-cover shadow-sm"
                                                 width="50" height="50" alt="{{ $product->product_name }}">
                                             <div>

@@ -204,7 +204,7 @@
                                                     <i class="mdi mdi-swap-horizontal"></i>
                                                 </button>
                                             @elseif($req->status == 'dispatched')
-                                                @php $proof = $req->store_payment_proof ? Storage::url($req->store_payment_proof) : ''; @endphp
+                                                @php $proof = $req->store_payment_proof ? Storage::disk('r2')->url($req->store_payment_proof) : ''; @endphp
                                                 <button class="btn btn-sm btn-outline-success"
                                                     style="color: #10b981; border-color: #10b981;"
                                                     title="Verify Payment"

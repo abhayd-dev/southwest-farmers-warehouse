@@ -87,7 +87,7 @@ class StaffController extends Controller
 
             // Handle Image Upload
             if ($request->hasFile('profile_image')) {
-                $data['profile_image'] = $request->file('profile_image')->store('staff_images', 'public');
+                $data['profile_image'] = $request->file('profile_image')->store('staff_images', 'r2');
             }
 
             $user = WareUser::create($data);
@@ -142,9 +142,9 @@ class StaffController extends Controller
             // Handle Image
             if ($request->hasFile('profile_image')) {
                 if ($user->profile_image) {
-                    Storage::disk('public')->delete($user->profile_image);
+                    Storage::disk('r2')->delete($user->profile_image);
                 }
-                $data['profile_image'] = $request->file('profile_image')->store('staff_images', 'public');
+                $data['profile_image'] = $request->file('profile_image')->store('staff_images', 'r2');
             }
 
             $user->update($data);

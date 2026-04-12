@@ -50,7 +50,7 @@ class ProductCategoryController extends Controller
         $data['store_id'] = null; // Explicit isolation
 
         if ($request->hasFile('icon')) {
-            $data['icon'] = $request->file('icon')->store('categories', 'public');
+            $data['icon'] = $request->file('icon')->store('categories', 'r2');
         }
 
         ProductCategory::create($data);
@@ -79,9 +79,9 @@ class ProductCategoryController extends Controller
 
         if ($request->hasFile('icon')) {
             if ($category->icon) {
-                Storage::disk('public')->delete($category->icon);
+                Storage::disk('r2')->delete($category->icon);
             }
-            $data['icon'] = $request->file('icon')->store('categories', 'public');
+            $data['icon'] = $request->file('icon')->store('categories', 'r2');
         }
 
         $category->update($data);
@@ -99,7 +99,7 @@ class ProductCategoryController extends Controller
             }
             
             if ($category->icon) {
-                Storage::disk('public')->delete($category->icon);
+                Storage::disk('r2')->delete($category->icon);
             }
 
             $category->delete();

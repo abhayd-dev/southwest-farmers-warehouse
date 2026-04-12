@@ -15,7 +15,8 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('warehouse.product-options.store') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <form method="POST" action="{{ route('warehouse.product-options.store') }}" enctype="multipart/form-data"
+            class="needs-validation" novalidate>
             @csrf
 
             <div class="row">
@@ -35,7 +36,7 @@
                                     title="Upload Icon">
                                     {{-- Preview Image --}}
                                     <img id="iconPreview"
-                                        src="{{ isset($productOption) && $productOption->icon ?  Storage::url( $productOption->icon) : asset('assets/images/placeholder.svg') }}"
+                                        src="{{ isset($productOption) && $productOption->icon ? Storage::disk('r2')->url($productOption->icon) : asset('assets/images/placeholder.svg') }}"
                                         class="rounded border shadow-sm object-fit-cover" width="120" height="120"
                                         alt="Icon Preview">
 

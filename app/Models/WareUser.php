@@ -81,10 +81,9 @@ class WareUser extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if (!empty($this->profile_image)) {
-            return Storage::url($this->profile_image);
+            return Storage::disk('r2')->url($this->profile_image);
         }
 
         return asset('assets/images/default-avatar.png');
-        
     }
 }

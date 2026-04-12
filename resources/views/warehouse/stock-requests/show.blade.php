@@ -277,7 +277,7 @@
                                         <div class="mb-2 d-flex justify-content-between">
                                             <small class="text-muted fw-bold">Store Proof:</small>
                                             @if ($stockRequest->store_payment_proof)
-                                                <a href="{{ Storage::url($stockRequest->store_payment_proof) }}"
+                                                <a href="{{ Storage::disk('r2')->url($stockRequest->store_payment_proof) }}"
                                                     target="_blank"
                                                     class="text-primary text-decoration-none small fw-bold">
                                                     <i class="mdi mdi-file-document me-1"></i> View File
@@ -289,7 +289,7 @@
                                         <div class="d-flex justify-content-between">
                                             <small class="text-muted fw-bold">Warehouse Proof:</small>
                                             @if ($stockRequest->warehouse_payment_proof)
-                                                <a href="{{ Storage::url($stockRequest->warehouse_payment_proof) }}"
+                                                <a href="{{ Storage::disk('r2')->url($stockRequest->warehouse_payment_proof) }}"
                                                     target="_blank"
                                                     class="text-primary text-decoration-none small fw-bold">
                                                     <i class="mdi mdi-file-check me-1"></i> View File
@@ -389,8 +389,8 @@
                         <label class="form-label text-muted small fw-bold text-uppercase">Store Payment Proof</label>
                         <div class="p-3 border rounded bg-light text-center">
                             @if ($stockRequest->store_payment_proof)
-                                <a href="{{ Storage::url($stockRequest->store_payment_proof) }}" target="_blank"
-                                    class="btn btn-outline-info shadow-sm">
+                                <a href="{{ Storage::disk('r2')->url($stockRequest->store_payment_proof) }}"
+                                    target="_blank" class="btn btn-outline-info shadow-sm">
                                     <i class="mdi mdi-eye me-1"></i> View Store Proof
                                 </a>
                             @else

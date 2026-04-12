@@ -6,18 +6,18 @@
             <div class="logo-box">
                 <a href="{{ route('dashboard') }}" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ Storage::url($settings['main_logo'] ?? '') }}" height="22">
+                        <img src="{{ Storage::disk('r2')->url($settings['main_logo'] ?? '') }}" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ Storage::url($settings['main_logo'] ?? '') }}" height="24">
+                        <img src="{{ Storage::disk('r2')->url($settings['main_logo'] ?? '') }}" height="24">
                     </span>
                 </a>
                 <a href="{{ route('dashboard') }}" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ Storage::url($settings['main_logo'] ?? '') }}" height="22">
+                        <img src="{{ Storage::disk('r2')->url($settings['main_logo'] ?? '') }}" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ Storage::url($settings['main_logo'] ?? '') }}" height="24">
+                        <img src="{{ Storage::disk('r2')->url($settings['main_logo'] ?? '') }}" height="24">
                     </span>
                 </a>
             </div>

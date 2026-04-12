@@ -13,15 +13,15 @@
                                 <div class="auth-brand mb-4">
                                     <a href="{{ url('/') }}" class="logo logo-light">
                                         <span class="logo-lg">
-                                            <img src="{{ Storage::url($settings['login_logo']) }}" alt="Warehouse POS"
-                                                height="40" class="d-inline-block">
+                                            <img src="{{ Storage::disk('r2')->url($settings['login_logo']) }}"
+                                                alt="Warehouse POS" height="40" class="d-inline-block">
                                         </span>
                                     </a>
 
                                     <a href="{{ url('/') }}" class="logo logo-dark">
                                         <span class="logo-lg">
-                                            <img src="{{ Storage::url($settings['main_logo']) }}" alt="Warehouse POS"
-                                                height="40" class="d-inline-block">
+                                            <img src="{{ Storage::disk('r2')->url($settings['main_logo']) }}"
+                                                alt="Warehouse POS" height="40" class="d-inline-block">
                                         </span>
                                     </a>
                                 </div>

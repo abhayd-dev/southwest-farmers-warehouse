@@ -57,7 +57,7 @@ class ProductSubcategoryController extends Controller
         $data['store_id'] = null; // Explicit isolation
 
         if ($request->hasFile('icon')) {
-            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
+            $data['icon'] = $request->file('icon')->store('subcategories', 'r2');
         }
 
         ProductSubcategory::create($data);
@@ -84,8 +84,8 @@ class ProductSubcategoryController extends Controller
 
         $data = $request->all();
         if ($request->hasFile('icon')) {
-            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
-            $data['icon'] = $request->file('icon')->store('subcategories', 'public');
+            if ($subcategory->icon) Storage::disk('r2')->delete($subcategory->icon);
+            $data['icon'] = $request->file('icon')->store('subcategories', 'r2');
         }
 
         $subcategory->update($data);
@@ -100,7 +100,7 @@ class ProductSubcategoryController extends Controller
             if ($subcategory->productOptions()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Product Options.');
             if ($subcategory->products()->exists()) return back()->with('error', 'Cannot delete: Subcategory has associated Products.');
 
-            if ($subcategory->icon) Storage::disk('public')->delete($subcategory->icon);
+            if ($subcategory->icon) Storage::disk('r2')->delete($subcategory->icon);
 
             $subcategory->delete();
             return back()->with('success', 'Subcategory deleted successfully');

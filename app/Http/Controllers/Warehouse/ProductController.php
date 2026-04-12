@@ -95,7 +95,7 @@ class ProductController extends Controller
                 $data['store_id'] = null;
 
                 if ($request->hasFile('icon')) {
-                    $data['icon'] = $request->file('icon')->store('products', 'public');
+                    $data['icon'] = $request->file('icon')->store('products', 'r2');
                 }
 
                 // If creating a new option on the fly
@@ -184,10 +184,10 @@ class ProductController extends Controller
             $data = $request->except('icon');
 
             if ($request->hasFile('icon')) {
-                if ($product->icon && Storage::disk('public')->exists($product->icon)) {
-                    Storage::disk('public')->delete($product->icon);
+                if ($product->icon && Storage::disk('r2')->exists($product->icon)) {
+                    Storage::disk('r2')->delete($product->icon);
                 }
-                $data['icon'] = $request->file('icon')->store('products', 'public');
+                $data['icon'] = $request->file('icon')->store('products', 'r2');
             }
 
             $product->update($data);

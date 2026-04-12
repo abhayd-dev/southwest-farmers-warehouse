@@ -94,7 +94,7 @@
                                     <td class="px-3 py-2">
                                         <div class="d-flex align-items-center gap-3">
                                             <div class="bg-light rounded p-1 border flex-shrink-0">
-                                                <img src="{{ ($stock->product?->icon) ? Storage::url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
+                                                <img src="{{ $stock->product?->icon ? Storage::disk('r2')->url($stock->product->icon) : asset('assets/images/placeholder.svg') }}"
                                                     class="rounded bg-light border object-fit-cover" width="40"
                                                     height="40">
                                             </div>

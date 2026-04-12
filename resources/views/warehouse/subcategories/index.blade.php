@@ -5,7 +5,9 @@
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="d-flex flex-column gap-2">
-                        @include('warehouse.subcategories.partials.breadcrumb', ['title' => 'Subcategories'])
+                        @include('warehouse.subcategories.partials.breadcrumb', [
+                            'title' => 'Subcategories',
+                        ])
                         <h4 class="fw-bold mb-0 text-dark">
                             <i class="mdi mdi-tag text-primary"></i> Subcategories
                         </h4>
@@ -17,19 +19,23 @@
                                 <div class="input-group shadow-sm">
                                     <input type="text" name="search" value="{{ request('search') }}"
                                         class="form-control border-end-0" placeholder="Search subcategories...">
-                                    <select name="status" class="form-select border-start-0 border-end-0" style="max-width: 120px;">
+                                    <select name="status" class="form-select border-start-0 border-end-0"
+                                        style="max-width: 120px;">
                                         <option value="">All Status</option>
-                                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
-                                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active
+                                        </option>
+                                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive
+                                        </option>
                                     </select>
-                                    
+
                                     {{-- Apply Button --}}
                                     <button class="btn btn-primary" type="submit" title="Apply Filter">
                                         <i class="mdi mdi-magnify"></i>
                                     </button>
 
                                     {{-- Reset Button --}}
-                                    <a href="{{ route('warehouse.subcategories.index') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                                    <a href="{{ route('warehouse.subcategories.index') }}"
+                                        class="btn btn-outline-secondary" title="Reset Filters">
                                         <i class="mdi mdi-refresh"></i>
                                     </a>
                                 </div>
@@ -38,13 +44,17 @@
                             {{-- ACTIONS (Protected) --}}
                             @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
                                 <div class="d-flex align-items-center gap-2">
-                                    <a href="{{ route('warehouse.subcategories.export') }}" class="btn btn-outline-primary d-flex align-items-center gap-1">
+                                    <a href="{{ route('warehouse.subcategories.export') }}"
+                                        class="btn btn-outline-primary d-flex align-items-center gap-1">
                                         <i class="mdi mdi-download"></i> <span class="d-none d-md-inline">Export</span>
                                     </a>
-                                    <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importSubCategoryModal">
+                                    <button type="button"
+                                        class="btn btn-outline-success d-flex align-items-center gap-1"
+                                        data-bs-toggle="modal" data-bs-target="#importSubCategoryModal">
                                         <i class="mdi mdi-upload"></i> <span class="d-none d-md-inline">Import</span>
                                     </button>
-                                    <a href="{{ route('warehouse.subcategories.create') }}" class="btn btn-success d-flex align-items-center gap-1 text-nowrap">
+                                    <a href="{{ route('warehouse.subcategories.create') }}"
+                                        class="btn btn-success d-flex align-items-center gap-1 text-nowrap">
                                         <i class="mdi mdi-plus-circle"></i> Add Subcategory
                                     </a>
                                 </div>
@@ -77,16 +87,19 @@
                                         {{ $loop->iteration + ($subcategories->currentPage() - 1) * $subcategories->perPage() }}
                                     </td>
                                     <td class="py-3">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ $sub->category->name ?? 'N/A' }}</span>
+                                        <span
+                                            class="badge bg-primary bg-opacity-10 text-primary">{{ $sub->category->name ?? 'N/A' }}</span>
                                     </td>
                                     <td class="py-3 fw-semibold">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ $sub->icon ? Storage::url($sub->icon) : asset('assets/images/placeholder.svg') }}"
-                                                class="rounded bg-light border object-fit-cover" width="40" height="40">
+                                            <img src="{{ $sub->icon ? Storage::disk('r2')->url($sub->icon) : asset('assets/images/placeholder.svg') }}"
+                                                class="rounded bg-light border object-fit-cover" width="40"
+                                                height="40">
                                             <span>{{ $sub->name }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-3"><code class="bg-light px-2 py-1 rounded">{{ $sub->code }}</code></td>
+                                    <td class="py-3"><code
+                                            class="bg-light px-2 py-1 rounded">{{ $sub->code }}</code></td>
                                     <td class="py-3 text-center">
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input status-toggle" type="checkbox"
@@ -95,12 +108,14 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons 
-                                            :viewUrl="null" 
-                                            :data="$sub"
-                                            :editUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.subcategories.edit', $sub) : null"
-                                            :deleteUrl="auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? route('warehouse.subcategories.destroy', $sub) : null"
-                                        />
+                                        <x-action-buttons :viewUrl="null" :data="$sub" :editUrl="auth()->user()->isSuperAdmin() ||
+                                        auth()->user()->hasPermission('manage_categories')
+                                            ? route('warehouse.subcategories.edit', $sub)
+                                            : null"
+                                            :deleteUrl="auth()->user()->isSuperAdmin() ||
+                                            auth()->user()->hasPermission('manage_categories')
+                                                ? route('warehouse.subcategories.destroy', $sub)
+                                                : null" />
                                     </td>
                                 </tr>
                             @empty
@@ -113,7 +128,8 @@
                 </div>
             </div>
             @if ($subcategories->hasPages())
-                <div class="card-footer bg-white border-top py-3">{{ $subcategories->withQueryString()->links() }}</div>
+                <div class="card-footer bg-white border-top py-3">{{ $subcategories->withQueryString()->links() }}
+                </div>
             @endif
         </div>
     </div>
@@ -123,7 +139,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold"><i class="mdi mdi-tag text-primary me-2"></i> Subcategory Details</h5>
+                    <h5 class="modal-title fw-bold"><i class="mdi mdi-tag text-primary me-2"></i> Subcategory Details
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -131,7 +148,7 @@
                         <label class="text-muted small text-uppercase fw-bold">Name</label>
                         <div class="fs-5 fw-semibold" id="viewName"></div>
                     </div>
-                     <div class="mb-3">
+                    <div class="mb-3">
                         <label class="text-muted small text-uppercase fw-bold">Parent Category</label>
                         <div class="fs-6 text-primary" id="viewCategory"></div>
                     </div>

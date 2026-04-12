@@ -88,12 +88,12 @@ class WareSettingController extends Controller
             
             // Delete old file if exists
             $oldSetting = WareSetting::where('key', $key)->first();
-            if ($oldSetting && $oldSetting->value && Storage::disk('public')->exists($oldSetting->value)) {
-                Storage::disk('public')->delete($oldSetting->value);
+            if ($oldSetting && $oldSetting->value && Storage::disk('r2')->exists($oldSetting->value)) {
+                Storage::disk('r2')->delete($oldSetting->value);
             }
 
             // Store new file
-            $path = $file->store($folder, 'public');
+            $path = $file->store($folder, 'r2');
 
             // Update DB
             WareSetting::updateOrCreate(

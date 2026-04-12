@@ -38,18 +38,33 @@ return [
             'report' => false,
         ],
 
+
         'public' => [
-            'driver' => 's3', 
-            'key' => env('SUPABASE_ACCESS_KEY_ID'),
-            'secret' => env('SUPABASE_SECRET_ACCESS_KEY'),
-            'region' => env('SUPABASE_DEFAULT_REGION'),
-            'bucket' => env('SUPABASE_BUCKET'),
-            'endpoint' => env('SUPABASE_ENDPOINT'),
-            'url' => env('SUPABASE_URL'),
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'url' => env('R2_URL'),
             'visibility' => 'public',
             'use_path_style_endpoint' => true,
             'throw' => false,
         ],
+
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'url' => env('R2_URL'),
+            'visibility' => 'public',
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+        ],
+
     ],
 
     /*

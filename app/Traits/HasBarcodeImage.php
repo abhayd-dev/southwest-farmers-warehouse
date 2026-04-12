@@ -26,12 +26,12 @@ trait HasBarcodeImage
             $barcodeData = $generator->getBarcode((string)$code, $generator::TYPE_CODE_128);
             
             $directory = 'barcodes';
-            if (!Storage::disk('public')->exists($directory)) {
-                Storage::disk('public')->makeDirectory($directory);
+            if (!Storage::disk('r2')->exists($directory)) {
+                Storage::disk('r2')->makeDirectory($directory);
             }
 
             $filename = $directory . '/' . $code . '.png';
-            Storage::disk('public')->put($filename, $barcodeData);
+            Storage::disk('r2')->put($filename, $barcodeData);
             
             $this->update(['barcode_image' => $filename]);
             

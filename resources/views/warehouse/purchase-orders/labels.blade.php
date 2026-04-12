@@ -210,8 +210,8 @@
                                         @php
                                             $code = $item->product->upc ?? ($item->product->id ?? 'N/A');
                                             $barcodeBase64 = null;
-                                            if ($item->product->barcode_image && Storage::disk('public')->exists($item->product->barcode_image)) {
-                                                $barcodeBase64 = base64_encode(Storage::disk('public')->get($item->product->barcode_image));
+                                            if ($item->product->barcode_image && Storage::disk('r2')->exists($item->product->barcode_image)) {
+                                                $barcodeBase64 = base64_encode(Storage::disk('r2')->get($item->product->barcode_image));
                                             } elseif ($code !== 'N/A') {
                                                 $barcodeData = $generator->getBarcode((string) $code, $generator::TYPE_CODE_128);
                                                 $barcodeBase64 = base64_encode($barcodeData);
