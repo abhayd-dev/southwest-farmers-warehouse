@@ -34,18 +34,42 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.partials.sidebar', SidebarComposer::class);
 
+        // Default critical settings to prevent view crashes
+        $defaults = [
+            'login_logo' => 'settings/default_logo.png',
+            'main_logo'  => 'settings/default_logo.png',
+            'favicon'    => 'settings/default_favicon.png',
+            'app_name'   => 'Warehouse POS',
+        ];
+
         try {
             if (Schema::hasTable('ware_settings')) {
-                $settings = Cache::rememberForever('ware_settings', function () {
-                    return WareSetting::pluck('value', 'key')->toArray();
-                });
+                // Try cache first
+                try {
+                    $settings = Cache::get('ware_settings');
+                } catch (\Exception $e) {
+                    $settings = null;
+                }
 
+                if (!$settings) {
+                    $settings = WareSetting::pluck('value', 'key')->toArray();
+                    // Attempt to cache, but don't fail if cache storage is broken
+                    try {
+                        Cache::forever('ware_settings', $settings);
+                    } catch (\Exception $e) {
+                        // Cache storage failed (e.g. SQL error in cache table)
+                    }
+                }
+
+                // Merge retrieved settings with defaults
+                $settings = array_merge($defaults, $settings);
                 View::share('settings', $settings);
             } else {
-                View::share('settings', []);
+                View::share('settings', $defaults);
             }
         } catch (\Exception $e) {
-            View::share('settings', []);
+            \Log::error("Failed to load warehouse settings: " . $e->getMessage());
+            View::share('settings', $defaults);
         }
      
     }

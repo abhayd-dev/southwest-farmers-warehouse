@@ -123,8 +123,13 @@ class ProductCategoryController extends Controller
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,csv']);
-        Excel::import(new CategoryImport, $request->file);
-        return back()->with('success', 'Imported successfully');
+        
+        Excel::import(
+            new CategoryImport(\Illuminate\Support\Facades\Auth::id()), 
+            $request->file
+        );
+
+        return back()->with('success', 'Import started! You will be notified once processing is complete.');
     }
 
     public function export()

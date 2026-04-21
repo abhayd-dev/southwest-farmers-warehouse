@@ -126,9 +126,12 @@ class ProductSubcategoryController extends Controller
             'category_id' => 'required|exists:product_categories,id'
         ]);
 
-        Excel::import(new SubCategoryImport($request->category_id), $request->file);
+        Excel::import(
+            new SubCategoryImport($request->category_id, \Illuminate\Support\Facades\Auth::id()), 
+            $request->file
+        );
 
-        return back()->with('success', 'Imported successfully');
+        return back()->with('success', 'Import started! You will be notified once processing is complete.');
     }
 
     public function export()

@@ -242,10 +242,18 @@ class ProductController extends Controller
                 'subcategory_id' => 'required',
             ]);
 
-            // Excel::import(new ProductImport($request->categoryId, $request->subcategoryId, $request->departmentId), $request->file);
-            Excel::import(new ProductImport($request->category_id, $request->subcategory_id, $request->department_id), $request->file);
+            // Pass Auth::id() to ensure background job knows who started it
+            Excel::import(
+                new ProductImport(
+                    $request->category_id,
+                    $request->subcategory_id,
+                    $request->department_id,
+                    \Illuminate\Support\Facades\Auth::id()
+                ),
+                $request->file
+            );
 
-            return back()->with('success', 'Imported successfully');
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }

@@ -211,12 +211,13 @@ class ProductOptionController extends Controller
             Excel::import(
                 new ProductOptionImport(
                     $request->category_id,
-                    $request->subcategory_id
+                    $request->subcategory_id,
+                    \Illuminate\Support\Facades\Auth::id()
                 ),
                 $request->file
             );
 
-            return back()->with('success', 'Product options imported successfully.');
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
             Log::error('ProductOption Import Error: ' . $e->getMessage());
             return back()->with('error', 'Import failed. Please check file format.');

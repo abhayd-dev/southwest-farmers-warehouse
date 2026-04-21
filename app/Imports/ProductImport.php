@@ -5,23 +5,34 @@ namespace App\Imports;
 use App\Models\Product;
 use App\Models\ProductOption;
 use App\Models\ProductStock;
+use App\Services\NotificationService;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\RemembersRowNumber;
+use Maatwebsite\Excel\Events\AfterImport;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class ProductImport implements ToCollection, WithHeadingRow
+class ProductImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithEvents
 {
+    use RemembersRowNumber;
+
     protected $departmentId;
     protected $categoryId;
     protected $subcategoryId;
+    protected $authUserId;
 
-    public function __construct($categoryId, $subcategoryId, $departmentId)
+    public function __construct($categoryId, $subcategoryId, $departmentId, $authUserId = null)
     {
         $this->categoryId = $categoryId;
         $this->subcategoryId = $subcategoryId;
         $this->departmentId = $departmentId;
+        $this->authUserId = $authUserId ?? Auth::id();
     }
 
     public function collection(Collection $rows)
@@ -30,13 +41,9 @@ class ProductImport implements ToCollection, WithHeadingRow
             if (empty($row['product_name'])) continue;
 
             DB::transaction(function () use ($row) {
-                // If special handling for ProductOption is needed as in manual store method
-                // We'll follow the logic: Use product_option_id if exists, otherwise create one.
-                // For import, we'll create a new option for each product to keep it simple and consistent.
-
                 $option = ProductOption::create([
-                    'ware_user_id' => Auth::id(),
-                    'store_id' => null, // Warehouse Option
+                    'ware_user_id' => $this->authUserId,
+                    'store_id' => null,
                     'option_name' => $row['product_name'],
                     'sku' => $row['sku'] ?? null,
                     'category_id' => $this->categoryId,
@@ -54,6 +61,7 @@ class ProductImport implements ToCollection, WithHeadingRow
                 ]);
 
                 $product = Product::create([
+                    'ware_user_id' => $this->authUserId,
                     'product_option_id' => $option->id,
                     'department_id' => $this->departmentId,
                     'category_id' => $this->categoryId,
@@ -75,17 +83,39 @@ class ProductImport implements ToCollection, WithHeadingRow
                     'store_id' => null,
                 ]);
 
-                // Initialize Warehouse Stock
                 ProductStock::create([
                     'product_id' => $product->id,
                     'warehouse_id' => 1,
                     'quantity' => 0
                 ]);
 
-                // Generate Barcode Images
                 $option->generateBarcodeImage();
                 $product->generateBarcodeImage();
             });
         }
+    }
+
+    public function batchSize(): int
+    {
+        return 20;
+    }
+
+    public function chunkSize(): int
+    {
+        return 20;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterImport::class => function (AfterImport $event) {
+                NotificationService::sendToUser(
+                    $this->authUserId,
+                    'Import Completed',
+                    'Product import processing finished successfully.',
+                    'success'
+                );
+            },
+        ];
     }
 }

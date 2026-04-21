@@ -3,28 +3,64 @@
 namespace App\Imports;
 
 use App\Models\ProductSubcategory;
-use Maatwebsite\Excel\Concerns\ToModel;
+use App\Services\NotificationService;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterImport;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
-class SubCategoryImport implements ToModel, WithHeadingRow
+class SubCategoryImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithEvents
 {
     protected $categoryId;
+    protected $authUserId;
 
-    public function __construct($categoryId)
+    public function __construct($categoryId, $authUserId = null)
     {
         $this->categoryId = $categoryId;
+        $this->authUserId = $authUserId ?? Auth::id();
     }
 
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
-        if (empty($row['name'])) return null;
+        foreach ($rows as $row) {
+            if (empty($row['name'])) continue;
 
-        return new ProductSubcategory([
-            'category_id' => $this->categoryId,
-            'name'        => $row['name'],
-            'code'        => $row['code'],
-            'is_active'   => 1,
-            'store_id'    => null,
-        ]);
+            ProductSubcategory::create([
+                'category_id' => $this->categoryId,
+                'name'        => $row['name'],
+                'code'        => $row['code'] ?? null,
+                'is_active'   => 1,
+                'store_id'    => null,
+            ]);
+        }
+    }
+
+    public function batchSize(): int
+    {
+        return 20;
+    }
+
+    public function chunkSize(): int
+    {
+        return 20;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterImport::class => function (AfterImport $event) {
+                NotificationService::sendToUser(
+                    $this->authUserId,
+                    'Import Completed',
+                    'Subcategory import processing finished successfully.',
+                    'success'
+                );
+            },
+        ];
     }
 }
