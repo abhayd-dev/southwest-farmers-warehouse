@@ -51,7 +51,7 @@ class CategoryImport implements ToCollection, WithHeadingRow, ShouldQueue, WithC
     {
         return [
             AfterImport::class => function (AfterImport $event) {
-                NotificationService::sendToUser(
+                NotificationService::send(
                     $this->authUserId,
                     'Import Completed',
                     'Category import processing finished successfully.',

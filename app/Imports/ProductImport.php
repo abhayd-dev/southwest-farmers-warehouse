@@ -109,7 +109,7 @@ class ProductImport implements ToCollection, WithHeadingRow, ShouldQueue, WithCh
     {
         return [
             AfterImport::class => function (AfterImport $event) {
-                NotificationService::sendToUser(
+                NotificationService::send(
                     $this->authUserId,
                     'Import Completed',
                     'Product import processing finished successfully.',

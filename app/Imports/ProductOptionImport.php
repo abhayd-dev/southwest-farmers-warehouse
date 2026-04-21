@@ -61,7 +61,7 @@ class ProductOptionImport implements ToCollection, WithHeadingRow, ShouldQueue, 
     {
         return [
             AfterImport::class => function (AfterImport $event) {
-                NotificationService::sendToUser(
+                NotificationService::send(
                     $this->authUserId,
                     'Import Completed',
                     'Product option import processing finished successfully.',

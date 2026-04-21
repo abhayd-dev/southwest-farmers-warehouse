@@ -54,7 +54,7 @@ class SubCategoryImport implements ToCollection, WithHeadingRow, ShouldQueue, Wi
     {
         return [
             AfterImport::class => function (AfterImport $event) {
-                NotificationService::sendToUser(
+                NotificationService::send(
                     $this->authUserId,
                     'Import Completed',
                     'Subcategory import processing finished successfully.',
