@@ -11,6 +11,7 @@ use App\Exports\Samples\SubCategorySampleExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ImportTask;
 
 class ProductSubcategoryController extends Controller
 {
@@ -126,10 +127,26 @@ class ProductSubcategoryController extends Controller
             'category_id' => 'required|exists:product_categories,id'
         ]);
 
+        // Create Import Task
+        $task = ImportTask::create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'type' => 'Subcategory',
+            'status' => ImportTask::STATUS_PENDING,
+            'file_name' => $request->file('file')->getClientOriginalName(),
+        ]);
+
         Excel::import(
-            new SubCategoryImport($request->category_id, \Illuminate\Support\Facades\Auth::id()), 
+            new SubCategoryImport($request->category_id, \Illuminate\Support\Facades\Auth::id(), $task->id), 
             $request->file
         );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Import started!',
+                'task_id' => $task->id
+            ]);
+        }
 
         return back()->with('success', 'Import started! You will be notified once processing is complete.');
     }

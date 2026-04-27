@@ -10,6 +10,7 @@ use App\Exports\Samples\CategorySampleExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ImportTask;
 
 class ProductCategoryController extends Controller
 {
@@ -122,14 +123,53 @@ class ProductCategoryController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,csv']);
-        
-        Excel::import(
-            new CategoryImport(\Illuminate\Support\Facades\Auth::id()), 
-            $request->file
-        );
+        try {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'file' => 'required|mimes:xlsx,csv',
+            ]);
 
-        return back()->with('success', 'Import started! You will be notified once processing is complete.');
+            if ($validator->fails()) {
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+                return back()->withErrors($validator)->withInput();
+            }
+            
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'type' => 'Category',
+                'status' => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            Excel::import(
+                new CategoryImport(\Illuminate\Support\Facades\Auth::id(), $task->id), 
+                $request->file
+            );
+
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import failed: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
     }
 
     public function export()

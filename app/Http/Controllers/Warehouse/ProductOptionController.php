@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ImportTask;
 
 class ProductOptionController extends Controller
 {
@@ -208,14 +209,31 @@ class ProductOptionController extends Controller
                 'file'           => 'required|mimes:xlsx,csv',
             ]);
 
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'type' => 'ProductOption',
+                'status' => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
             Excel::import(
                 new ProductOptionImport(
                     $request->category_id,
                     $request->subcategory_id,
-                    \Illuminate\Support\Facades\Auth::id()
+                    \Illuminate\Support\Facades\Auth::id(),
+                    $task->id
                 ),
                 $request->file
             );
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
 
             return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {

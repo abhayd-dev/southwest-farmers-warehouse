@@ -14,27 +14,8 @@ trait HasBarcodeImage
      */
     public function generateBarcodeImage()
     {
-        $code = $this->upc ?: $this->barcode;
-        
-        if (!$code) {
-            return null;
-        }
-
-        try {
-            $generator = new BarcodeGeneratorPNG();
-            // Use CODE_128 format which is widely used for alphanumeric
-            $barcodeData = $generator->getBarcode((string)$code, $generator::TYPE_CODE_128);
-            
-            $directory = 'barcodes';
-            $filename = $directory . '/' . $code . '.png';
-            Storage::disk('r2')->put($filename, $barcodeData);
-            
-            $this->update(['barcode_image' => $filename]);
-            
-            return $filename;
-        } catch (\Exception $e) {
-            \Log::error('Barcode generation failed: ' . $e->getMessage());
-            return null;
-        }
+        // We no longer store barcode images on R2 to ensure maximum speed.
+        // Barcodes are now generated on-the-fly in the browser (SVG) or PDF (Base64).
+        return null; 
     }
 }

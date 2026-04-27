@@ -19,6 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\ImportTask;
 
 class ProductController extends Controller
 {
@@ -235,26 +236,60 @@ class ProductController extends Controller
     public function import(Request $request)
     {
         try {
-            $request->validate([
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
                 'file' => 'required|mimes:xlsx,csv',
                 'department_id' => 'required|exists:departments,id',
                 'category_id' => 'required',
                 'subcategory_id' => 'required',
             ]);
 
-            // Pass Auth::id() to ensure background job knows who started it
+            if ($validator->fails()) {
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+                return back()->withErrors($validator)->withInput();
+            }
+
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'type' => 'Product',
+                'status' => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            // Pass Auth::id() and ImportTask ID to ensure background job knows who started it and which task to update
             Excel::import(
                 new ProductImport(
                     $request->category_id,
                     $request->subcategory_id,
                     $request->department_id,
-                    \Illuminate\Support\Facades\Auth::id()
+                    \Illuminate\Support\Facades\Auth::id(),
+                    $task->id
                 ),
                 $request->file
             );
 
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
             return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import failed: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }

@@ -33,6 +33,7 @@ use App\Http\Controllers\Warehouse\TransferMonitorController;
 use App\Http\Controllers\Warehouse\VendorController;
 use App\Http\Controllers\Warehouse\WareSettingController;
 use App\Http\Controllers\Warehouse\FreeWeightController;
+use App\Http\Controllers\Warehouse\ImportProgressController;
 use App\Http\Controllers\Warehouse\PalletController;
 use App\Http\Controllers\WarehouseController;
 
@@ -109,7 +110,8 @@ Route::middleware('auth')->group(function () {
         Route::get('products/fetch-option/{option}', [ProductController::class, 'fetchOption'])->name('warehouse.products.fetch-option');
         Route::get('products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('warehouse.products.generate-barcode');
         Route::get('products/generate-upc', [ProductController::class, 'generateUpc'])->name('warehouse.products.generate-upc');
-        Route::post('products/bulk-price-update', [ProductController::class, 'bulkPriceUpdate'])->name('warehouse.products.bulk-price-update');
+        Route::get('products/bulk-price-update', [ProductController::class, 'bulkPriceUpdate'])->name('warehouse.products.bulk-price-update');
+        Route::get('imports/progress/{id}', [ImportProgressController::class, 'show'])->name('warehouse.imports.progress');
 
         Route::controller(ProductStockController::class)->group(function () {
             Route::get('stocks', 'index')->name('warehouse.stocks.index');

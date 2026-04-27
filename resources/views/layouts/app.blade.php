@@ -213,6 +213,7 @@
         })();
     </script>
     @stack('scripts')
+    @include('layouts.partials._import-progress-scripts')
 
 </body>
 
