@@ -57,10 +57,8 @@
         @endif
 
 
-        {{-- DELETE ALL --}}
-        @if (auth()->user()->isSuperAdmin() ||
-                auth()->user()->hasPermission('delete_products') ||
-                auth()->user()->hasPermission('manage_products'))
+        {{-- DELETE ALL
+        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
             <form action="{{ route('warehouse.products.destroy-all') }}" method="POST" class="d-inline delete-all-form">
                 @csrf
                 @method('DELETE')
@@ -69,7 +67,7 @@
                     <span class="d-none d-lg-inline">Delete All</span>
                 </button>
             </form>
-        @endif
+        @endif --}}
 
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
