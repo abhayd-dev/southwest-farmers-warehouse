@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::get('subcategories/export', [ProductSubcategoryController::class, 'export'])->name('warehouse.subcategories.export');
         Route::get('subcategories/sample', [ProductSubcategoryController::class, 'sample'])->name('warehouse.subcategories.sample');
 
+        Route::delete('products/destroy-all', [ProductController::class, 'destroyAll'])->name('warehouse.products.destroy-all');
         Route::resource('products', ProductController::class)->names('warehouse.products')->except(['show']);
         Route::post('products/status', [ProductController::class, 'changeStatus'])->name('warehouse.products.status');
         Route::post('products/import', [ProductController::class, 'import'])->name('warehouse.products.import');

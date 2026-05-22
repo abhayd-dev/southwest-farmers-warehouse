@@ -202,7 +202,67 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        return back()->with('error', 'Products cannot be deleted from the system. Please deactivate them instead.');
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($product->store_id !== null) {
+            abort(403, 'Unauthorized access to store product');
+        }
+
+        try {
+            DB::transaction(function () use ($product) {
+                // Delete from referencing tables without automatic database cascade
+                DB::table('pallet_items')->where('product_id', $product->id)->delete();
+                DB::table('sale_return_items')->where('product_id', $product->id)->delete();
+                DB::table('sale_items')->where('product_id', $product->id)->delete();
+                DB::table('stock_transfers')->where('product_id', $product->id)->delete();
+                DB::table('stock_audit_items')->where('product_id', $product->id)->delete();
+                DB::table('purchase_order_items')->where('product_id', $product->id)->delete();
+                DB::table('store_purchase_order_items')->where('product_id', $product->id)->delete();
+
+                // Delete the product itself (which triggers automatic DB-level cascades)
+                $product->delete();
+            });
+
+            return back()->with('success', 'Product and all its referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Product deletion failed: ' . $e->getMessage(), ['product_id' => $product->id]);
+            return back()->with('error', 'Failed to delete product: ' . $e->getMessage());
+        }
+    }
+
+    public function destroyAll()
+    {
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            DB::transaction(function () {
+                // Find all warehouse product IDs (store_id IS NULL)
+                $productIds = Product::whereNull('store_id')->pluck('id')->toArray();
+
+                if (!empty($productIds)) {
+                    // Delete from referencing tables without automatic database cascade for these products
+                    DB::table('pallet_items')->whereIn('product_id', $productIds)->delete();
+                    DB::table('sale_return_items')->whereIn('product_id', $productIds)->delete();
+                    DB::table('sale_items')->whereIn('product_id', $productIds)->delete();
+                    DB::table('stock_transfers')->whereIn('product_id', $productIds)->delete();
+                    DB::table('stock_audit_items')->whereIn('product_id', $productIds)->delete();
+                    DB::table('purchase_order_items')->whereIn('product_id', $productIds)->delete();
+                    DB::table('store_purchase_order_items')->whereIn('product_id', $productIds)->delete();
+
+                    // Delete the products themselves (triggers automatic DB-level cascades)
+                    Product::whereIn('id', $productIds)->delete();
+                }
+            });
+
+            return back()->with('success', 'All warehouse products and their referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('All products deletion failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete all products: ' . $e->getMessage());
+        }
     }
 
     public function changeStatus(Request $request)

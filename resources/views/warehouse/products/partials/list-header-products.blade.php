@@ -57,6 +57,20 @@
         @endif
 
 
+        {{-- DELETE ALL --}}
+        @if (auth()->user()->isSuperAdmin() ||
+                auth()->user()->hasPermission('delete_products') ||
+                auth()->user()->hasPermission('manage_products'))
+            <form action="{{ route('warehouse.products.destroy-all') }}" method="POST" class="d-inline delete-all-form">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-1" title="Delete All Products">
+                    <i class="mdi mdi-delete-sweep"></i>
+                    <span class="d-none d-lg-inline">Delete All</span>
+                </button>
+            </form>
+        @endif
+
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
             <a href="{{ route('warehouse.products.create') }}" class="btn btn-success d-flex align-items-center gap-1">

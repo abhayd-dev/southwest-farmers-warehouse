@@ -233,11 +233,26 @@
                                     Swal.fire('Error!', 'Failed to update status.',
                                         'error');
                                 });
-                        } else {
-                            checkbox.checked = originalState;
+            // Delete All Confirmation
+            document.body.addEventListener('submit', function(e) {
+                if (e.target.classList.contains('delete-all-form')) {
+                    e.preventDefault();
+                    const form = e.target;
+                    Swal.fire({
+                        title: 'Are you absolutely sure?',
+                        text: "This will permanently delete ALL warehouse products and all referencing transaction, pallet, and audit records! This action is irreversible.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, delete ALL products!',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
                         }
                     });
-                });
+                }
             });
 
             const importModalEl = document.getElementById('importModal');

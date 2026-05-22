@@ -205,7 +205,11 @@
                                         <x-action-buttons :editUrl="auth()->user()->isSuperAdmin() ||
                                         auth()->user()->hasPermission('edit_products')
                                             ? route('warehouse.products.edit', $product)
-                                            : null" :deleteUrl="null">
+                                            : null" :deleteUrl="auth()->user()->isSuperAdmin() ||
+                                        auth()->user()->hasPermission('delete_products') ||
+                                        auth()->user()->hasPermission('manage_products')
+                                            ? route('warehouse.products.destroy', $product)
+                                            : null">
                                             @if (auth()->user()->isSuperAdmin() ||
                                                     auth()->user()->hasPermission('print_labels') ||
                                                     auth()->user()->hasPermission('view_products'))
