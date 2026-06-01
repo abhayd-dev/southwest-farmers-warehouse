@@ -34,8 +34,6 @@ class TruncateProductData extends Command
 
         $tables = [
             'products',
-            'product_categories',
-            'product_subcategories',
             'product_options',
             'product_batches',
             'product_stocks',
