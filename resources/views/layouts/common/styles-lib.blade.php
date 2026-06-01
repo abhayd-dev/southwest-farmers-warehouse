@@ -23,6 +23,9 @@
 <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
+<!-- Preload Icon Fonts to prevent FOUI (Flash of Unstyled Icons) -->
+<link rel="preload" href="{{ asset('assets/fonts/materialdesignicons-webfont.woff2?v=7.4.47') }}" as="font" type="font/woff2" crossorigin>
+
 <!-- App & Icons (your local files) -->
 <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" id="app-style" />
 <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />

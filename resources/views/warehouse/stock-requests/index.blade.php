@@ -170,12 +170,12 @@
                                     </td>
                                     <td class="px-4 py-3 fw-bold">#{{ $req->id }}</td>
                                     <td class="py-3">
-                                        <div class="fw-semibold text-dark">{{ $req->store->store_name }}</div>
+                                        <div class="fw-semibold text-dark">{{ $req->store->store_name ?? 'Unknown Store' }}</div>
                                         <small class="text-muted">{{ $req->created_at->format('d M Y') }}</small>
                                     </td>
                                     <td class="py-3">
-                                        <div class="fw-semibold text-dark">{{ $req->product->product_name }}</div>
-                                        <small class="text-muted">{{ $req->product->upc }}</small>
+                                        <div class="fw-semibold text-dark">{{ $req->product->product_name ?? 'Unknown Product' }}</div>
+                                        <small class="text-muted">{{ $req->product->upc ?? 'N/A' }}</small>
                                     </td>
                                     <td class="py-3 text-center">{{ $req->requested_quantity }}</td>
                                     <td class="py-3 text-center">
@@ -200,7 +200,7 @@
                                             @if ($req->status == 'pending')
                                                 <button class="btn btn-sm btn-outline-primary btn-edit"
                                                     title="Change Status"
-                                                    onclick="openDispatchModal({{ $req->id }}, '{{ $req->store->store_name }}', '{{ $req->requested_quantity }}')">
+                                                    onclick="openDispatchModal({{ $req->id }}, '{{ addslashes($req->store->store_name ?? 'Unknown Store') }}', '{{ $req->requested_quantity }}')">
                                                     <i class="mdi mdi-swap-horizontal"></i>
                                                 </button>
                                             @elseif($req->status == 'dispatched')
