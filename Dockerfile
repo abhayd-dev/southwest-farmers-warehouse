@@ -43,6 +43,6 @@ RUN npm install && npm run build
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 # 8️⃣ Start Command (CRITICAL CHANGE)
-# This links the storage folder AND starts the server
+# This links the storage folder, runs migrations, AND starts the server
 EXPOSE 8080
-CMD sh -c "php artisan storage:link && php artisan serve --host=0.0.0.0 --port=$PORT"
+CMD sh -c "php artisan storage:link && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
