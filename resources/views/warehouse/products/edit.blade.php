@@ -4,12 +4,18 @@
 
         <div class="bg-white border-bottom shadow-sm mb-4">
             <div class="py-3">
-                <div class="d-flex flex-column gap-2">
-                    @include('warehouse.partials.breadcrumb', ['title' => 'Edit Product'])
-                    <h4 class="fw-bold mb-0 text-dark">
-                        <i class="mdi mdi-pencil-circle text-warning"></i>
-                        Edit Product
-                    </h4>
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex flex-column gap-2">
+                        <h4 class="fw-bold mb-0 text-dark">
+                            <i class="mdi mdi-pencil-circle text-warning"></i>
+                            Edit Product
+                        </h4>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="{{ route('warehouse.products.index') }}" class="btn btn-outline-secondary">
+                            <i class="mdi mdi-arrow-left me-1"></i> Back to List
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

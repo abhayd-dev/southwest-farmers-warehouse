@@ -7,7 +7,6 @@
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="d-flex flex-column gap-2">
-                        @include('warehouse.products.partials.breadcrumb', ['title' => 'Products'])
                         <h4 class="fw-bold mb-0 text-dark">
                             <i class="mdi mdi-cube-outline text-primary"></i> Products Management
                         </h4>
