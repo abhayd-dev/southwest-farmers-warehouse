@@ -62,27 +62,20 @@ class ProductImport implements ToCollection, WithHeadingRow, ShouldQueue, WithCh
             }
 
             DB::transaction(function () use ($row, $barcode) {
-                // Reuse existing ProductOption for this barcode if one already
-                // exists (e.g. from a previous partial import), otherwise create.
-                $option = ProductOption::firstOrCreate(
-                    ['barcode' => $barcode, 'store_id' => null],
-                    [
-                        'ware_user_id'               => $this->authUserId,
-                        'option_name'                => $row['product_name'],
-                        'sku'                        => $row['sku'] ?? null,
-                        'category_id'                => $this->categoryId,
-                        'subcategory_id'             => $this->subcategoryId,
-                        'unit'                       => $row['unit'],
-                        'upc'                        => (string)($row['upc'] ?? ''),
-                        'plu_code'                   => (string)($row['plu_code'] ?? ''),
-                        'warehouse_markup_percentage' => (float)($row['warehouse_markup_percentage'] ?? 0),
-                        'cost_price'                 => (float)($row['cost_price'] ?? 0),
-                        'base_price'                 => (float)($row['price'] ?? 0),
-                        'mrp'                        => (float)($row['price'] ?? 0),
-                        'is_active'                  => 1,
-                        'department_id'              => $this->departmentId,
-                    ]
-                );
+                // Create a new ProductOption — only using columns that exist on the table
+                $option = ProductOption::create([
+                    'option_name'    => $row['product_name'],
+                    'sku'            => $row['sku'] ?? null,
+                    'category_id'    => $this->categoryId,
+                    'subcategory_id' => $this->subcategoryId,
+                    'unit'           => $row['unit'],
+                    'upc'            => (string)($row['upc'] ?? ''),
+                    'barcode'        => $barcode,
+                    'cost_price'     => (float)($row['cost_price'] ?? 0),
+                    'base_price'     => (float)($row['price'] ?? 0),
+                    'mrp'            => (float)($row['price'] ?? 0),
+                    'is_active'      => 1,
+                ]);
 
                 $product = Product::create([
                     'ware_user_id'               => $this->authUserId,
