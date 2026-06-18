@@ -121,10 +121,10 @@
                             <input type="text" name="search" value="{{ request('search') }}"
                                 class="form-control border-end-0 flex-grow-1"
                                 placeholder="Search by name, SKU or Barcode...">
-                            {{-- Status: compact fixed width --}}
+                            {{-- Status: shrinks to fit text only --}}
                             <select name="status"
                                 class="form-select border-start-0 border-end-0 flex-shrink-0"
-                                style="width: 100px; min-width: 100px;">
+                                style="width: auto; min-width: 0; max-width: 90px;">
                                 <option value="">All</option>
                                 <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
                                 <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
