@@ -114,7 +114,7 @@
 
                     {{-- SEARCH + FILTER — right-aligned above table --}}
                     <form method="GET" action="{{ route('warehouse.products.index') }}"
-                        class="d-flex ms-auto" style="min-width: 420px; max-width: 600px;">
+                        class="d-flex ms-auto" style="min-width: 580px; max-width: 750px;">
                         <div class="input-group shadow-sm">
                             <input type="text" name="search" value="{{ request('search') }}"
                                 class="form-control border-end-0"
