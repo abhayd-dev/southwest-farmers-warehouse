@@ -107,9 +107,35 @@
         {{-- TABLE CARD --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="mdi mdi-format-list-bulleted text-primary"></i> Products List
-                </h5>
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="mdi mdi-format-list-bulleted text-primary"></i> Products List
+                    </h5>
+
+                    {{-- SEARCH + FILTER — right-aligned above table --}}
+                    <form method="GET" action="{{ route('warehouse.products.index') }}"
+                        class="d-flex ms-auto" style="min-width: 420px; max-width: 600px;">
+                        <div class="input-group shadow-sm">
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                class="form-control border-end-0"
+                                placeholder="Search by name, SKU or Barcode...">
+                            <select name="status" class="form-select border-start-0 border-end-0" style="max-width:130px;">
+                                <option value="">All Status</option>
+                                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="mdi mdi-magnify"></i>
+                            </button>
+                            @if (request('search') || request()->has('status'))
+                                <a href="{{ route('warehouse.products.index') }}"
+                                    class="btn btn-outline-secondary" title="Clear Filters">
+                                    <i class="mdi mdi-close"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div class="card-body p-0">
