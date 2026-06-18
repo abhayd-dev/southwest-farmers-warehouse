@@ -117,6 +117,12 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
+                                    <th class="px-3 py-3 text-center" style="width:44px;">
+                                        <input type="checkbox" id="selectAllCheckbox" class="form-check-input"
+                                            title="Select all on this page">
+                                    </th>
+                                @endif
                                 <th class="px-4 py-3 text-muted fw-semibold small">LOT NO.</th>
                                 <th class="py-3 text-muted fw-semibold small">UPC & BARCODE</th>
                                 <th class="py-3 text-muted fw-semibold small">ICON & NAME</th>
@@ -133,6 +139,12 @@
                         <tbody>
                             @forelse($products as $product)
                                 <tr class="border-bottom">
+                                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
+                                        <td class="px-3 py-3 text-center">
+                                            <input type="checkbox" class="form-check-input product-checkbox"
+                                                value="{{ $product->id }}">
+                                        </td>
+                                    @endif
                                     <td class="px-4 py-3">
                                         <span class="badge bg-light text-dark border">{{ $product->id }}</span>
                                     </td>
@@ -223,7 +235,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5">
+                                    <td colspan="11" class="text-center py-5">
                                         <div class="py-5">
                                             <i class="mdi mdi-cube-outline text-muted" style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No products found.</p>
@@ -328,6 +340,87 @@
     @endif
 
     @include('warehouse.products._scripts')
+
+    {{-- ── MULTI-DELETE & SELECT-ALL LOGIC ─────────────────────────────── --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const selectAllChk   = document.getElementById('selectAllCheckbox');
+            const deleteAllBtn   = document.getElementById('deleteAllBtn');
+            const deleteAllForm  = document.getElementById('deleteAllForm');
+            const deleteBulkForm = document.getElementById('deleteBulkForm');
+            const bulkContainer  = document.getElementById('bulkIdsContainer');
+
+            // ── Select-All header checkbox ───────────────────────────────────
+            if (selectAllChk) {
+                selectAllChk.addEventListener('change', function () {
+                    document.querySelectorAll('.product-checkbox').forEach(function (cb) {
+                        cb.checked = selectAllChk.checked;
+                    });
+                });
+
+                // Keep header checkbox in sync when individual rows change
+                document.querySelectorAll('.product-checkbox').forEach(function (cb) {
+                    cb.addEventListener('change', function () {
+                        const all   = document.querySelectorAll('.product-checkbox');
+                        const checked = document.querySelectorAll('.product-checkbox:checked');
+                        selectAllChk.indeterminate = checked.length > 0 && checked.length < all.length;
+                        selectAllChk.checked       = checked.length === all.length && all.length > 0;
+                    });
+                });
+            }
+
+            // ── Delete All / Bulk Delete button ──────────────────────────────
+            if (deleteAllBtn) {
+                deleteAllBtn.addEventListener('click', function () {
+                    const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+                    const selectedIds  = Array.from(checkedBoxes).map(cb => cb.value);
+                    const hasSelection = selectedIds.length > 0;
+
+                    // Build appropriate confirmation message
+                    let title, text, confirmText;
+                    if (hasSelection) {
+                        title       = 'Delete ' + selectedIds.length + ' selected product' + (selectedIds.length > 1 ? 's' : '') + '?';
+                        text        = 'This will permanently delete the selected product(s) and all their related records. This action cannot be undone.';
+                        confirmText = 'Yes, delete selected';
+                    } else {
+                        title       = 'Delete ALL products?';
+                        text        = 'This will permanently delete ALL warehouse products and all their related records.\n\nDepartments, Categories and Subcategories will NOT be deleted.';
+                        confirmText = 'Yes, delete ALL products';
+                    }
+
+                    Swal.fire({
+                        title:              title,
+                        text:               text,
+                        icon:               'warning',
+                        showCancelButton:   true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor:  '#6c757d',
+                        confirmButtonText:  confirmText,
+                        cancelButtonText:   'Cancel',
+                        reverseButtons:     true,
+                    }).then(function (result) {
+                        if (!result.isConfirmed) return;
+
+                        if (hasSelection) {
+                            // Populate hidden bulk-delete form with selected IDs
+                            bulkContainer.innerHTML = '';
+                            selectedIds.forEach(function (id) {
+                                const input = document.createElement('input');
+                                input.type  = 'hidden';
+                                input.name  = 'ids[]';
+                                input.value = id;
+                                bulkContainer.appendChild(input);
+                            });
+                            deleteBulkForm.submit();
+                        } else {
+                            deleteAllForm.submit();
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script>

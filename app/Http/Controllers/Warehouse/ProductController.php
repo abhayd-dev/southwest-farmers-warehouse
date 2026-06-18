@@ -265,6 +265,47 @@ class ProductController extends Controller
         }
     }
 
+    public function destroyBulk(Request $request)
+    {
+        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:products,id',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+                // Ensure all IDs belong to warehouse products (store_id IS NULL) — security guard
+                $productIds = Product::whereNull('store_id')
+                    ->whereIn('id', $request->ids)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (empty($productIds)) {
+                    return;
+                }
+
+                DB::table('pallet_items')->whereIn('product_id', $productIds)->delete();
+                DB::table('sale_return_items')->whereIn('product_id', $productIds)->delete();
+                DB::table('sale_items')->whereIn('product_id', $productIds)->delete();
+                DB::table('stock_transfers')->whereIn('product_id', $productIds)->delete();
+                DB::table('stock_audit_items')->whereIn('product_id', $productIds)->delete();
+                DB::table('purchase_order_items')->whereIn('product_id', $productIds)->delete();
+                DB::table('store_purchase_order_items')->whereIn('product_id', $productIds)->delete();
+
+                Product::whereIn('id', $productIds)->delete();
+            });
+
+            return back()->with('success', 'Selected products and their referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Bulk product deletion failed: ' . $e->getMessage(), ['ids' => $request->ids]);
+            return back()->with('error', 'Failed to delete selected products: ' . $e->getMessage());
+        }
+    }
+
     public function changeStatus(Request $request)
     {
         try {

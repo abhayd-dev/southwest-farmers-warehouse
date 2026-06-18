@@ -1,7 +1,7 @@
 <div class="d-flex align-items-center gap-2 flex-wrap">
     {{-- SEARCH + FILTER --}}
     <form method="GET" action="{{ route('warehouse.products.index') }}" class="d-flex flex-grow-1"
-        style="max-width: 600px;">
+        style="max-width: 900px;">
         <div class="input-group shadow-sm">
             <input type="text" name="search" value="{{ request('search') }}" class="form-control border-end-0"
                 placeholder="Search by product name, SKU or Barcode...">
@@ -35,8 +35,8 @@
                 <span class="d-none d-lg-inline text-white">Set Pricing</span>
             </button>
         @endif
+
         {{-- EXPORT --}}
-        {{-- Export usually allowed for Viewers too, but let's keep it restricted to managers or creators --}}
         @if (auth()->user()->isSuperAdmin() ||
                 auth()->user()->hasPermission('manage_products') ||
                 auth()->user()->hasPermission('export_reports'))
@@ -56,18 +56,29 @@
             </button>
         @endif
 
-
-        {{-- DELETE ALL
+        {{-- DELETE ALL / BULK DELETE --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
-            <form action="{{ route('warehouse.products.destroy-all') }}" method="POST" class="d-inline delete-all-form">
+            <button type="button" id="deleteAllBtn" class="btn btn-outline-danger d-flex align-items-center gap-1"
+                title="Delete All / Selected Products">
+                <i class="mdi mdi-delete-sweep"></i>
+                <span class="d-none d-lg-inline">Delete All</span>
+            </button>
+
+            {{-- Hidden form: Delete ALL warehouse products --}}
+            <form id="deleteAllForm" action="{{ route('warehouse.products.destroy-all') }}" method="POST"
+                class="d-none">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-1" title="Delete All Products">
-                    <i class="mdi mdi-delete-sweep"></i>
-                    <span class="d-none d-lg-inline">Delete All</span>
-                </button>
             </form>
-        @endif --}}
+
+            {{-- Hidden form: Delete SELECTED product IDs --}}
+            <form id="deleteBulkForm" action="{{ route('warehouse.products.destroy-bulk') }}" method="POST"
+                class="d-none">
+                @csrf
+                @method('DELETE')
+                <div id="bulkIdsContainer"></div>
+            </form>
+        @endif
 
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
