@@ -32,7 +32,7 @@
             </button>
         @endif
 
-        {{-- DELETE ALL / BULK DELETE --}}
+        {{-- DELETE ALL / BULK DELETE: commented out temporarily
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
             <button type="button" id="deleteAllBtn" class="btn btn-outline-danger d-flex align-items-center gap-1"
                 title="Delete All / Selected Products">
@@ -55,6 +55,7 @@
                 <div id="bulkIdsContainer"></div>
             </form>
         @endif
+        --}}
 
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))

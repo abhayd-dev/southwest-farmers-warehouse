@@ -164,12 +164,14 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
+                                {{-- MULTI-DELETE: commented out temporarily
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
                                     <th class="px-3 py-3 text-center" style="width:44px;">
                                         <input type="checkbox" id="selectAllCheckbox" class="form-check-input"
                                             title="Select all on this page">
                                     </th>
                                 @endif
+                                --}}
                                 <th class="px-4 py-3 text-muted fw-semibold small">LOT NO.</th>
                                 <th class="py-3 text-muted fw-semibold small">UPC & BARCODE</th>
                                 <th class="py-3 text-muted fw-semibold small">ICON & NAME</th>
@@ -186,12 +188,14 @@
                         <tbody>
                             @forelse($products as $product)
                                 <tr class="border-bottom">
+                                    {{-- MULTI-DELETE: commented out temporarily
                                     @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
                                         <td class="px-3 py-3 text-center">
                                             <input type="checkbox" class="form-check-input product-checkbox"
                                                 value="{{ $product->id }}">
                                         </td>
                                     @endif
+                                    --}}
                                     <td class="px-4 py-3">
                                         <span class="badge bg-light text-dark border">{{ $product->id }}</span>
                                     </td>
