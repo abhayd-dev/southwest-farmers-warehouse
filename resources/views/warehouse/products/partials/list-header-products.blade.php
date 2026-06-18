@@ -32,30 +32,24 @@
             </button>
         @endif
 
-        {{-- DELETE ALL / BULK DELETE: commented out temporarily
+        @php /* DELETE ALL / BULK DELETE: commented out temporarily
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
             <button type="button" id="deleteAllBtn" class="btn btn-outline-danger d-flex align-items-center gap-1"
                 title="Delete All / Selected Products">
                 <i class="mdi mdi-delete-sweep"></i>
                 <span class="d-none d-lg-inline">Delete All</span>
             </button>
-
-            {{-- Hidden form: Delete ALL warehouse products --}}
-            <form id="deleteAllForm" action="{{ route('warehouse.products.destroy-all') }}" method="POST"
-                class="d-none">
+            <form id="deleteAllForm" action="{{ route('warehouse.products.destroy-all') }}" method="POST" class="d-none">
                 @csrf
                 @method('DELETE')
             </form>
-
-            {{-- Hidden form: Delete SELECTED product IDs --}}
-            <form id="deleteBulkForm" action="{{ route('warehouse.products.destroy-bulk') }}" method="POST"
-                class="d-none">
+            <form id="deleteBulkForm" action="{{ route('warehouse.products.destroy-bulk') }}" method="POST" class="d-none">
                 @csrf
                 @method('DELETE')
                 <div id="bulkIdsContainer"></div>
             </form>
         @endif
-        --}}
+        */ @endphp
 
         {{-- ADD --}}
         @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
