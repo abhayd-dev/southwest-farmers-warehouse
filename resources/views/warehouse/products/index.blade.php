@@ -107,29 +107,34 @@
         {{-- TABLE CARD --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
-                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-                    <h5 class="mb-0 fw-semibold">
+                {{-- Row 1 on large: title left + search right | on small: title top, search below --}}
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2">
+                    <h5 class="mb-0 fw-semibold flex-shrink-0">
                         <i class="mdi mdi-format-list-bulleted text-primary"></i> Products List
                     </h5>
 
-                    {{-- SEARCH + FILTER — right-aligned above table --}}
+                    {{-- SEARCH + FILTER — responsive, right-aligned on large screens --}}
                     <form method="GET" action="{{ route('warehouse.products.index') }}"
-                        class="d-flex ms-auto" style="min-width: 580px; max-width: 750px;">
+                        class="d-flex w-100 ms-lg-auto" style="max-width: 100%;">
                         <div class="input-group shadow-sm">
+                            {{-- Search input grows to fill all remaining space --}}
                             <input type="text" name="search" value="{{ request('search') }}"
-                                class="form-control border-end-0"
+                                class="form-control border-end-0 flex-grow-1"
                                 placeholder="Search by name, SKU or Barcode...">
-                            <select name="status" class="form-select border-start-0 border-end-0" style="max-width:130px;">
-                                <option value="">All Status</option>
+                            {{-- Status: compact fixed width --}}
+                            <select name="status"
+                                class="form-select border-start-0 border-end-0 flex-shrink-0"
+                                style="width: 100px; min-width: 100px;">
+                                <option value="">All</option>
                                 <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
                                 <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
                             </select>
-                            <button class="btn btn-primary" type="submit">
+                            <button class="btn btn-primary flex-shrink-0" type="submit">
                                 <i class="mdi mdi-magnify"></i>
                             </button>
                             @if (request('search') || request()->has('status'))
                                 <a href="{{ route('warehouse.products.index') }}"
-                                    class="btn btn-outline-secondary" title="Clear Filters">
+                                    class="btn btn-outline-secondary flex-shrink-0" title="Clear">
                                     <i class="mdi mdi-close"></i>
                                 </a>
                             @endif
