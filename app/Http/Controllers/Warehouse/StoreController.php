@@ -81,7 +81,8 @@ class StoreController extends Controller
             return redirect()->route('warehouse.stores.index')
                 ->with('success', 'Store registered successfully with Manager account.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Store creation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -192,7 +193,8 @@ class StoreController extends Controller
             return redirect()->route('warehouse.stores.index')
                 ->with('success', 'Store details updated.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Store update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -202,7 +204,8 @@ class StoreController extends Controller
             StoreDetail::findOrFail($id)->delete();
             return redirect()->route('warehouse.stores.index')->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Cannot delete store.');
+            \Illuminate\Support\Facades\Log::error('Store deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -223,7 +226,8 @@ class StoreController extends Controller
             }
             return response()->json(['success' => true, 'message' => 'Status updated.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error.'], 500);
+            \Illuminate\Support\Facades\Log::error('Store status update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 
@@ -241,7 +245,8 @@ class StoreController extends Controller
             $this->storeService->createStoreStaff($storeId, $request->all());
             return back()->with('success', 'Staff added successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Store staff creation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -251,7 +256,8 @@ class StoreController extends Controller
             $this->storeService->deleteStoreStaff($id);
             return back()->with('success', 'Staff removed successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Store staff deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -266,7 +272,8 @@ class StoreController extends Controller
             $this->storeService->updateStoreSchedule($id, $request->all());
             return back()->with('success', 'Schedule updated successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Store schedule update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 }

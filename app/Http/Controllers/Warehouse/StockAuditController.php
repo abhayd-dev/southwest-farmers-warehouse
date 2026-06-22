@@ -109,7 +109,8 @@ class StockAuditController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Audit initiation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -154,7 +155,8 @@ class StockAuditController extends Controller
             return redirect()->route('warehouse.stock-control.audit.index')->with('success', 'Audit Finalized.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Audit finalization failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 }

@@ -106,7 +106,8 @@ class ProductSubcategoryController extends Controller
             $subcategory->delete();
             return back()->with('success', 'Subcategory deleted successfully');
         } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed');
+            \Illuminate\Support\Facades\Log::error('Subcategory deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
     
@@ -116,7 +117,8 @@ class ProductSubcategoryController extends Controller
             ProductSubcategory::whereNull('store_id')->findOrFail($request->id)->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error'], 500);
+            \Illuminate\Support\Facades\Log::error('Subcategory status change failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 

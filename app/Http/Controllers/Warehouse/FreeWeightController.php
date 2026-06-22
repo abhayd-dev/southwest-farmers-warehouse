@@ -140,7 +140,8 @@ class FreeWeightController extends Controller
                 ->with('success', "Packaging event completed. {$request->packages_to_create} packages created.");
 
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Packaging event failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 

@@ -16,5 +16,41 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            // Validation exceptions should propagate normally so users see validation errors
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return null;
+            }
+
+            // Authentication exceptions should propagate to handle guest redirects
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                return null;
+            }
+
+            // Log all unhandled exceptions for debugging purposes
+            \Illuminate\Support\Facades\Log::error('Unhandled Exception: ' . $e->getMessage(), [
+                'exception' => $e,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'input' => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            // Determine if AJAX or API request
+            if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong. Please try again later.'
+                ], 500);
+            }
+
+            // Check if the exception is an HTTP exception (e.g. 404, 403) and not 500
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                if ($e->getStatusCode() !== 500) {
+                    return null; // let default handler render 404, 403, etc.
+                }
+            }
+
+            // Render custom 500 error page
+            return response()->view('errors.500', [], 500);
+        });
     })->create();

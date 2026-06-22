@@ -86,7 +86,8 @@ class DepartmentController extends Controller
             Department::where('id', $request->id)->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error updating status'], 500);
+            \Illuminate\Support\Facades\Log::error('Department status change failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 }

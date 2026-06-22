@@ -379,9 +379,10 @@ class StorePurchaseOrderController extends Controller
                 ->route('warehouse.store-orders.index')
                 ->with('info', "No PO needed for {$store->store_name} — stock levels are sufficient or duplicates exist.");
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto-PO generation failed: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()
                 ->route('warehouse.store-orders.index')
-                ->with('error', "Auto-PO generation failed: {$e->getMessage()}");
+                ->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -454,7 +455,8 @@ class StorePurchaseOrderController extends Controller
                 ->with('success', "Auto-arranged PO #{$storeOrder->po_number} into " . count($arrangedData) . " pallets successfully.");
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to auto-arrange pallets: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to auto-arrange pallets: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 }

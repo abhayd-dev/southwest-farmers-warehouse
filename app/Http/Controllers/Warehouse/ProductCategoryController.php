@@ -106,7 +106,8 @@ class ProductCategoryController extends Controller
             $category->delete();
             return back()->with('success', 'Category deleted successfully');
         } catch (\Exception $e) {
-            return back()->with('error', 'Delete failed');
+            \Illuminate\Support\Facades\Log::error('Category deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -117,7 +118,8 @@ class ProductCategoryController extends Controller
                 ->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error'], 500);
+            \Illuminate\Support\Facades\Log::error('Category status change failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 
@@ -162,13 +164,14 @@ class ProductCategoryController extends Controller
 
             return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Category import failed: ' . $e->getMessage(), ['exception' => $e]);
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Import failed: ' . $e->getMessage()
+                    'message' => 'Something went wrong. Please try again later.'
                 ], 500);
             }
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 

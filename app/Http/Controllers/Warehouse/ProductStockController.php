@@ -137,7 +137,8 @@ class ProductStockController extends Controller
                 ->with('success', "Stock Added! Total added: $finalQty {$product->unit}");
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error adding stock: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error adding stock: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -267,7 +268,8 @@ class ProductStockController extends Controller
                 ->with('success', 'Stock adjusted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Adjustment Failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Stock adjustment failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 

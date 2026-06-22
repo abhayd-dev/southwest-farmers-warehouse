@@ -55,7 +55,8 @@ class StaffController extends Controller
 
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error updating status'], 500);
+            \Illuminate\Support\Facades\Log::error('Staff status change failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
     public function create()
@@ -103,7 +104,8 @@ class StaffController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Staff member creation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -160,7 +162,8 @@ class StaffController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Staff member update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -174,7 +177,8 @@ class StaffController extends Controller
             $user->delete(); // Soft Delete
             return back()->with('success', 'Staff Member Deleted.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Staff member deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 }

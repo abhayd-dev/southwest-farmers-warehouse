@@ -213,7 +213,8 @@ class PurchaseOrderController extends Controller
             return redirect()->route('warehouse.purchase-orders.show', $po->id)
                 ->with('success', 'Purchase Order created successfully!' . $approvalMessage);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error creating PO: ' . $e->getMessage());
+            Log::error('Error creating PO: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -239,7 +240,8 @@ class PurchaseOrderController extends Controller
             return redirect()->route('warehouse.purchase-orders.create')
                 ->with('prefilled_items', $request->items);
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to process restock items: ' . $e->getMessage());
+            Log::error('Failed to process restock items: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -294,8 +296,8 @@ class PurchaseOrderController extends Controller
             $purchaseOrder->update(['approval_status' => 'pending']);
             return back()->with('success', 'Approval email sent successfully.');
         } catch (\Exception $e) {
-            Log::error('Failed to send approval email: ' . $e->getMessage());
-            return back()->with('error', 'Failed to send approval email: ' . $e->getMessage());
+            Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -348,7 +350,8 @@ class PurchaseOrderController extends Controller
             return redirect()->route('warehouse.receiving.show', $purchaseOrder->id)
                 ->with('success', 'Inventory updated successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Receive failed: ' . $e->getMessage());
+            Log::error('Receive failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -425,8 +428,8 @@ class PurchaseOrderController extends Controller
             }
 
             if (!empty($results['errors'])) {
-                $errorMsg = implode(', ', $results['errors']);
-                return back()->with('warning', 'Partial success: ' . implode(', ', $messages) . '. Errors: ' . $errorMsg);
+                Log::warning('PO communication partial success/errors: ' . implode(', ', $results['errors']));
+                return back()->with('warning', 'Partial success: ' . implode(', ', $messages) . '. Something went wrong. Please try again later.');
             }
 
             if (empty($messages)) {
@@ -443,7 +446,8 @@ class PurchaseOrderController extends Controller
 
             return back()->with('success', 'PO sent to vendor: ' . implode(', ', $messages));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to send PO: ' . $e->getMessage());
+            Log::error('Failed to send PO: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -491,9 +495,10 @@ class PurchaseOrderController extends Controller
                 'po' => $purchaseOrder,
             ]);
         } catch (\Exception $e) {
+            Log::error('Approval processing failed: ' . $e->getMessage(), ['exception' => $e]);
             return view('warehouse.purchase-orders.approval-result', [
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Something went wrong. Please try again later.',
             ]);
         }
     }

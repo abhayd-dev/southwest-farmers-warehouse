@@ -126,7 +126,8 @@ class VendorController extends Controller
             $vendor->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error updating status'], 500);
+            \Illuminate\Support\Facades\Log::error('Vendor status change failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 }

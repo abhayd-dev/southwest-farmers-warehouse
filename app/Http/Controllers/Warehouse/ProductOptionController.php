@@ -49,8 +49,8 @@ class ProductOptionController extends Controller
 
             return view('warehouse.product-options.index', compact('options', 'categories'));
         } catch (\Exception $e) {
-            Log::error('ProductOption Index Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to load product options.');
+            Log::error('ProductOption Index Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -64,8 +64,8 @@ class ProductOptionController extends Controller
 
             return view('warehouse.product-options.create', compact('categories'));
         } catch (\Exception $e) {
-            Log::error('ProductOption Create Error: ' . $e->getMessage());
-            return back()->with('error', 'Unable to open create form.');
+            Log::error('ProductOption Create Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -98,7 +98,8 @@ class ProductOptionController extends Controller
                 ->route('warehouse.product-options.index')
                 ->with('success', 'Product option created successfully');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            Log::error('ProductOption Store Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -120,8 +121,8 @@ class ProductOptionController extends Controller
                 compact('productOption', 'categories', 'subcategories')
             );
         } catch (\Exception $e) {
-            Log::error('ProductOption Edit Error: ' . $e->getMessage());
-            return back()->with('error', 'Unable to open edit page.');
+            Log::error('ProductOption Edit Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -156,7 +157,8 @@ class ProductOptionController extends Controller
 
             return back()->with('success', 'Product option updated successfully');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            Log::error('ProductOption Update Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -188,11 +190,11 @@ class ProductOptionController extends Controller
                 'message' => 'Status updated successfully'
             ]);
         } catch (\Exception $e) {
-            Log::error('ProductOption Status Error: ' . $e->getMessage());
+            Log::error('ProductOption Status Error: ' . $e->getMessage(), ['exception' => $e]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update status'
+                'message' => 'Something went wrong. Please try again later.'
             ], 500);
         }
     }
@@ -237,8 +239,8 @@ class ProductOptionController extends Controller
 
             return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
-            Log::error('ProductOption Import Error: ' . $e->getMessage());
-            return back()->with('error', 'Import failed. Please check file format.');
+            Log::error('ProductOption Import Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -253,8 +255,8 @@ class ProductOptionController extends Controller
                 'product-options.xlsx'
             );
         } catch (\Exception $e) {
-            Log::error('ProductOption Export Error: ' . $e->getMessage());
-            return back()->with('error', 'Export failed.');
+            Log::error('ProductOption Export Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -268,8 +270,8 @@ class ProductOptionController extends Controller
                 storage_path('app/samples/product-options-sample.xlsx')
             );
         } catch (\Exception $e) {
-            Log::error('ProductOption Sample Error: ' . $e->getMessage());
-            return back()->with('error', 'Sample file not found.');
+            Log::error('ProductOption Sample Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
         }
     }
 
@@ -285,8 +287,8 @@ class ProductOptionController extends Controller
 
             return response()->json($subcategories);
         } catch (\Exception $e) {
-            Log::error('Fetch Subcategory Error: ' . $e->getMessage());
-            return response()->json([], 500);
+            Log::error('Fetch Subcategory Error: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
     }
 }

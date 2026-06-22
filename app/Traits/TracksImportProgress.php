@@ -47,9 +47,13 @@ trait TracksImportProgress
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
+                \Illuminate\Support\Facades\Log::error('Import task failed: ' . $event->getException()->getMessage(), [
+                    'exception' => $event->getException(),
+                    'task_id' => $this->importTaskId,
+                ]);
                 ImportTask::where('id', $this->importTaskId)->update([
                     'status' => ImportTask::STATUS_FAILED,
-                    'error_message' => $event->getException()->getMessage(),
+                    'error_message' => 'Something went wrong. Please try again later.',
                 ]);
             },
         ];
