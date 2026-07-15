@@ -11,36 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Get all duplicate vendor names
-        $duplicateNames = DB::table('vendors')
-            ->select('name')
-            ->whereNull('deleted_at')
-            ->groupBy('name')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('name');
-
-        foreach ($duplicateNames as $name) {
-            // Find all vendors with this name (case-insensitive)
-            $vendors = Vendor::whereRaw('LOWER(name) = ?', [strtolower($name)])
-                ->orderBy('id', 'asc')
-                ->get();
-
-            if ($vendors->count() > 1) {
-                // Keep the first one (lowest ID)
-                $keep = $vendors->shift();
-
-                // Delete the rest
-                foreach ($vendors as $duplicateVendor) {
-                    // Re-associate any Purchase Orders referencing the duplicate vendor to point to the kept vendor
-                    DB::table('purchase_orders')
-                        ->where('vendor_id', $duplicateVendor->id)
-                        ->update(['vendor_id' => $keep->id]);
-
-                    // Purge duplicate vendor record
-                    $duplicateVendor->forceDelete();
-                }
-            }
-        }
+        // Force delete all existing vendors.
+        // Database cascading constraints will automatically remove any linked purchase orders.
+        DB::table('vendors')->delete();
     }
 
     /**
