@@ -72,8 +72,25 @@
 
                     @endif
 
-                    <div class="mt-4">
-                        <p class="text-muted small">You can close this window now.</p>
+                    <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
+                        @if(isset($po))
+                            <a href="{{ route('warehouse.purchase-orders.show', $po->id) }}"
+                               class="btn btn-{{ $success ? 'success' : 'danger' }}">
+                                ← Back to Purchase Order
+                            </a>
+                            <a href="{{ route('warehouse.purchase-orders.show', $po->id) }}"
+                               class="btn btn-outline-secondary"
+                               onclick="window.location.reload(); return false;">
+                                ↺ Reload
+                            </a>
+                        @else
+                            <button onclick="history.back()" class="btn btn-{{ $success ? 'success' : 'danger' }}">
+                                ← Go Back
+                            </button>
+                            <button onclick="window.location.reload()" class="btn btn-outline-secondary">
+                                ↺ Reload
+                            </button>
+                        @endif
                     </div>
 
                 </div>
