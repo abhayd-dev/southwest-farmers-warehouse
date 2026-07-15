@@ -4,7 +4,13 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vendor;
+use App\Models\ImportTask;
+use App\Imports\VendorImport;
+use App\Exports\Samples\VendorSampleExport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\DataTables;
 
 class VendorController extends Controller
@@ -129,5 +135,62 @@ class VendorController extends Controller
             \Illuminate\Support\Facades\Log::error('Vendor status change failed: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
         }
+    }
+
+    public function import(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|mimes:xlsx,csv',
+            ]);
+
+            if ($validator->fails()) {
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors'  => $validator->errors(),
+                    ], 422);
+                }
+                return back()->withErrors($validator)->withInput();
+            }
+
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id'   => Auth::id(),
+                'type'      => 'Vendor',
+                'status'    => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            Excel::import(
+                new VendorImport(Auth::id(), $task->id),
+                $request->file
+            );
+
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id,
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Vendor import failed: ' . $e->getMessage(), ['exception' => $e]);
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong. Please try again later.',
+                ], 500);
+            }
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function sample()
+    {
+        return Excel::download(new VendorSampleExport, 'vendors-sample.xlsx');
     }
 }

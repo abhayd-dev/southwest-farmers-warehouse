@@ -224,6 +224,8 @@ Route::middleware('auth')->group(function () {
             });
         });
 
+        Route::post('vendors/import', [VendorController::class, 'import'])->name('warehouse.vendors.import');
+        Route::get('vendors/sample', [VendorController::class, 'sample'])->name('warehouse.vendors.sample');
         Route::resource('vendors', VendorController::class)
             ->names('warehouse.vendors')
             ->except(['show']);

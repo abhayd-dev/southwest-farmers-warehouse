@@ -12,9 +12,13 @@
                         </h4>
                     </div>
                     
-                    {{-- ADD BUTTON (Protected) --}}
+                    {{-- ACTION BUTTONS (Protected) --}}
                     @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_vendors'))
                     <div class=" d-flex align-items-end gap-2 ">
+                        <button type="button" class="btn btn-outline-success shadow-sm"
+                            data-bs-toggle="modal" data-bs-target="#importVendorModal">
+                            <i class="mdi mdi-upload me-1"></i> Import
+                        </button>
                         <a href="{{ route('warehouse.vendors.create') }}" class="btn btn-success w-40 w-md-auto shadow-sm">
                             <i class="mdi mdi-plus-circle me-1"></i> Add New Vendor
                         </a>
@@ -48,6 +52,8 @@
             </div>
         </div>
     </div>
+
+    @include('warehouse.vendors._import-modal')
 
     @push('scripts')
     <script>
