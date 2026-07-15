@@ -71,6 +71,16 @@
                 }
             });
 
+            @if (session('import_skipped_errors'))
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Skipped Duplicate Rows',
+                    html: `{!! implode('<br>', array_map('e', session('import_skipped_errors'))) !!}`,
+                    timer: 15000,
+                    width: '400px'
+                });
+            @endif
+
             // Initialize DataTable
             let table = $('#vendors-table').DataTable({
                 processing: true,

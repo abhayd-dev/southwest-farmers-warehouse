@@ -23,6 +23,7 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
     use TracksImportProgress;
 
     protected $authUserId;
+    protected $skippedErrors = [];
 
     public function __construct($authUserId = null, $importTaskId = null)
     {
@@ -33,6 +34,7 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
     public function collection(Collection $rows)
     {
         $skippedCount = 0;
+        $this->skippedErrors = [];
 
         foreach ($rows as $row) {
             // Skip rows with no vendor name
@@ -52,6 +54,7 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
                         'phone'   => $phone,
                         'task_id' => $this->importTaskId,
                     ]);
+                    $this->skippedErrors[] = "Row '{$row['name']}' skipped: Duplicate email '{$email}'.";
                     $skippedCount++;
                     continue;
                 }
@@ -65,6 +68,7 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
                         'phone'   => $phone,
                         'task_id' => $this->importTaskId,
                     ]);
+                    $this->skippedErrors[] = "Row '{$row['name']}' skipped: Duplicate phone '{$phone}'.";
                     $skippedCount++;
                     continue;
                 }
@@ -84,10 +88,27 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
 
         $this->updateImportProgress($rows->count());
 
-        if ($skippedCount > 0) {
+        if ($skippedCount > 0 && !empty($this->skippedErrors)) {
             Log::info("VendorImport: {$skippedCount} duplicate row(s) skipped in this chunk.", [
                 'task_id' => $this->importTaskId,
             ]);
+
+            $task = \App\Models\ImportTask::find($this->importTaskId);
+            if ($task) {
+                $currentErrors = [];
+                if ($task->error_message) {
+                    $decoded = json_decode($task->error_message, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $currentErrors = $decoded;
+                    } else {
+                        $currentErrors = [$task->error_message];
+                    }
+                }
+                $updatedErrors = array_merge($currentErrors, $this->skippedErrors);
+                $task->update([
+                    'error_message' => json_encode($updatedErrors),
+                ]);
+            }
         }
     }
 

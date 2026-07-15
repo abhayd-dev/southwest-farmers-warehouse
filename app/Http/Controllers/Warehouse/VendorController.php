@@ -168,15 +168,33 @@ class VendorController extends Controller
                 $request->file
             );
 
+            $task->refresh();
+
+            $skippedErrors = [];
+            if ($task->error_message) {
+                $decoded = json_decode($task->error_message, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $skippedErrors = $decoded;
+                } else {
+                    $skippedErrors = [$task->error_message];
+                }
+            }
+
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Import started!',
+                    'message' => 'Import completed!',
                     'task_id' => $task->id,
+                    'skipped' => $skippedErrors
                 ]);
             }
 
-            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+            if (!empty($skippedErrors)) {
+                return back()->with('success', 'Import completed with warnings!')
+                             ->with('import_skipped_errors', $skippedErrors);
+            }
+
+            return back()->with('success', 'Import completed successfully!');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Vendor import failed: ' . $e->getMessage(), ['exception' => $e]);
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
