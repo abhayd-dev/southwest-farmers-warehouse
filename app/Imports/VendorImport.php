@@ -43,39 +43,25 @@ class VendorImport implements ToCollection, WithHeadingRow, ShouldQueue, WithChu
             $email = isset($row['email']) ? trim((string) $row['email']) : null;
             $phone = isset($row['phone']) ? trim((string) $row['phone']) : null;
 
-            // ── DUPLICATE GUARD ───────────────────────────────────────────────
-            // Skip if a vendor with the same email OR same phone already exists.
-            // Only check a field when it is present in the row (not blank).
-            if ($email !== null && $email !== '') {
-                if (Vendor::whereRaw('LOWER(email) = ?', [strtolower($email)])->exists()) {
-                    Log::warning('VendorImport: skipped duplicate email', [
-                        'name'    => $row['name'],
-                        'email'   => $email,
-                        'phone'   => $phone,
-                        'task_id' => $this->importTaskId,
-                    ]);
-                    $this->skippedErrors[] = "Row '{$row['name']}' skipped: Duplicate email '{$email}'.";
-                    $skippedCount++;
-                    continue;
-                }
-            }
+            $name = isset($row['name']) ? trim((string) $row['name']) : '';
+            if ($name === '') continue;
 
-            if ($phone !== null && $phone !== '') {
-                if (Vendor::where('phone', $phone)->exists()) {
-                    Log::warning('VendorImport: skipped duplicate phone', [
-                        'name'    => $row['name'],
-                        'email'   => $email,
-                        'phone'   => $phone,
-                        'task_id' => $this->importTaskId,
-                    ]);
-                    $this->skippedErrors[] = "Row '{$row['name']}' skipped: Duplicate phone '{$phone}'.";
-                    $skippedCount++;
-                    continue;
-                }
+            // ── DUPLICATE GUARD ───────────────────────────────────────────────
+            // Skip if a vendor with the same name already exists (case-insensitive check).
+            if (Vendor::whereRaw('LOWER(name) = ?', [strtolower($name)])->exists()) {
+                Log::warning('VendorImport: skipped duplicate name', [
+                    'name'    => $name,
+                    'email'   => $email,
+                    'phone'   => $phone,
+                    'task_id' => $this->importTaskId,
+                ]);
+                $this->skippedErrors[] = "Row '{$name}' skipped: Duplicate vendor name already exists.";
+                $skippedCount++;
+                continue;
             }
 
             Vendor::create([
-                'name'           => trim($row['name']),
+                'name'           => $name,
                 'contact_person' => isset($row['contact_person']) ? trim($row['contact_person']) : null,
                 'email'          => $email ?: null,
                 'phone'          => $phone ?: null,
