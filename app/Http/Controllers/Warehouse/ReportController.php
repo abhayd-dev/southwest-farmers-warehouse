@@ -391,7 +391,7 @@ class ReportController extends Controller
             if ($request->filled('vendor_id')) $query->where('vendor_id', $request->vendor_id);
             if ($request->filled('user_id')) $query->where('created_by', $request->user_id);
             $orders = $query->get();
-            foreach ($orders as $order) { $data[] = [$order->po_number, $order->vendor->name, $order->order_date, '$' . number_format($order->total_amount, 2), strtoupper($order->status), $order->creator->name ?? 'N/A']; }
+            foreach ($orders as $order) { $data[] = [$order->po_number, optional($order->vendor)->name ?? 'N/A', $order->order_date, '$' . number_format($order->total_amount, 2), strtoupper($order->status), $order->creator->name ?? 'N/A']; }
         } elseif ($report === 'reorder-suggestion') {
             $headings = ['Product', 'UPC', 'Category', 'Current Stock', 'Min Level', 'Max Level', 'Suggestion'];
             $query = Product::with(['stock', 'category', 'minMaxLevel'])->whereNull('store_id');
@@ -413,7 +413,7 @@ class ReportController extends Controller
             if ($request->filled('start_date')) $query->whereDate('created_at', '>=', $request->start_date);
             if ($request->filled('end_date')) $query->whereDate('created_at', '<=', $request->end_date);
             $transactions = $query->latest()->get();
-            foreach ($transactions as $tx) { $data[] = [$tx->created_at->format('d M Y H:i'), $tx->user->name ?? 'N/A', $tx->vendor->name ?? 'N/A', $tx->reference_no ?? 'N/A', $tx->product->product_name, abs($tx->quantity_change), '$' . number_format($tx->product->cost_price ?? 0, 2), $tx->batch->batch_number ?? 'N/A']; }
+            foreach ($transactions as $tx) { $data[] = [$tx->created_at->format('d M Y H:i'), $tx->user->name ?? 'N/A', optional($tx->vendor)->name ?? 'N/A', $tx->reference_no ?? 'N/A', $tx->product->product_name, abs($tx->quantity_change), '$' . number_format($tx->product->cost_price ?? 0, 2), $tx->batch->batch_number ?? 'N/A']; }
         } elseif ($report === 'purchase-price-variance') {
             $headings = ['Date', 'Product', 'Received Price', 'Std Cost Price', 'Variance'];
             $query = StockTransaction::with(['product'])->whereIn('type', ['purchase_in', 'receive']);
@@ -430,7 +430,7 @@ class ReportController extends Controller
             $query = PurchaseOrder::with(['vendor'])->whereIn('status', ['partial', 'completed'])->where('payment_status', '!=', 'paid');
             if ($request->filled('vendor_id')) $query->where('vendor_id', $request->vendor_id);
             $orders = $query->get();
-            foreach ($orders as $order) { $data[] = [$order->po_number, $order->vendor->name, $order->order_date, '$' . number_format($order->total_amount, 2), strtoupper($order->payment_status)]; }
+            foreach ($orders as $order) { $data[] = [$order->po_number, optional($order->vendor)->name ?? 'N/A', $order->order_date, '$' . number_format($order->total_amount, 2), strtoupper($order->payment_status)]; }
         }
 
         if (empty($data)) { return back()->with('info', 'No data available to export.'); }

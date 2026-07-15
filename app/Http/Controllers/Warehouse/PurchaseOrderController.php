@@ -87,7 +87,7 @@ class PurchaseOrderController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('vendor_name', fn($row) => $row->vendor->name)
+                ->addColumn('vendor_name', fn($row) => optional($row->vendor)->name ?? 'N/A')
                 ->editColumn('order_date', function ($row) {
                     return $row->order_date ? Carbon::parse($row->order_date)->format('d M Y') : '-';
                 })
