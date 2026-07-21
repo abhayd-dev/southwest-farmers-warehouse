@@ -179,7 +179,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i class="mdi mdi-receipt"></i></span>
                                             <input type="text" name="invoice_number" class="form-control" required
-                                                placeholder="e.g. INV-9988">
+                                                placeholder="e.g. INV-9988" value="{{ $purchaseOrder->vendor_invoice_number ?? '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
