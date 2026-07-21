@@ -55,13 +55,53 @@ class PurchaseOrderService
         });
     }
 
+    public function updatePO(PurchaseOrder $po, $data)
+    {
+        return DB::transaction(function () use ($po, $data) {
+            // 1. Update Header
+            $po->update([
+                'vendor_id' => $data['vendor_id'],
+                'order_date' => $data['order_date'],
+                'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
+                'approval_email' => $data['approval_email'] ?? null,
+                'approver_phone' => $data['approver_phone'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'vendor_notes' => $data['vendor_notes'] ?? null,
+            ]);
+
+            // 2. Re-create Items (Delete existing and insert new ones)
+            $po->items()->delete();
+
+            $grandTotal = 0;
+            foreach ($data['items'] as $item) {
+                $lineTotal = ($item['quantity'] * $item['cost']);
+
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $po->id,
+                    'product_id' => $item['product_id'],
+                    'requested_quantity' => $item['quantity'],
+                    'unit_cost' => $item['cost'],
+                    'total_cost' => $lineTotal
+                ]);
+
+                $grandTotal += $lineTotal;
+            }
+
+            // 3. Update Total
+            $po->update(['total_amount' => $grandTotal]);
+
+            return $po;
+        });
+    }
+
     public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0)
     {
         return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes) {
             $po = PurchaseOrder::findOrFail($poId);
 
-            // Update additional costs
+            // Update additional costs and invoice number
             $po->update([
+                'vendor_invoice_number' => $invoiceNumber ?? $po->vendor_invoice_number,
                 'duties' => $duties,
                 'shipping_cost' => $shippingCost,
                 'taxes' => $taxes,

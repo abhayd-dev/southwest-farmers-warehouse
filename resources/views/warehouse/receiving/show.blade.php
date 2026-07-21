@@ -151,9 +151,6 @@
                             class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                             <h5 class="fw-bold text-primary mb-0"><i class="mdi mdi-truck-check me-2"></i> Receive Incoming
                                 Stock</h5>
-                            <button type="button" id="receiveAllBtn" class="btn btn-sm btn-outline-primary shadow-sm">
-                                <i class="mdi mdi-check-all me-1"></i> Receive All Pending
-                            </button>
                         </div>
                         <div class="card-body p-4">
                             {{-- SCANNER INPUT --}}
@@ -191,7 +188,7 @@
                                             <span class="input-group-text bg-light"><i
                                                     class="mdi mdi-currency-usd"></i></span>
                                             <input type="number" name="duties" class="form-control" step="0.01"
-                                                min="0" value="0">
+                                                min="0" value="{{ $purchaseOrder->duties ?? 0 }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -200,7 +197,7 @@
                                             <span class="input-group-text bg-light"><i
                                                     class="mdi mdi-truck-delivery"></i></span>
                                             <input type="number" name="shipping_cost" class="form-control"
-                                                step="0.01" min="0" value="0">
+                                                step="0.01" min="0" value="{{ $purchaseOrder->shipping_cost ?? 0 }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -208,7 +205,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i class="mdi mdi-percent"></i></span>
                                             <input type="number" name="taxes" class="form-control" step="0.01"
-                                                min="0" value="0">
+                                                min="0" value="{{ $purchaseOrder->taxes ?? 0 }}">
                                         </div>
                                     </div>
                                 </div>

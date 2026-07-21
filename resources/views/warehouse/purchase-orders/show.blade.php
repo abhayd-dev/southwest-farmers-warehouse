@@ -93,10 +93,14 @@
                                             <i class="mdi mdi-email-send me-1"></i> Send for Order for approval
                                         </button>
                                     </form>
-                                    <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']) }}"
-                                        class="btn btn-danger shadow-sm">
-                                        <i class="mdi mdi-close me-1"></i> Reject
-                                    </a>
+                                    <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
+                                        method="POST" class="d-inline"
+                                        onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                        @csrf
+                                        <button class="btn btn-danger shadow-sm">
+                                            <i class="mdi mdi-cancel me-1"></i> Cancel order
+                                        </button>
+                                    </form>
                                 @endif
                                 <a href="{{ route('warehouse.purchase-orders.edit', $purchaseOrder->id) }}"
                                     class="btn btn-primary shadow-sm">
@@ -128,6 +132,17 @@
                                     <i class="mdi mdi-cancel me-1"></i> Cancel order
                                 </button>
                             </form>
+                        @elseif (in_array($purchaseOrder->status, ['completed', 'partial', 'cancelled']))
+                            <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                class="btn btn-outline-dark shadow-sm" target="_blank">
+                                <i class="mdi mdi-printer me-1"></i> Print PO
+                            </a>
+                            @if ($purchaseOrder->status !== 'cancelled')
+                            <a href="{{ route('warehouse.receiving.receipt', $purchaseOrder->id) }}"
+                                class="btn btn-outline-primary shadow-sm" target="_blank">
+                                <i class="mdi mdi-printer me-1"></i> Print Receipt
+                            </a>
+                            @endif
                         @endif
 
                         <a href="{{ route('warehouse.purchase-orders.index') }}"
@@ -173,6 +188,30 @@
                             <span class="text-muted">Order Date:</span>
                             <span class="fw-semibold">{{ $purchaseOrder->order_date->format('d M, Y') }}</span>
                         </div>
+                        @if ($purchaseOrder->vendor_invoice_number)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Vendor Invoice:</span>
+                            <span class="fw-semibold">{{ $purchaseOrder->vendor_invoice_number }}</span>
+                        </div>
+                        @endif
+                        @if ($purchaseOrder->duties > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Duties:</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->duties, 2) }}</span>
+                        </div>
+                        @endif
+                        @if ($purchaseOrder->shipping_cost > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Shipping Cost:</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->shipping_cost, 2) }}</span>
+                        </div>
+                        @endif
+                        @if ($purchaseOrder->taxes > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Taxes:</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->taxes, 2) }}</span>
+                        </div>
+                        @endif
                         <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
                             <span class="text-muted">Total Amount:</span>
                             <span

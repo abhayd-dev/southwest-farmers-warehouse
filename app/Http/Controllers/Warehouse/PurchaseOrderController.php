@@ -251,6 +251,47 @@ class PurchaseOrderController extends Controller
         return view('warehouse.purchase-orders.show', compact('purchaseOrder'));
     }
 
+    public function edit(PurchaseOrder $purchaseOrder)
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return back()->with('error', 'Only draft purchase orders can be edited.');
+        }
+
+        $vendors = Vendor::active()->get();
+        $products = Product::warehouse()->active()->select('id', 'product_name', 'sku', 'barcode', 'cost_price')->get();
+        $purchaseOrder->load(['items.product']);
+
+        return view('warehouse.purchase-orders.edit', compact('purchaseOrder', 'vendors', 'products'));
+    }
+
+    public function update(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        if ($purchaseOrder->status !== 'draft') {
+            return back()->with('error', 'Only draft purchase orders can be edited.');
+        }
+
+        $request->validate([
+            'vendor_id' => 'required|exists:vendors,id',
+            'order_date' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.cost' => 'required|numeric|min:0',
+            'approval_email' => 'nullable|email',
+            'approver_phone' => 'nullable|string|max:20',
+        ]);
+
+        try {
+            $this->poService->updatePO($purchaseOrder, $request->all());
+
+            return redirect()->route('warehouse.purchase-orders.show', $purchaseOrder->id)
+                ->with('success', 'Purchase Order updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error updating PO: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
     public function markOrdered(PurchaseOrder $purchaseOrder)
     {
         if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po')) {

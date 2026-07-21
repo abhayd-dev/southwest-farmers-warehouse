@@ -142,6 +142,7 @@
         .signature-section {
             margin-top: 40px;
             clear: both;
+            page-break-inside: avoid;
         }
 
         .signature-box {

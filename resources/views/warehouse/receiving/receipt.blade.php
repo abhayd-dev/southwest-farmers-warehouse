@@ -144,6 +144,7 @@
             margin-top: 50px;
             width: 100%;
             clear: both;
+            page-break-inside: avoid;
         }
 
         .signature-box {
