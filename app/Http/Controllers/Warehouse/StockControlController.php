@@ -79,6 +79,12 @@ class StockControlController extends Controller
             ->addColumn('subcategory_name', fn($row) => $row->subcategory->name ?? '-')
             ->addColumn('total_qty', fn($row) => (int)$row->warehouse_qty + (int)$row->total_stores_qty)
             ->addColumn('value', fn($row) => number_format(((int)$row->warehouse_qty + (int)$row->total_stores_qty) * ($row->cost_price ?? 0), 2))
+            ->filterColumn('product_name', function($query, $keyword) {
+                $query->where('products.product_name', 'like', "%{$keyword}%");
+            })
+            ->filterColumn('upc', function($query, $keyword) {
+                $query->where('products.upc', 'like', "%{$keyword}%");
+            })
             ->rawColumns(['department_name', 'category_name', 'subcategory_name'])
             ->make(true);
     }

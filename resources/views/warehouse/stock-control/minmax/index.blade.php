@@ -122,22 +122,28 @@
                             data: 'upc'
                         },
                         {
-                            data: 'category_name'
+                            data: 'category_name',
+                            searchable: false
                         },
                         {
-                            data: 'min_level'
+                            data: 'min_level',
+                            searchable: false
                         },
                         {
-                            data: 'max_level'
+                            data: 'max_level',
+                            searchable: false
                         },
                         {
-                            data: 'reorder_qty'
+                            data: 'reorder_qty',
+                            searchable: false
                         },
                         {
-                            data: 'current_qty'
+                            data: 'current_qty',
+                            searchable: false
                         },
                         {
-                            data: 'status'
+                            data: 'status',
+                            searchable: false
                         },
                         {
                             data: 'action',

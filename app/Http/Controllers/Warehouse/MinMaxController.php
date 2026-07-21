@@ -61,6 +61,12 @@ class MinMaxController extends Controller
                             </button>
                         </div>';
             })
+            ->filterColumn('product_name', function($query, $keyword) {
+                $query->where('products.product_name', 'like', "%{$keyword}%");
+            })
+            ->filterColumn('upc', function($query, $keyword) {
+                $query->where('products.upc', 'like', "%{$keyword}%");
+            })
             ->rawColumns(['status', 'action'])
             ->make(true);
     }

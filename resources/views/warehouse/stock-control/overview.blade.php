@@ -122,31 +122,38 @@
                         },
                         {
                             data: 'department_name',
-                            defaultContent: '-'
+                            defaultContent: '-',
+                            searchable: false
                         },
                         {
                             data: 'category_name',
-                            defaultContent: '-'
+                            defaultContent: '-',
+                            searchable: false
                         },
                         {
                             data: 'subcategory_name',
-                            defaultContent: '-'
+                            defaultContent: '-',
+                            searchable: false
                         },
                         {
                             data: 'warehouse_qty',
-                            className: 'text-center fw-bold text-primary'
+                            className: 'text-center fw-bold text-primary',
+                            searchable: false
                         },
                         {
                             data: 'total_stores_qty',
-                            className: 'text-center fw-bold text-info'
+                            className: 'text-center fw-bold text-info',
+                            searchable: false
                         },
                         {
                             data: 'total_qty',
-                            className: 'text-center fw-bold text-success'
+                            className: 'text-center fw-bold text-success',
+                            searchable: false
                         },
                         {
                             data: 'value',
                             className: 'text-end px-3 fw-bold',
+                            searchable: false,
                             render: data => '$ ' + parseFloat(data || 0).toLocaleString('en-US', {
                                 minimumFractionDigits: 2
                             })
