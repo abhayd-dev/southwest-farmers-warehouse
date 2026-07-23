@@ -115,10 +115,14 @@ class StockAuditController extends Controller
     }
 
     // ... (Show, UpdateCounts, Finalize methods remain unchanged) ...
-    public function show($id) {
-        // Eager load product stock to get bin_location
-        $audit = StockAudit::with(['items.product.stock', 'initiator'])->findOrFail($id);
-        return view('warehouse.stock-control.audit.show', compact('audit'));
+    public function show(Request $request, $id) {
+        $audit = StockAudit::with(['initiator'])->findOrFail($id);
+        $items = StockAuditItem::where('stock_audit_id', $id)
+            ->whereHas('product')
+            ->with(['product.stock'])
+            ->paginate(50);
+
+        return view('warehouse.stock-control.audit.show', compact('audit', 'items'));
     }
 
     public function updateCounts(Request $request, $id) {

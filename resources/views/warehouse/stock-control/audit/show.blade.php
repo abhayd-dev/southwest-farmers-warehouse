@@ -57,7 +57,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($audit->items as $item)
+                                @foreach ($items as $item)
                                     @php
                                         $variance =
                                             $item->physical_qty !== null ? $item->physical_qty - $item->system_qty : 0;
@@ -81,8 +81,8 @@
                                     @endphp
                                     <tr>
                                         <td class="ps-4 fw-semibold">
-                                            {{ $item->product->product_name }}
-                                            @if ($item->product->stock && $item->product->stock->bin_location)
+                                            {{ $item->product?->product_name ?? 'Unknown Product' }}
+                                            @if ($item->product?->stock && $item->product?->stock->bin_location)
                                                 <div class="small">
                                                     <i class="mdi mdi-map-marker text-primary"></i>
                                                     <span
@@ -90,7 +90,7 @@
                                                 </div>
                                             @endif
                                         </td>
-                                        <td class="text-muted small">{{ $item->product->upc }}</td>
+                                        <td class="text-muted small">{{ $item->product?->upc ?? 'N/A' }}</td>
 
                                         {{-- System Qty --}}
                                         <td class="text-center bg-info bg-opacity-10 fw-bold">
@@ -124,6 +124,18 @@
                     </div>
                 </form>
             </div>
+            @if ($items->hasPages())
+                <div class="card-footer bg-white border-top py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            Showing {{ $items->firstItem() }} to {{ $items->lastItem() }} of {{ $items->total() }} items
+                        </div>
+                        <div>
+                            {{ $items->links() }}
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
