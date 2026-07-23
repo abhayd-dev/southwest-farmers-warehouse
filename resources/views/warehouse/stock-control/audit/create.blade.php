@@ -29,7 +29,7 @@
                             {{-- Audit Type Selection --}}
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Audit Scope</label>
-                                <select name="type" id="auditType" class="form-select bg-light" required>
+                                <select name="type" id="auditType" class="form-select bg-light" onchange="toggleDepartment(this.value)" required>
                                     <option value="full">Full Warehouse Inventory</option>
                                     <option value="department">By Department</option>
                                 </select>
@@ -38,7 +38,7 @@
                             {{-- Department Select (Hidden by default) --}}
                             <div class="mb-3" id="departmentDiv" style="display: none;">
                                 <label class="form-label fw-bold">Select Department <span class="text-danger">*</span></label>
-                                <select name="department_id" class="form-select">
+                                <select name="department_id" id="departmentSelect" class="form-select">
                                     <option value="">-- Choose Department --</option>
                                     @foreach($departments as $dept)
                                         <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -67,23 +67,18 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const auditType = document.getElementById('auditType');
+        function toggleDepartment(val) {
             const deptDiv = document.getElementById('departmentDiv');
-            const deptSelect = deptDiv.querySelector('select');
-
-            // Handle Type Change
-            auditType.addEventListener('change', function() {
-                if (this.value === 'department') {
-                    deptDiv.style.display = 'block';
-                    deptSelect.setAttribute('required', 'required');
-                } else {
-                    deptDiv.style.display = 'none';
-                    deptSelect.removeAttribute('required');
-                    deptSelect.value = '';
-                }
-            });
-        });
+            const deptSelect = document.getElementById('departmentSelect');
+            if (val === 'department') {
+                deptDiv.style.display = 'block';
+                deptSelect.setAttribute('required', 'required');
+            } else {
+                deptDiv.style.display = 'none';
+                deptSelect.removeAttribute('required');
+                deptSelect.value = '';
+            }
+        }
     </script>
     @endpush
 </x-app-layout>
