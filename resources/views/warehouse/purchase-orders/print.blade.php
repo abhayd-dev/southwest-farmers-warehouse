@@ -6,87 +6,89 @@
     <title>Purchase Order - {{ $po->po_number }}</title>
     <style>
         @page {
-            margin: 20mm;
+            margin: 10mm 12mm;
         }
 
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11pt;
+            font-size: 9.5pt;
             color: #333;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         .header {
-            border-bottom: 3px solid #206bc4;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            border-bottom: 2px solid #206bc4;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .company-name {
-            font-size: 24pt;
+            font-size: 18pt;
             font-weight: bold;
             color: #206bc4;
             margin: 0;
         }
 
         .po-title {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
             text-align: right;
             margin: 0;
         }
 
         .po-number {
-            font-size: 14pt;
+            font-size: 11pt;
             text-align: right;
             color: #666;
         }
 
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .section-title {
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: bold;
             color: #206bc4;
-            border-bottom: 2px solid #206bc4;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            border-bottom: 1.5px solid #206bc4;
+            padding-bottom: 3px;
+            margin-bottom: 6px;
         }
 
         .info-table {
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
         .info-table td {
-            padding: 5px;
+            padding: 2px 4px;
             vertical-align: top;
         }
 
         .info-label {
             font-weight: bold;
-            width: 30%;
+            width: 35%;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         .items-table th {
             background-color: #206bc4;
             color: white;
-            padding: 10px;
+            padding: 6px 8px;
             text-align: left;
             font-weight: bold;
+            font-size: 9pt;
         }
 
         .items-table td {
-            padding: 8px;
+            padding: 4px 8px;
             border-bottom: 1px solid #ddd;
+            font-size: 9pt;
         }
 
         .items-table tr:last-child td {
@@ -102,7 +104,7 @@
         }
 
         .totals-section {
-            margin-top: 20px;
+            margin-top: 8px;
         }
 
         .totals-table {
@@ -110,35 +112,37 @@
         }
 
         .totals-table td {
-            padding: 5px;
+            padding: 3px 4px;
+            font-size: 9.5pt;
         }
 
         .grand-total {
-            font-size: 14pt;
+            font-size: 11.5pt;
             font-weight: bold;
             border-top: 2px solid #206bc4;
-            padding-top: 8px !important;
+            padding-top: 4px !important;
         }
 
         .notes-box {
             background-color: #f8f9fa;
-            border-left: 4px solid #ffc107;
-            padding: 10px;
-            margin-top: 20px;
+            border-left: 3px solid #ffc107;
+            padding: 6px 10px;
+            margin-top: 8px;
             clear: both;
+            font-size: 8.5pt;
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 15px;
+            margin-top: 12px;
+            padding-top: 8px;
             border-top: 1px solid #ddd;
             text-align: center;
-            font-size: 9pt;
+            font-size: 8pt;
             color: #666;
         }
 
         .signature-section {
-            margin-top: 40px;
+            margin-top: 15px;
             clear: both;
             page-break-inside: avoid;
         }
@@ -146,13 +150,13 @@
         .signature-box {
             display: inline-block;
             width: 45%;
-            margin-top: 50px;
+            margin-top: 10px;
         }
 
         .signature-line {
             border-top: 1px solid #333;
-            margin-top: 40px;
-            padding-top: 5px;
+            margin-top: 20px;
+            padding-top: 3px;
         }
     </style>
 </head>

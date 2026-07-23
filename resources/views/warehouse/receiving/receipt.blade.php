@@ -6,27 +6,27 @@
     <title>Received Order - {{ $po->po_number }}</title>
     <style>
         @page {
-            margin: 15mm;
+            margin: 10mm 12mm;
         }
 
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 10pt;
+            font-size: 9.5pt;
             color: #333;
-            line-height: 1.4;
+            line-height: 1.3;
             margin: 0;
             padding: 0;
         }
 
         .header-table {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 12px;
             border-bottom: 2px solid #206bc4;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
         }
 
         .company-name {
-            font-size: 22pt;
+            font-size: 18pt;
             font-weight: bold;
             color: #206bc4;
             margin: 0;
@@ -38,14 +38,14 @@
         }
 
         .received-order-text {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #666;
             margin-bottom: 2px;
             text-transform: uppercase;
         }
 
         .po-title {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
             color: #206bc4;
             margin: 0;
@@ -53,14 +53,14 @@
         }
 
         .po-number-small {
-            font-size: 11pt;
+            font-size: 10.5pt;
             color: #444;
             margin-top: 2px;
         }
 
         .details-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .details-table td {
@@ -69,17 +69,17 @@
         }
 
         .section-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: bold;
             color: #206bc4;
             border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            padding-bottom: 3px;
+            margin-bottom: 6px;
             text-transform: uppercase;
         }
 
         .info-row {
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .info-label {
@@ -91,22 +91,23 @@
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px;
         }
 
         .items-table th {
             background-color: #206bc4;
             color: white;
-            padding: 8px 10px;
+            padding: 6px 8px;
             text-align: left;
             font-size: 9pt;
             text-transform: uppercase;
         }
 
         .items-table td {
-            padding: 8px 10px;
+            padding: 4px 8px;
             border-bottom: 1px solid #eee;
+            font-size: 9pt;
         }
 
         .text-right {
@@ -119,7 +120,7 @@
 
         .totals-section {
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .totals-table {
@@ -128,20 +129,21 @@
         }
 
         .totals-table td {
-            padding: 4px 10px;
+            padding: 3px 6px;
+            font-size: 9.5pt;
         }
 
         .grand-total {
-            font-size: 13pt;
+            font-size: 11.5pt;
             font-weight: bold;
             color: #000;
             border-top: 1px solid #333;
-            margin-top: 5px;
-            padding-top: 5px;
+            margin-top: 3px;
+            padding-top: 3px;
         }
 
         .signature-section {
-            margin-top: 50px;
+            margin-top: 15px;
             width: 100%;
             clear: both;
             page-break-inside: avoid;
@@ -149,15 +151,15 @@
 
         .signature-box {
             text-align: left;
-            padding-top: 40px;
+            padding-top: 25px;
             border-top: 1px solid #333;
-            width: 200px;
+            width: 180px;
         }
 
         .footer-note {
-            margin-top: 60px;
-            font-weight: bold;
-            font-size: 11pt;
+            margin-top: 15px;
+            font-size: 8.5pt;
+            color: #666;
             text-align: left;
         }
     </style>
