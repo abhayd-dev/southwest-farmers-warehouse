@@ -243,37 +243,45 @@
         </tbody>
     </table>
 
-    <div class="totals-section">
-        <table class="totals-table">
-            <tr>
-                <td class="text-right"><strong>Subtotal:</strong></td>
-                <td class="text-right">${{ number_format($subtotal, 2) }}</td>
-            </tr>
-            @if ($po->taxes > 0)
-                <tr>
-                    <td class="text-right"><strong>Taxes:</strong></td>
-                    <td class="text-right">${{ number_format($po->taxes, 2) }}</td>
-                </tr>
-            @endif
-            @if ($po->duties > 0)
-                <tr>
-                    <td class="text-right"><strong>Duties:</strong></td>
-                    <td class="text-right">${{ number_format($po->duties, 2) }}</td>
-                </tr>
-            @endif
-            @if ($po->shipping_cost > 0)
-                <tr>
-                    <td class="text-right"><strong>Shipping Cost:</strong></td>
-                    <td class="text-right">${{ number_format($po->shipping_cost, 2) }}</td>
-                </tr>
-            @endif
-            <tr>
-                <td class="text-right grand-total">GRAND TOTAL:</td>
-                <td class="text-right grand-total">
-                    ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost, 2) }}</td>
-            </tr>
-        </table>
-    </div>
+    <table style="width: 100%; margin-top: 20px;">
+        <tr>
+            <td style="width: 60%; vertical-align: top;">
+            </td>
+            <td style="width: 40%; vertical-align: top;">
+                <div class="totals-section" style="margin-top: 0;">
+                    <table class="totals-table">
+                        <tr>
+                            <td class="text-right"><strong>Subtotal:</strong></td>
+                            <td class="text-right">${{ number_format($subtotal, 2) }}</td>
+                        </tr>
+                        @if ($po->taxes > 0)
+                            <tr>
+                                <td class="text-right"><strong>Taxes:</strong></td>
+                                <td class="text-right">${{ number_format($po->taxes, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($po->duties > 0)
+                            <tr>
+                                <td class="text-right"><strong>Duties:</strong></td>
+                                <td class="text-right">${{ number_format($po->duties, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($po->shipping_cost > 0)
+                            <tr>
+                                <td class="text-right"><strong>Shipping Cost:</strong></td>
+                                <td class="text-right">${{ number_format($po->shipping_cost, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td class="text-right grand-total">GRAND TOTAL:</td>
+                            <td class="text-right grand-total">
+                                ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost, 2) }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <div style="page-break-inside: avoid;">
         <table class="signature-section">

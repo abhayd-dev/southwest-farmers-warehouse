@@ -103,8 +103,6 @@
 
         .totals-section {
             margin-top: 20px;
-            float: right;
-            width: 40%;
         }
 
         .totals-table {
@@ -250,38 +248,45 @@
         </table>
     </div>
 
-    <div class="totals-section">
-        <table class="totals-table">
-            <tr>
-                <td>Subtotal:</td>
-                <td class="text-right">${{ number_format($po->total_amount - $po->tax_amount - $po->other_costs, 2) }}
-                </td>
-            </tr>
-            @if ($po->tax_amount > 0)
-                <tr>
-                    <td>Tax:</td>
-                    <td class="text-right">${{ number_format($po->tax_amount, 2) }}</td>
-                </tr>
-            @endif
-            @if ($po->other_costs > 0)
-                <tr>
-                    <td>Other Costs:</td>
-                    <td class="text-right">${{ number_format($po->other_costs, 2) }}</td>
-                </tr>
-            @endif
-            <tr class="grand-total">
-                <td><strong>GRAND TOTAL:</strong></td>
-                <td class="text-right"><strong>${{ number_format($po->total_amount, 2) }}</strong></td>
-            </tr>
-        </table>
-    </div>
-
-    @if ($po->notes)
-        <div class="notes-box">
-            <strong>Special Instructions / Notes:</strong><br>
-            {{ $po->notes }}
-        </div>
-    @endif
+    <table style="width: 100%; margin-top: 20px;">
+        <tr>
+            <td style="width: 60%; vertical-align: top;">
+                @if ($po->notes)
+                    <div class="notes-box" style="margin-top: 0;">
+                        <strong>Special Instructions / Notes:</strong><br>
+                        {{ $po->notes }}
+                    </div>
+                @endif
+            </td>
+            <td style="width: 40%; vertical-align: top;">
+                <div class="totals-section" style="margin-top: 0;">
+                    <table class="totals-table">
+                        <tr>
+                            <td>Subtotal:</td>
+                            <td class="text-right">${{ number_format($po->total_amount - $po->tax_amount - $po->other_costs, 2) }}
+                            </td>
+                        </tr>
+                        @if ($po->tax_amount > 0)
+                            <tr>
+                                <td>Tax:</td>
+                                <td class="text-right">${{ number_format($po->tax_amount, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($po->other_costs > 0)
+                            <tr>
+                                <td>Other Costs:</td>
+                                <td class="text-right">${{ number_format($po->other_costs, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr class="grand-total">
+                            <td><strong>GRAND TOTAL:</strong></td>
+                            <td class="text-right"><strong>${{ number_format($po->total_amount, 2) }}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <div style="page-break-inside: avoid;">
         <div class="signature-section">
