@@ -333,12 +333,16 @@ class PurchaseOrderController extends Controller
             if (!$purchaseOrder->approval_email) {
                 return back()->with('error', 'No approval email set for this PO. Please edit the PO to add one.');
             }
-            $this->approvalService->sendApprovalEmail($purchaseOrder);
+            
+            // Update status first so it changes even if email fails
             $purchaseOrder->update(['approval_status' => 'pending']);
+            
+            $this->approvalService->sendApprovalEmail($purchaseOrder);
+            
             return back()->with('success', 'Approval email sent successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('success', 'PO set to pending, but email failed to send. Check logs for the approval link!');
         }
     }
 

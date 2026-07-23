@@ -31,6 +31,10 @@ class ApprovalService
             ['purchaseOrder' => $po->id, 'action' => 'reject']
         );
 
+        // Log URLs for testing purposes when email is not configured
+        Log::info("PO #{$po->po_number} Approval Link: " . $approveUrl);
+        Log::info("PO #{$po->po_number} Reject Link: " . $rejectUrl);
+
         // Send email
         Mail::send('emails.purchase-order-approval', [
             'po' => $po,
