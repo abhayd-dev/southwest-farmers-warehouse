@@ -341,20 +341,8 @@ class PurchaseOrderController extends Controller
             
             return back()->with('success', 'Approval email sent successfully.');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
-            
-            $approveUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                'warehouse.purchase-orders.approve',
-                now()->addDays(7),
-                ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']
-            );
-            $rejectUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                'warehouse.purchase-orders.approve',
-                now()->addDays(7),
-                ['purchaseOrder' => $purchaseOrder->id, 'action' => 'reject']
-            );
-
-            return back()->with('success', 'PO set to pending. Email failed. Test links: [APPROVE: ' . $approveUrl . '] ---- [REJECT: ' . $rejectUrl . ']');
+            Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('success', 'PO set to pending, but email failed to send. Check logs for the approval link!');
         }
     }
 

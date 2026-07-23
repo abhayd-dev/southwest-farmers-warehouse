@@ -283,34 +283,36 @@
         </div>
     @endif
 
-    <div class="signature-section">
-        <table style="width: 100%;">
-            <tr>
-                <td class="signature-box">
-                    <div class="signature-line">
-                        <strong>Authorized By</strong><br>
-                        {{ $warehouse->name ?? 'Southwest Farmers Warehouse' }}
-                    </div>
-                </td>
-                <td style="width: 10%;"></td>
-                <td class="signature-box">
-                    <div class="signature-line">
-                        <strong>Vendor Acknowledgment</strong><br>
-                        {{ $po->vendor->name }}
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <div style="page-break-inside: avoid;">
+        <div class="signature-section">
+            <table style="width: 100%;">
+                <tr>
+                    <td class="signature-box">
+                        <div class="signature-line">
+                            <strong>Authorized By</strong><br>
+                            {{ $warehouse->name ?? 'Southwest Farmers Warehouse' }}
+                        </div>
+                    </td>
+                    <td style="width: 10%;"></td>
+                    <td class="signature-box">
+                        <div class="signature-line">
+                            <strong>Vendor Acknowledgment</strong><br>
+                            {{ $po->vendor->name }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
 
-    <div class="footer">
-        <p><strong>Thank you for your business!</strong></p>
-        <p>Please confirm receipt of this purchase order and provide delivery confirmation.</p>
-        <p style="margin-top: 10px; font-size: 8pt;">
-            This is a computer-generated document. For questions, contact
-            {{ $warehouse->phone ?? config('app.warehouse_phone') }} or
-            {{ $warehouse->email ?? config('app.warehouse_email') }}
-        </p>
+        <div class="footer">
+            <p><strong>Thank you for your business!</strong></p>
+            <p>Please confirm receipt of this purchase order and provide delivery confirmation.</p>
+            <p style="margin-top: 10px; font-size: 8pt;">
+                This is a computer-generated document. For questions, contact
+                {{ $warehouse->phone ?? config('app.warehouse_phone') }} or
+                {{ $warehouse->email ?? config('app.warehouse_email') }}
+            </p>
+        </div>
     </div>
 </body>
 

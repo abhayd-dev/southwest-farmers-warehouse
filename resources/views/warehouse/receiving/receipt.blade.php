@@ -275,25 +275,26 @@
         </table>
     </div>
 
-    <table style="width: 100%; margin-top: 100px;">
-        <tr>
-            <td style="width: 10%;"></td>
-            <td>
-                <div class="signature-box">
+    <div style="page-break-inside: avoid;">
+        <table class="signature-section">
+            <tr>
+                <td class="signature-box">
                     <strong>Received By</strong><br>
-                    <small>{{ $warehouse->name ?? 'Central Warehouse' }}</small>
-                </div>
-            </td>
-            <td style="width: 20%;"></td>
-            <td>
-                <div class="signature-box">
-                    <strong>Vendor Acknowledgment</strong><br>
-                    <small>{{ $po->vendor->name }}</small>
-                </div>
-            </td>
-            <td style="width: 10%;"></td>
-        </tr>
-    </table>
+                    {{ $warehouse->name ?? 'Central Warehouse' }}
+                </td>
+                <td style="width: 20%;"></td>
+                <td class="signature-box">
+                    <strong>Delivered By</strong><br>
+                    {{ $po->vendor->name }}
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer-note">
+            Note: This receipt confirms the delivery of goods listed above. For discrepancies, please contact
+            {{ $warehouse->email ?? 'support@company.com' }}.
+        </div>
+    </div>
 
 </body>
 
