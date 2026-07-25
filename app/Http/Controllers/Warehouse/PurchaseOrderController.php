@@ -339,10 +339,10 @@ class PurchaseOrderController extends Controller
             
             $this->approvalService->sendApprovalEmail($purchaseOrder);
             
-            return back()->with('success', 'Approval email sent successfully.');
+            return back()->with('success', 'Approval email sent successfully to ' . $purchaseOrder->approval_email);
         } catch (\Exception $e) {
             Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('success', 'PO set to pending, but email failed to send. Check logs for the approval link!');
+            return back()->with('error', 'Failed to send approval email: ' . $e->getMessage());
         }
     }
 
