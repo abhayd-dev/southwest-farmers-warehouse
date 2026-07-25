@@ -329,7 +329,7 @@ class PurchaseOrderController extends Controller
             return back()->with('success', 'Approval email sent successfully to ' . $purchaseOrder->approval_email);
         } catch (\Exception $e) {
             Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Failed to send approval email: ' . $e->getMessage());
+            return back()->with('error', 'Approval email failed to send. Please verify SMTP settings or try again later.');
         }
     }
 
