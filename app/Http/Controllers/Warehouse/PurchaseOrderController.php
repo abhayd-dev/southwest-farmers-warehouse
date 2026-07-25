@@ -481,6 +481,11 @@ class PurchaseOrderController extends Controller
                 return back()->with('error', 'No communication method selected or available');
             }
 
+            // Update status to ordered if it was draft/approved
+            if (in_array($purchaseOrder->status, ['draft', 'approved']) || $purchaseOrder->approval_status === 'approved') {
+                $purchaseOrder->update(['status' => 'ordered']);
+            }
+
             // Notify admins
             NotificationService::sendToAdmins(
                 'PO Sent to Vendor',

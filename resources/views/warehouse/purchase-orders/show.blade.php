@@ -62,29 +62,46 @@
                                         <i class="mdi mdi-close me-1"></i> Reject
                                     </a>
                                 @endif
+                                <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
+                                    method="POST" class="d-inline"
+                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    @csrf
+                                    <button class="btn btn-danger shadow-sm">
+                                        <i class="mdi mdi-cancel me-1"></i> Cancel order
+                                    </button>
+                                </form>
                             @elseif ($purchaseOrder->approval_status === 'approved')
                                 {{-- Approved --}}
                                 <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
                                     <form
-                                        action="{{ route('warehouse.purchase-orders.mark-ordered', $purchaseOrder->id) }}"
+                                        action="{{ route('warehouse.purchase-orders.send-to-vendor', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline">
                                         @csrf
-                                        <button class="btn btn-info text-white shadow-sm">
-                                            <i class="mdi mdi-send me-1"></i> Mark as Ordered
+                                        <input type="hidden" name="send_email" value="1">
+                                        <button class="btn btn-success shadow-sm" type="submit">
+                                            <i class="mdi mdi-send me-1"></i> Send to Vendor
                                         </button>
                                     </form>
                                 @endif
+                                <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
+                                    method="POST" class="d-inline"
+                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    @csrf
+                                    <button class="btn btn-danger shadow-sm">
+                                        <i class="mdi mdi-cancel me-1"></i> Cancel order
+                                    </button>
+                                </form>
                             @else
-                                {{-- Draft --}}
+                                {{-- Draft / Rejected --}}
                                 <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
                                     <form
                                         action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline">
@@ -103,7 +120,7 @@
                                     </form>
                                 @endif
                                 <a href="{{ route('warehouse.purchase-orders.edit', $purchaseOrder->id) }}"
-                                    class="btn btn-primary shadow-sm">
+                                    class="btn btn-success shadow-sm">
                                     <i class="mdi mdi-pencil me-1"></i> Edit PO
                                 </a>
                             @endif
