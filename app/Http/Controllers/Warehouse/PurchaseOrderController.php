@@ -190,28 +190,15 @@ class PurchaseOrderController extends Controller
         try {
             $po = $this->poService->createPO($request->all());
 
-            // Send approval email if provided
-            if ($request->filled('approval_email')) {
-                try {
-                    $this->approvalService->sendApprovalEmail($po);
-                    $approvalMessage = ' Approval email sent to ' . $request->approval_email;
-                } catch (\Exception $e) {
-                    Log::error('Failed to send approval email: ' . $e->getMessage());
-                    $approvalMessage = ' (Note: Approval email failed to send)';
-                }
-            } else {
-                $approvalMessage = '';
-            }
-
             NotificationService::sendToAdmins(
                 'New PO Created',
-                "PO #{$po->po_number} created by " . auth()->user()->name . $approvalMessage,
+                "PO #{$po->po_number} created by " . auth()->user()->name,
                 'info',
                 route('warehouse.purchase-orders.show', $po->id)
             );
 
             return redirect()->route('warehouse.purchase-orders.show', $po->id)
-                ->with('success', 'Purchase Order created successfully!' . $approvalMessage);
+                ->with('success', 'Purchase Order saved as draft successfully!');
         } catch (\Exception $e) {
             Log::error('Error creating PO: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Something went wrong. Please try again later.');
