@@ -28,6 +28,7 @@ class PurchaseOrderService
                 'notes' => $data['notes'] ?? null,
                 'vendor_notes' => $data['vendor_notes'] ?? null,
                 'status' => PurchaseOrder::STATUS_DRAFT,
+                'approval_status' => 'draft',
                 'created_by' => Auth::id(),
             ]);
 
