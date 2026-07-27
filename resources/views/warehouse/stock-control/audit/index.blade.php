@@ -1,12 +1,12 @@
-<x-app-layout title="Stock Audits">
+<x-app-layout title="Inventory Count">
     <div class="container-fluid">
         
         @include('warehouse.partials.breadcrumb', [
-            'title' => 'Cycle Counts / Audits',
+            'title' => 'Inventory Count',
             'items' => [
                 ['text' => 'Dashboard', 'url' => route('dashboard')],
                 ['text' => 'Stock Control', 'url' => route('warehouse.stock-control.overview')],
-                ['text' => 'Stock Audits']
+                ['text' => 'Inventory Count']
             ]
         ])
 
