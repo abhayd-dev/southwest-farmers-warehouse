@@ -16,7 +16,7 @@
 
         {{-- STATUS TABS --}}
         <ul class="nav nav-tabs mb-4">
-            @foreach(['preparing' => ['label' => 'Preparing', 'count' => $preparingCount, 'color' => 'warning'],
+            @foreach(['preparing' => ['label' => 'Preparing (Building Pallet)', 'count' => $preparingCount, 'color' => 'warning'],
                       'ready'     => ['label' => 'Ready',     'count' => $readyCount,     'color' => 'success'],
                       'in_transit'=> ['label' => 'In Transit','count' => $inTransitCount, 'color' => 'info'],
                       'delivered' => ['label' => 'Delivered', 'count' => $deliveredCount, 'color' => 'secondary'],

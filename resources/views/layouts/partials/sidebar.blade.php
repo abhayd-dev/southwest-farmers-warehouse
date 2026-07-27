@@ -343,7 +343,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.audit.index') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.audit.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-clipboard-check-outline me-2"></i> Cycle Counts
+                                            <i class="mdi mdi-clipboard-check-outline me-2"></i> Inventory Count
                                         </a>
                                     </li>
                                 @endif

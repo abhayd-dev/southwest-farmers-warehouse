@@ -18,7 +18,10 @@
                 <a href="{{ route('warehouse.stock-control.audit.index') }}"
                     class="btn btn-light border shadow-sm">Back</a>
 
-                @if ($audit->status != 'completed')
+                <a href="{{ route('warehouse.stock-control.audit.export', $audit->id) }}"
+                    class="btn btn-outline-success shadow-sm">
+                    <i class="mdi mdi-file-excel me-1"></i> Export (Excel)
+                </a>
                     @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits'))
                         {{-- Save Draft Button --}}
                         <button type="submit" form="auditForm" class="btn btn-primary shadow-sm">

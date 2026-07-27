@@ -128,8 +128,22 @@
 
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">Recent Transactions (Last 20)</h5>
+                    <div class="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3">
+                        <h5 class="mb-0 fw-bold"><i class="mdi mdi-history me-1"></i> Recent Transactions</h5>
+                        <form method="GET" action="{{ route('warehouse.stock-control.valuation.product', $product->id) }}" class="d-flex align-items-center gap-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white">From</span>
+                                <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control">
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white">To</span>
+                                <input type="date" name="to_date" value="{{ request('to_date') }}" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                            @if(request('from_date') || request('to_date'))
+                                <a href="{{ route('warehouse.stock-control.valuation.product', $product->id) }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                            @endif
+                        </form>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">

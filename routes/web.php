@@ -179,7 +179,7 @@ Route::middleware('auth')->group(function () {
             // Stock Overview
             Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
             Route::get('overview/data', [StockControlController::class, 'overviewData'])->name('overview.data');
-
+            Route::get('overview/export', [StockControlController::class, 'exportOverview'])->name('overview.export');
 
             // Recall Stock - NEW 3-TAB STRUCTURE
             Route::get('recall', [RecallController::class, 'indexTabs'])->name('recall');
@@ -219,6 +219,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', 'create')->name('create');
                 Route::post('/store', 'store')->name('store');
                 Route::get('/{id}', 'show')->name('show');
+                Route::get('/{id}/export', 'export')->name('export');
                 Route::post('/{id}/update-counts', 'updateCounts')->name('update-counts');
                 Route::post('/{id}/finalize', 'finalize')->name('finalize');
             });

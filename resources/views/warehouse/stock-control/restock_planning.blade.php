@@ -23,9 +23,19 @@
                     </button>
                 </div>
             </div>
+            <div class="px-4 py-3 bg-light border-bottom">
+                <div class="row align-items-center">
+                    <div class="col-12 col-md-5">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="mdi mdi-magnify text-muted"></i></span>
+                            <input type="text" id="restockSearchInput" class="form-control" placeholder="Search product name, UPC, or category...">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="restockTable">
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4" style="width: 40px;">
@@ -193,6 +203,15 @@
                     }
                 });
             }
+
+            document.getElementById('restockSearchInput')?.addEventListener('keyup', function() {
+                let term = this.value.toLowerCase();
+                let rows = document.querySelectorAll('#restockTable tbody tr');
+                rows.forEach(row => {
+                    let text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
         </script>
     @endpush
 </x-app-layout>

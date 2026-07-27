@@ -61,6 +61,7 @@ class StockAuditController extends Controller
         $request->validate([
             'type' => 'required|in:full,department',
             'department_id' => 'required_if:type,department|nullable|exists:departments,id',
+            'audit_by' => 'nullable|string',
         ]);
 
         try {
@@ -70,7 +71,7 @@ class StockAuditController extends Controller
                 'audit_number' => 'AUD-WH-' . time(),
                 'warehouse_id' => 1,
                 'type' => $request->type,
-                'department_id' => $request->department_id, // SAVE DEPARTMENT ID
+                'department_id' => $request->department_id,
                 'status' => 'in_progress',
                 'initiated_by' => Auth::id(),
                 'notes' => $request->notes
@@ -84,6 +85,26 @@ class StockAuditController extends Controller
                 $stockQuery->whereHas('product', function($q) use ($request) {
                     $q->where('department_id', $request->department_id);
                 });
+            }
+
+            // Apply Audit By Criteria
+            if ($request->filled('audit_by')) {
+                switch ($request->audit_by) {
+                    case 'expiring':
+                        $stockQuery->whereHas('product.batches', function($q) {
+                            $q->where('expiry_date', '<=', now()->addDays(30));
+                        });
+                        break;
+                    case 'recently_received':
+                        $stockQuery->where('updated_at', '>=', now()->subDays(14));
+                        break;
+                    case 'low_stock':
+                        $stockQuery->where('quantity', '<', 10);
+                        break;
+                    case 'high_stock':
+                        $stockQuery->where('quantity', '>', 100);
+                        break;
+                }
             }
 
             // ORDER BY BIN LOCATION for optimized walking path
@@ -112,6 +133,47 @@ class StockAuditController extends Controller
             \Illuminate\Support\Facades\Log::error('Audit initiation failed: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function export($id)
+    {
+        set_time_limit(300);
+        $audit = StockAudit::findOrFail($id);
+        $items = StockAuditItem::where('stock_audit_id', $id)
+            ->whereHas('product')
+            ->with('product')
+            ->get();
+
+        $fileName = 'Inventory_Count_' . $audit->audit_number . '_' . date('Y_m_d') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $columns = ['Product Name', 'UPC', 'System Qty', 'Physical Count', 'Variance', 'Cost Price'];
+
+        $callback = function () use ($items, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($items as $item) {
+                fputcsv($file, [
+                    $item->product->product_name ?? 'Unknown',
+                    $item->product->upc ?? '-',
+                    $item->system_qty,
+                    $item->physical_qty,
+                    $item->variance_qty ?? ($item->physical_qty - $item->system_qty),
+                    '$' . number_format($item->cost_price ?? 0, 2, '.', '')
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     // ... (Show, UpdateCounts, Finalize methods remain unchanged) ...

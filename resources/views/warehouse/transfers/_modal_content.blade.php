@@ -57,8 +57,8 @@
                         {{ $transfer->product->upc ?? '-' }}
                     </td>
                     <td class="text-center">
-                        <span class="badge bg-primary fs-6">
-                            {{ $transfer->quantity }} {{ $transfer->product->unit ?? 'Units' }}
+                        <span class="badge bg-success px-3 py-2 fs-6 fw-bold">
+                            <i class="mdi mdi-package-variant me-1"></i> {{ number_format($transfer->quantity) }} {{ $transfer->product->unit ?? 'Units' }}
                         </span>
                     </td>
                 </tr>

@@ -28,7 +28,7 @@
 
                             {{-- Audit Type Selection --}}
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Audit Scope</label>
+                                <label class="form-label fw-bold">Audit Type</label>
                                 <select name="type" id="auditType" class="form-select bg-light" onchange="toggleDepartment(this.value)" required>
                                     <option value="full">Full Warehouse Inventory</option>
                                     <option value="department">By Department</option>
@@ -45,6 +45,19 @@
                                     @endforeach
                                 </select>
                                 <div class="form-text text-muted">Only products in this department will be included in the audit.</div>
+                            </div>
+
+                            {{-- Audit By Filter Selection --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Audit By (Item Filter)</label>
+                                <select name="audit_by" id="auditBy" class="form-select bg-light">
+                                    <option value="general">General Audit / All Items</option>
+                                    <option value="most_ordered">Most Ordered Items</option>
+                                    <option value="expiring">Expiring Items (Next 30 Days)</option>
+                                    <option value="recently_received">Recently Received Items (Last 14 Days)</option>
+                                    <option value="low_stock">Low Stock Items</option>
+                                    <option value="high_stock">High Stock Items</option>
+                                </select>
                             </div>
 
                             <div class="mb-4">

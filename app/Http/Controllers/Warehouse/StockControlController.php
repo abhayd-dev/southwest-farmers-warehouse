@@ -34,6 +34,8 @@ class StockControlController extends Controller
     public function overviewData(Request $request)
     {
         set_time_limit(300);
+        $viewType = $request->get('view_type', 'warehouse');
+
         $query = Product::query()
             ->whereNull('products.store_id')
             ->with(['category', 'subcategory', 'department'])
@@ -59,26 +61,16 @@ class StockControlController extends Controller
             $query->where('subcategory_id', $request->subcategory_id);
         }
 
-        if ($request->filled('date_range')) {
-            $dates = explode(' to ', $request->date_range);
-            if (count($dates) == 2) {
-                $query->whereBetween('products.created_at', [
-                    Carbon::parse($dates[0])->startOfDay(),
-                    Carbon::parse($dates[1])->endOfDay()
-                ]);
-            }
-        }
-
-        if ($request->low_stock) {
-            $query->havingRaw('(warehouse_qty + total_stores_qty) < 10');
-        }
-
         return DataTables::of($query)
             ->addColumn('department_name', fn($row) => $row->department->name ?? '-')
             ->addColumn('category_name', fn($row) => $row->category->name ?? '-')
             ->addColumn('subcategory_name', fn($row) => $row->subcategory->name ?? '-')
+            ->addColumn('display_qty', fn($row) => $viewType === 'store' ? (int)$row->total_stores_qty : (int)$row->warehouse_qty)
             ->addColumn('total_qty', fn($row) => (int)$row->warehouse_qty + (int)$row->total_stores_qty)
-            ->addColumn('value', fn($row) => number_format(((int)$row->warehouse_qty + (int)$row->total_stores_qty) * ($row->cost_price ?? 0), 2))
+            ->addColumn('value', function($row) use ($viewType) {
+                $qty = $viewType === 'store' ? (int)$row->total_stores_qty : (int)$row->warehouse_qty;
+                return number_format($qty * ($row->cost_price ?? 0), 2);
+            })
             ->filterColumn('product_name', function($query, $keyword) {
                 $query->where('products.product_name', 'like', "%{$keyword}%");
             })
@@ -87,6 +79,71 @@ class StockControlController extends Controller
             })
             ->rawColumns(['department_name', 'category_name', 'subcategory_name'])
             ->make(true);
+    }
+
+    public function exportOverview(Request $request)
+    {
+        set_time_limit(300);
+        $viewType = $request->get('view_type', 'warehouse');
+        $fileName = ($viewType === 'store' ? 'Store_Stock_Overview_' : 'Warehouse_Stock_Overview_') . date('Y_m_d_His') . '.csv';
+
+        $query = Product::query()
+            ->whereNull('products.store_id')
+            ->with(['category', 'subcategory', 'department'])
+            ->select('products.*')
+            ->addSelect([
+                'warehouse_qty' => ProductStock::selectRaw('COALESCE(SUM(quantity - reserved_quantity - damaged_quantity), 0)')
+                    ->whereColumn('product_id', 'products.id')
+                    ->where('warehouse_id', 1)
+                    ->limit(1),
+                'total_stores_qty' => StoreStock::selectRaw('COALESCE(SUM(quantity - reserved_quantity), 0)')
+                    ->whereColumn('product_id', 'products.id')
+            ]);
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        if ($request->filled('subcategory_id')) {
+            $query->where('subcategory_id', $request->subcategory_id);
+        }
+
+        $products = $query->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $columns = ['Product', 'UPC', 'Department', 'Category', 'Subcategory', $viewType === 'store' ? 'Store Qty' : 'Warehouse Qty', 'Cost Value'];
+
+        $callback = function () use ($products, $columns, $viewType) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($products as $row) {
+                $qty = $viewType === 'store' ? (int)$row->total_stores_qty : (int)$row->warehouse_qty;
+                $val = number_format($qty * ($row->cost_price ?? 0), 2, '.', '');
+
+                fputcsv($file, [
+                    $row->product_name,
+                    $row->upc ?? '-',
+                    $row->department->name ?? '-',
+                    $row->category->name ?? '-',
+                    $row->subcategory->name ?? '-',
+                    $qty,
+                    '$' . $val
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     // ===== STOCK VALUATION =====
@@ -247,10 +304,18 @@ class StockControlController extends Controller
             ->orderBy('expiry_date')
             ->get();
 
-        $transactions = StockTransaction::where('product_id', $product->id)
-            ->with('user', 'store')
-            ->latest()
-            ->limit(20)
+        $txnQuery = StockTransaction::where('product_id', $product->id)
+            ->with('user', 'store');
+
+        if ($request->filled('from_date')) {
+            $txnQuery->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $txnQuery->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $transactions = $txnQuery->latest()
+            ->limit(50)
             ->get();
 
         return view('warehouse.stock-control.product-analytics', compact(

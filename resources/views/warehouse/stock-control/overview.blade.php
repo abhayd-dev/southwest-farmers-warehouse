@@ -61,8 +61,29 @@
             </div>
         </div>
 
-        {{-- TABLE CARD --}}
+        {{-- TABLE CARD WITH TABS --}}
         <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <ul class="nav nav-pills card-header-pills" id="viewTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-bold px-4" data-view="warehouse" onclick="switchView('warehouse')">
+                            <i class="mdi mdi-warehouse me-1"></i> Warehouse Stock (WHSE)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold px-4" data-view="store" onclick="switchView('store')">
+                            <i class="mdi mdi-store me-1"></i> Store Stock (STR)
+                        </button>
+                    </li>
+                </ul>
+
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-success shadow-sm fw-bold" onclick="exportFullData()">
+                        <i class="mdi mdi-file-excel me-1"></i> Export All Data (CSV)
+                    </button>
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table id="stockOverviewTable"
@@ -74,9 +95,7 @@
                                 <th class="py-3 text-uppercase small fw-bold">Department</th>
                                 <th class="py-3 text-uppercase small fw-bold">Category</th>
                                 <th class="py-3 text-uppercase small fw-bold">Subcategory</th>
-                                <th class="py-3 text-uppercase small fw-bold text-center">Warehouse Qty</th>
-                                <th class="py-3 text-uppercase small fw-bold text-center">Stores Qty</th>
-                                <th class="py-3 text-uppercase small fw-bold text-center">Total Qty</th>
+                                <th class="py-3 text-uppercase small fw-bold text-center" id="qtyColHeader">Warehouse Qty</th>
                                 <th class="px-3 py-3 text-uppercase small fw-bold text-end">Cost Value</th>
                             </tr>
                         </thead>
@@ -90,21 +109,53 @@
 
     @push('scripts')
         <script>
+            let currentViewType = 'warehouse';
+            let table = null;
+
+            function switchView(type) {
+                currentViewType = type;
+                $('#viewTabs .nav-link').removeClass('active');
+                $(`#viewTabs [data-view="${type}"]`).addClass('active');
+
+                if (type === 'store') {
+                    $('#qtyColHeader').text('Store Qty');
+                } else {
+                    $('#qtyColHeader').text('Warehouse Qty');
+                }
+
+                if (table) {
+                    table.draw();
+                }
+            }
+
+            function exportFullData() {
+                let dept = $('#departmentFilter').val();
+                let cat = $('#categoryFilter').val();
+                let subcat = $('#subcategoryFilter').val();
+
+                let url = "{{ route('warehouse.stock-control.overview.export') }}?view_type=" + currentViewType +
+                    "&department_id=" + encodeURIComponent(dept || '') +
+                    "&category_id=" + encodeURIComponent(cat || '') +
+                    "&subcategory_id=" + encodeURIComponent(subcat || '');
+
+                window.location.href = url;
+            }
+
             $(document).ready(function() {
-                let table = $('#stockOverviewTable').DataTable({
+                table = $('#stockOverviewTable').DataTable({
                     serverSide: true,
                     processing: true,
                     ajax: {
                         url: '{{ route('warehouse.stock-control.overview.data') }}',
                         data: function(d) {
+                            d.view_type = currentViewType;
                             d.department_id = $('#departmentFilter').val();
                             d.category_id = $('#categoryFilter').val();
                             d.subcategory_id = $('#subcategoryFilter').val();
-                            // Removed low_stock parameter
                         },
                         error: function(xhr) {
                             $('#stockOverviewTable tbody').html(
-                                '<tr><td colspan="9" class="text-center py-5 text-danger">' +
+                                '<tr><td colspan="7" class="text-center py-5 text-danger">' +
                                 '<i class="mdi mdi-alert-circle-outline fs-2 mb-3 d-block"></i>' +
                                 '<strong>Data Load Failed</strong><br>Please try again or contact support.' +
                                 '</td></tr>'
@@ -136,51 +187,20 @@
                             searchable: false
                         },
                         {
-                            data: 'warehouse_qty',
+                            data: 'display_qty',
                             className: 'text-center fw-bold text-primary',
                             searchable: false
                         },
                         {
-                            data: 'total_stores_qty',
-                            className: 'text-center fw-bold text-info',
-                            searchable: false
-                        },
-                        {
-                            data: 'total_qty',
-                            className: 'text-center fw-bold text-success',
-                            searchable: false
-                        },
-                        {
                             data: 'value',
-                            className: 'text-end px-3 fw-bold',
+                            className: 'text-end px-3 fw-bold text-success',
                             searchable: false,
                             render: data => '$ ' + parseFloat(data || 0).toLocaleString('en-US', {
                                 minimumFractionDigits: 2
                             })
                         }
                     ],
-                    dom: '<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"Bf>rt<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"ip>',
-                    buttons: [{
-                            extend: 'copy',
-                            className: 'btn btn-sm btn-outline-secondary'
-                        },
-                        {
-                            extend: 'csv',
-                            className: 'btn btn-sm btn-outline-secondary'
-                        },
-                        {
-                            extend: 'excel',
-                            className: 'btn btn-sm btn-outline-success'
-                        },
-                        {
-                            extend: 'pdf',
-                            className: 'btn btn-sm btn-outline-danger'
-                        },
-                        {
-                            extend: 'print',
-                            className: 'btn btn-sm btn-outline-info'
-                        }
-                    ],
+                    dom: '<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"f>rt<"d-flex flex-column flex-md-row justify-content-between align-items-center p-3 gap-2"ip>',
                     language: {
                         search: "",
                         searchPlaceholder: "Search products...",
