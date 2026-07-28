@@ -18,6 +18,16 @@
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
+                        @if ($errors->any())
+                            <div class="alert alert-danger border-0 shadow-sm mb-4">
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <form action="{{ route('warehouse.free-weight.package.store', $bulkProduct->id) }}"
                             method="POST" class="needs-validation" novalidate>
                             @csrf

@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Services\PackagingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class FreeWeightController extends Controller
 {
@@ -86,11 +87,14 @@ class FreeWeightController extends Controller
      */
     public function storePackage(Request $request, FreeWeightProduct $bulkProduct)
     {
+        $sku = $request->input('sku') ?: $request->input('upc') ?: ('PKG-' . strtoupper(Str::random(6)));
+        $request->merge(['sku' => $sku]);
+
         $request->validate([
             'package_name'      => 'required|string|max:100',
             'package_size'      => 'required|numeric|min:0.01',
             'unit'              => 'required|in:lbs,kg',
-            'sku'               => 'required|string|unique:free_weight_packages,sku',
+            'sku'               => 'required|string',
             'barcode'           => 'nullable|string',
             'target_product_id' => 'nullable|exists:products,id',
         ]);
