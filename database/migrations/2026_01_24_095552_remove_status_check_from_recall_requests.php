@@ -9,8 +9,9 @@ return new class extends Migration
 {
     public function up()
     {
-        // PostgreSQL mein Check Constraint hataane ke liye raw SQL query
-        DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_status_check");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_status_check");
+        }
     }
 
     public function down()

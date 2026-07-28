@@ -12,13 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Drop the old strict constraint
-        DB::statement("ALTER TABLE stock_requests DROP CONSTRAINT IF EXISTS stock_requests_status_check");
+        if (DB::getDriverName() === 'pgsql') {
+            // 1. Drop the old strict constraint
+            DB::statement("ALTER TABLE stock_requests DROP CONSTRAINT IF EXISTS stock_requests_status_check");
 
-        // 2. Add a new constraint with ALL required statuses
-        // We include: pending, approved, rejected, partial, dispatched, completed
-        DB::statement("ALTER TABLE stock_requests ADD CONSTRAINT stock_requests_status_check 
-            CHECK (status IN ('pending', 'approved', 'rejected', 'partial', 'dispatched', 'completed'))");
+            // 2. Add a new constraint with ALL required statuses
+            // We include: pending, approved, rejected, partial, dispatched, completed
+            DB::statement("ALTER TABLE stock_requests ADD CONSTRAINT stock_requests_status_check 
+                CHECK (status IN ('pending', 'approved', 'rejected', 'partial', 'dispatched', 'completed'))");
+        }
     }
 
     /**

@@ -20,10 +20,12 @@ return new class extends Migration
             }
         });
 
-        // PostgreSQL: remove default value
-        DB::statement(
-            'ALTER TABLE product_subcategories ALTER COLUMN store_id DROP DEFAULT'
-        );
+        if (DB::getDriverName() === 'pgsql') {
+            // PostgreSQL: remove default value
+            DB::statement(
+                'ALTER TABLE product_subcategories ALTER COLUMN store_id DROP DEFAULT'
+            );
+        }
     }
 
     /**
@@ -38,8 +40,10 @@ return new class extends Migration
             }
         });
 
-        DB::statement(
-            'ALTER TABLE product_subcategories ALTER COLUMN store_id SET DEFAULT 1'
-        );
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement(
+                'ALTER TABLE product_subcategories ALTER COLUMN store_id SET DEFAULT 1'
+            );
+        }
     }
 };

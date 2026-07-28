@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('purchase_orders', function (Blueprint $table) {
-            $table->string('approval_email')->nullable();
-            $table->string('approval_status')->default('pending'); // pending, approved, rejected
-            $table->string('approved_by_email')->nullable();
-            $table->timestamp('approved_at')->nullable();
-            $table->text('approval_reason')->nullable();
-        });
+        if (!Schema::hasColumn('purchase_orders', 'approval_email')) {
+            Schema::table('purchase_orders', function (Blueprint $table) {
+                $table->string('approval_email')->nullable();
+                $table->string('approval_status')->default('pending'); // pending, approved, rejected
+                $table->string('approved_by_email')->nullable();
+                $table->timestamp('approved_at')->nullable();
+                $table->text('approval_reason')->nullable();
+            });
+        }
     }
 
     /**

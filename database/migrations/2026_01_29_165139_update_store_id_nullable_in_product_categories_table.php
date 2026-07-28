@@ -20,8 +20,10 @@ return new class extends Migration
             }
         });
 
-        // Remove default value (PostgreSQL safe)
-        DB::statement('ALTER TABLE product_categories ALTER COLUMN store_id DROP DEFAULT');
+        if (DB::getDriverName() === 'pgsql') {
+            // Remove default value (PostgreSQL safe)
+            DB::statement('ALTER TABLE product_categories ALTER COLUMN store_id DROP DEFAULT');
+        }
     }
 
     /**
@@ -36,6 +38,8 @@ return new class extends Migration
             }
         });
 
-        DB::statement('ALTER TABLE product_categories ALTER COLUMN store_id SET DEFAULT 1');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE product_categories ALTER COLUMN store_id SET DEFAULT 1');
+        }
     }
 };

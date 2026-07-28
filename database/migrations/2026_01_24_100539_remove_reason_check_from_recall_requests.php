@@ -9,11 +9,10 @@ return new class extends Migration
 {
     public function up()
     {
-        // 'reason' column se check constraint hatane ke liye
-        DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_reason_check");
-        
-        // Agar 'status' wala pehle nahi hataya tha, toh wo bhi hata dein (Safety ke liye)
-        DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_status_check");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_reason_check");
+            DB::statement("ALTER TABLE recall_requests DROP CONSTRAINT IF EXISTS recall_requests_status_check");
+        }
     }
 
     public function down()
