@@ -155,4 +155,26 @@ class StockControlDocVerificationTest extends TestCase
         $response->assertSee('id="restockSearchInput"', false);
         $response->assertSee('placeholder="Search product name, UPC, or category..."', false);
     }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function point_7_stock_valuation_warehouse_and_store_analytics_split_works()
+    {
+        $this->actingAs($this->user);
+
+        // Valuation Dashboard Page
+        $valuation = $this->get(route('warehouse.stock-control.valuation'));
+        $valuation->assertStatus(200);
+        $valuation->assertSee('Total Warehouse Units');
+        $valuation->assertSee('Total Store Units');
+        $valuation->assertSee('Warehouse Analytics');
+        $valuation->assertSee('Store Analytics');
+
+        // DataTables Endpoint for Warehouse View
+        $whseData = $this->get(route('warehouse.stock-control.valuation.data', ['view_type' => 'warehouse']));
+        $whseData->assertStatus(200);
+
+        // DataTables Endpoint for Store View
+        $storeData = $this->get(route('warehouse.stock-control.valuation.data', ['view_type' => 'store']));
+        $storeData->assertStatus(200);
+    }
 }

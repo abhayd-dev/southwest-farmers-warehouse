@@ -18,37 +18,12 @@
         </div>
 
         <div class="row g-4 mb-4">
-            {{-- Total System Value --}}
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 overflow-hidden">
-                    <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-danger">
-                        <div class="position-absolute top-0 end-0 opacity-10 p-3">
-                        </div>
-
-                        <div class="d-flex align-items-center mb-3">
-                            <div
-                                class="avatar-sm rounded bg-danger bg-opacity-10 d-flex align-items-center justify-content-center me-3">
-                                <i class="mdi mdi-cash-multiple text-danger fs-4"></i>
-                            </div>
-                            <h6 class="text-muted text-uppercase fw-bold mb-0">Total System Value</h6>
-                        </div>
-
-                        <h3 class="fw-bold text-dark mb-1">$ {{ number_format($totalValue, 2) }}</h3>
-
-                        <small class="text-muted">
-                            <i class="mdi mdi-warehouse me-1"></i> Warehouse + Stores
-                        </small>
-                    </div>
-                </div>
-            </div>
-
             {{-- Warehouse Value --}}
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 overflow-hidden">
                     <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-info">
                         <div class="d-flex align-items-center mb-3">
-                            <div
-                                class="avatar-sm rounded bg-info bg-opacity-10 d-flex align-items-center justify-content-center me-3">
+                            <div class="avatar-sm rounded bg-info bg-opacity-10 d-flex align-items-center justify-content-center me-3">
                                 <i class="mdi mdi-warehouse text-info fs-4"></i>
                             </div>
                             <h6 class="text-muted text-uppercase fw-bold mb-0">Warehouse Value</h6>
@@ -64,8 +39,7 @@
                 <div class="card border-0 shadow-sm h-100 overflow-hidden">
                     <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-success">
                         <div class="d-flex align-items-center mb-3">
-                            <div
-                                class="avatar-sm rounded bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-3">
+                            <div class="avatar-sm rounded bg-success bg-opacity-10 d-flex align-items-center justify-content-center me-3">
                                 <i class="mdi mdi-store text-success fs-4"></i>
                             </div>
                             <h6 class="text-muted text-uppercase fw-bold mb-0">Stores Value</h6>
@@ -76,19 +50,34 @@
                 </div>
             </div>
 
-            {{-- Total Units --}}
+            {{-- Total Warehouse Units --}}
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                    <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-primary">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-sm rounded bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3">
+                                <i class="mdi mdi-package-variant-closed text-primary fs-4"></i>
+                            </div>
+                            <h6 class="text-muted text-uppercase fw-bold mb-0">Total Warehouse Units</h6>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-1">{{ number_format($totalWarehouseUnits, 0) }}</h3>
+                        <small class="text-muted">Warehouse Inventory</small>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Total Store Units --}}
             <div class="col-lg-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 overflow-hidden">
                     <div class="card-body p-4 bg-white position-relative border-bottom border-4 border-warning">
                         <div class="d-flex align-items-center mb-3">
-                            <div
-                                class="avatar-sm rounded bg-warning bg-opacity-10 d-flex align-items-center justify-content-center me-3">
-                                <i class="mdi mdi-package-variant-closed text-warning fs-4"></i>
+                            <div class="avatar-sm rounded bg-warning bg-opacity-10 d-flex align-items-center justify-content-center me-3">
+                                <i class="mdi mdi-storefront text-warning fs-4"></i>
                             </div>
-                            <h6 class="text-muted text-uppercase fw-bold mb-0">Total Units</h6>
+                            <h6 class="text-muted text-uppercase fw-bold mb-0">Total Store Units</h6>
                         </div>
-                        <h3 class="fw-bold text-dark mb-1">{{ number_format($totalQty, 0) }}</h3>
-                        <small class="text-muted">Across all channels</small>
+                        <h3 class="fw-bold text-dark mb-1">{{ number_format($totalStoreUnits, 0) }}</h3>
+                        <small class="text-muted">Distributed Channel Units</small>
                     </div>
                 </div>
             </div>
@@ -100,14 +89,13 @@
                     <div class="card-header bg-white border-bottom py-3">
                         <ul class="nav nav-pills card-header-pills" role="tablist">
                             <li class="nav-item">
-                                <button class="nav-link active fw-bold" data-bs-toggle="tab"
-                                    data-bs-target="#productValuation">
-                                    <i class="mdi mdi-cube-outline me-1"></i> Product-wise Analytics
+                                <button class="nav-link active fw-bold" id="whse-tab" data-bs-toggle="tab" data-bs-target="#whseAnalytics">
+                                    <i class="mdi mdi-warehouse me-1"></i> Warehouse Analytics
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#storeValuation">
-                                    <i class="mdi mdi-store-outline me-1"></i> Store-wise Analytics
+                                <button class="nav-link fw-bold" id="store-tab" data-bs-toggle="tab" data-bs-target="#storeAnalytics">
+                                    <i class="mdi mdi-store-outline me-1"></i> Store Analytics
                                 </button>
                             </li>
                         </ul>
@@ -116,14 +104,13 @@
                     <div class="card-body p-0">
                         <div class="tab-content">
 
-                            {{-- TAB 1: PRODUCT VALUATION --}}
-                            <div class="tab-pane fade show active" id="productValuation">
+                            {{-- TAB 1: WAREHOUSE ANALYTICS --}}
+                            <div class="tab-pane fade show active" id="whseAnalytics">
                                 <div class="p-4 border-bottom bg-light bg-opacity-50">
-                                    <div class="row g-3">
-                                        {{-- DEPARTMENT FILTER (Added) --}}
-                                        <div class="col-md-3">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
                                             <label class="form-label text-muted small fw-bold">DEPARTMENT</label>
-                                            <select id="departmentFilter" class="form-select shadow-none">
+                                            <select id="whseDepartmentFilter" class="form-select shadow-none">
                                                 <option value="">All Departments</option>
                                                 @foreach ($departments as $dept)
                                                     <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -131,9 +118,9 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label text-muted small fw-bold">CATEGORY</label>
-                                            <select id="categoryFilter" class="form-select shadow-none">
+                                            <select id="whseCategoryFilter" class="form-select shadow-none">
                                                 <option value="">All Categories</option>
                                                 @foreach ($categories as $cat)
                                                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -141,19 +128,8 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-md-3">
-                                            <label class="form-label text-muted small fw-bold">STORE</label>
-                                            <select id="storeFilter" class="form-select shadow-none">
-                                                <option value="">All Stores</option>
-                                                @foreach ($stores as $store)
-                                                    <option value="{{ $store->id }}">{{ $store->store_name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-3 d-flex align-items-end">
-                                            <button class="btn btn-dark w-100 shadow-sm" id="applyValuationFilters">
+                                        <div class="col-md-4">
+                                            <button class="btn btn-dark w-100 shadow-sm" id="applyWhseFilters">
                                                 <i class="mdi mdi-filter me-1"></i> Filter Data
                                             </button>
                                         </div>
@@ -161,121 +137,69 @@
                                 </div>
 
                                 <div class="table-responsive">
-                                    <table id="productValuationTable" class="table table-hover align-middle mb-0"
-                                        style="width:100%">
+                                    <table id="whseValuationTable" class="table table-hover align-middle mb-0" style="width:100%">
                                         <thead class="bg-light">
                                             <tr>
                                                 <th class="ps-4 text-uppercase text-muted small fw-bold">Product</th>
                                                 <th class="text-uppercase text-muted small fw-bold">UPC</th>
                                                 <th class="text-uppercase text-muted small fw-bold">Department</th>
-                                                {{-- Added --}}
-                                                <th class="text-center text-uppercase text-muted small fw-bold">Whse
-                                                    Qty</th>
-                                                <th class="text-uppercase text-muted small fw-bold">Whse Value</th>
-                                                <th class="text-center text-uppercase text-muted small fw-bold">Stores
-                                                    Qty</th>
-                                                <th class="text-uppercase text-muted small fw-bold">Stores Value</th>
-                                                <th class="text-end text-uppercase text-muted small fw-bold">Total
-                                                    Value</th>
-                                                <th class="text-end pe-4 text-uppercase text-muted small fw-bold">
-                                                    Actions</th>
+                                                <th class="text-center text-uppercase text-muted small fw-bold">Whse Qty</th>
+                                                <th class="text-end text-uppercase text-muted small fw-bold">Whse Cost Value</th>
+                                                <th class="text-end text-uppercase text-muted small fw-bold">Total Whse Value</th>
+                                                <th class="text-end pe-4 text-uppercase text-muted small fw-bold">Action</th>
                                             </tr>
                                         </thead>
                                     </table>
                                 </div>
                             </div>
 
-                            {{-- TAB 2: STORE VALUATION --}}
-                            <div class="tab-pane fade" id="storeValuation">
+                            {{-- TAB 2: STORE ANALYTICS --}}
+                            <div class="tab-pane fade" id="storeAnalytics">
+                                <div class="p-4 border-bottom bg-light bg-opacity-50">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted small fw-bold">SELECT STORE / LOCATION</label>
+                                            <select id="storeLocationFilter" class="form-select shadow-none">
+                                                <option value="">All Stores</option>
+                                                @foreach ($stores as $store)
+                                                    <option value="{{ $store->id }}">{{ $store->store_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted small fw-bold">DEPARTMENT</label>
+                                            <select id="storeDepartmentFilter" class="form-select shadow-none">
+                                                <option value="">All Departments</option>
+                                                @foreach ($departments as $dept)
+                                                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted small fw-bold">SEARCH PRODUCT / UPC</label>
+                                            <input type="text" id="storeSearchInput" class="form-control shadow-none" placeholder="Type product name or UPC...">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
+                                    <table id="storeValuationTable" class="table table-hover align-middle mb-0" style="width:100%">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th class="ps-4 text-uppercase text-muted small fw-bold">Store Name
-                                                </th>
-                                                <th class="text-uppercase text-muted small fw-bold">Location</th>
-                                                <th class="text-center text-uppercase text-muted small fw-bold">Total
-                                                    Stock Qty</th>
-                                                <th class="text-uppercase text-muted small fw-bold">Total Value</th>
-                                                <th class="text-uppercase text-muted small fw-bold">Avg. Value / Unit
-                                                </th>
-                                                <th class="text-center text-uppercase text-muted small fw-bold">Status
-                                                </th>
-                                                <th class="text-end pe-4 text-uppercase text-muted small fw-bold">
-                                                    Actions</th>
+                                                <th class="ps-4 text-uppercase text-muted small fw-bold">Product</th>
+                                                <th class="text-uppercase text-muted small fw-bold">UPC</th>
+                                                <th class="text-uppercase text-muted small fw-bold">Department</th>
+                                                <th class="text-center text-uppercase text-muted small fw-bold">Store Qty</th>
+                                                <th class="text-end text-uppercase text-muted small fw-bold">Store Value</th>
+                                                <th class="text-end pe-4 text-uppercase text-muted small fw-bold">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            @forelse($stores as $store)
-                                                @php
-                                                    $storeValue = \App\Models\StoreStock::where(
-                                                        'store_stocks.store_id',
-                                                        $store->id,
-                                                    )
-                                                        ->join(
-                                                            'products',
-                                                            'store_stocks.product_id',
-                                                            '=',
-                                                            'products.id',
-                                                        )
-                                                        ->sum(
-                                                            \Illuminate\Support\Facades\DB::raw(
-                                                                'store_stocks.quantity * products.cost_price',
-                                                            ),
-                                                        );
-
-                                                    $storeQty = \App\Models\StoreStock::where(
-                                                        'store_stocks.store_id',
-                                                        $store->id,
-                                                    )->sum('quantity');
-                                                    $avgValue = $storeQty > 0 ? $storeValue / $storeQty : 0;
-                                                @endphp
-                                                <tr>
-                                                    <td class="ps-4">
-                                                        <div class="d-flex align-items-center">
-                                                            <div
-                                                                class="avatar-sm bg-light rounded d-flex align-items-center justify-content-center me-2 text-primary">
-                                                                <i class="mdi mdi-store"></i>
-                                                            </div>
-                                                            <span
-                                                                class="fw-bold text-dark">{{ $store->store_name }}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td><span class="text-muted">{{ $store->city ?? 'N/A' }}</span>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <span
-                                                            class="badge bg-light text-dark border">{{ number_format($storeQty, 0) }}</span>
-                                                    </td>
-                                                    <td><span class="fw-bold text-primary">$
-                                                            {{ number_format($storeValue, 2) }}</span></td>
-                                                    <td><span class="text-muted">$
-                                                            {{ number_format($avgValue, 2) }}</span></td>
-                                                    <td class="text-center">
-                                                        <span
-                                                            class="badge bg-success bg-opacity-10 text-success px-2 py-1">Active</span>
-                                                    </td>
-                                                    <td class="text-end pe-4">
-                                                        <a href="{{ route('warehouse.stock-control.valuation.store-analytics', $store->id) }}"
-                                                            class="btn btn-sm btn-outline-dark shadow-sm">
-                                                            <i class="mdi mdi-chart-line me-1"></i> Analytics
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="7" class="text-center py-5 text-muted">
-                                                        <div class="d-flex flex-column align-items-center">
-                                                            <i class="mdi mdi-store-off fs-1 opacity-50 mb-2"></i>
-                                                            <span>No active stores found with inventory data.</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
                                     </table>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -288,66 +212,69 @@
         <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
         <script>
             $(function() {
-                let table = $('#productValuationTable').DataTable({
+                // TAB 1: Warehouse Analytics Table
+                let whseTable = $('#whseValuationTable').DataTable({
                     serverSide: true,
                     processing: true,
                     ajax: {
                         url: '{{ route('warehouse.stock-control.valuation.data') }}',
                         data: function(d) {
-                            d.department_id = $('#departmentFilter').val(); // Added Department param
-                            d.category_id = $('#categoryFilter').val();
-                            d.store_id = $('#storeFilter').val();
+                            d.view_type = 'warehouse';
+                            d.department_id = $('#whseDepartmentFilter').val();
+                            d.category_id = $('#whseCategoryFilter').val();
                         }
                     },
-                    columns: [{
-                            data: 'product_name',
-                            className: 'ps-4 fw-semibold'
-                        },
-                        {
-                            data: 'upc',
-                            className: 'text-muted small'
-                        },
-                        {
-                            data: 'department_name',
-                            name: 'department.name',
-                            defaultContent: '-'
-                        }, // Added Department Column
-                        {
-                            data: 'warehouse_qty',
-                            className: 'text-center'
-                        },
-                        {
-                            data: 'warehouse_value_fmt',
-                            className: 'text-muted text-end'
-                        },
-                        {
-                            data: 'stores_qty',
-                            className: 'text-center'
-                        },
-                        {
-                            data: 'stores_value_fmt',
-                            className: 'text-muted text-end'
-                        },
-                        {
-                            data: 'total_value_fmt',
-                            className: 'text-end fw-bold text-success'
-                        },
-                        {
-                            data: 'action',
-                            className: 'text-end pe-4',
-                            searchable: false,
-                            orderable: false
-                        }
+                    columns: [
+                        { data: 'product_name', className: 'ps-4 fw-semibold' },
+                        { data: 'upc', className: 'text-muted small' },
+                        { data: 'department_name', name: 'department.name', defaultContent: '-' },
+                        { data: 'warehouse_qty', className: 'text-center' },
+                        { data: 'whse_cost_value_fmt', className: 'text-end text-muted' },
+                        { data: 'warehouse_value_fmt', className: 'text-end fw-bold text-primary' },
+                        { data: 'action', className: 'text-end pe-4', searchable: false, orderable: false }
                     ],
-                    order: [
-                        [7, 'desc']
-                    ], // Order by Total Value descending (Index adjusted for new column)
+                    order: [[5, 'desc']],
                     language: {
                         processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
                     }
                 });
 
-                $('#applyValuationFilters').click(() => table.draw());
+                $('#applyWhseFilters').click(() => whseTable.draw());
+
+                // TAB 2: Store Analytics Table
+                let storeTable = $('#storeValuationTable').DataTable({
+                    serverSide: true,
+                    processing: true,
+                    ajax: {
+                        url: '{{ route('warehouse.stock-control.valuation.data') }}',
+                        data: function(d) {
+                            d.view_type = 'store';
+                            d.store_id = $('#storeLocationFilter').val();
+                            d.department_id = $('#storeDepartmentFilter').val();
+                            d.search_term = $('#storeSearchInput').val();
+                        }
+                    },
+                    columns: [
+                        { data: 'product_name', className: 'ps-4 fw-semibold' },
+                        { data: 'upc', className: 'text-muted small' },
+                        { data: 'department_name', name: 'department.name', defaultContent: '-' },
+                        { data: 'stores_qty', className: 'text-center' },
+                        { data: 'stores_value_fmt', className: 'text-end fw-bold text-success' },
+                        { data: 'action', className: 'text-end pe-4', searchable: false, orderable: false }
+                    ],
+                    order: [[4, 'desc']],
+                    language: {
+                        processing: '<div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>'
+                    }
+                });
+
+                $('#storeLocationFilter, #storeDepartmentFilter').change(() => storeTable.draw());
+                
+                let searchTimer;
+                $('#storeSearchInput').on('keyup input', function() {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(() => storeTable.draw(), 300);
+                });
             });
         </script>
     @endpush

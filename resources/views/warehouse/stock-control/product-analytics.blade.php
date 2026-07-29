@@ -20,31 +20,36 @@
         </div>
 
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-danger">
-                    <div class="card-body text-center p-4">
-                        <h6 class="text-danger-50 mb-1">Total System Value</h6>
-                        <h3 class="text-danger fw-bold">$ {{ number_format($totalValue, 2) }}</h3>
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-1">Warehouse Stock</h6>
+                                <h3 class="fw-bold text-dark mb-0">{{ number_format($warehouseQty, 0) }} <small class="fs-6 text-muted">{{ $product->unit ?? 'Units' }}</small></h3>
+                                <small class="text-success fw-semibold">Value: $ {{ number_format($warehouseValue, 2) }}</small>
+                            </div>
+                            <div class="avatar-md rounded bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-warehouse text-info fs-2"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <h6 class="text-muted mb-1">Warehouse Stock</h6>
-                        <h3 class="fw-bold text-dark">{{ $warehouseQty }} <small
-                                class="fs-6 text-muted">{{ $product->unit }}</small></h3>
-                        <small class="text-success">Value: $ {{ number_format($warehouseValue, 2) }}</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <h6 class="text-muted mb-1">Total Store Stock</h6>
-                        <h3 class="fw-bold text-dark">{{ $storesQty }} <small
-                                class="fs-6 text-muted">{{ $product->unit }}</small></h3>
-                        <small class="text-info">Value: $ {{ number_format($storesValue, 2) }}</small>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-1">Stores Distribution Stock</h6>
+                                <h3 class="fw-bold text-dark mb-0">{{ number_format($storesQty, 0) }} <small class="fs-6 text-muted">{{ $product->unit ?? 'Units' }}</small></h3>
+                                <small class="text-success fw-semibold">Value: $ {{ number_format($storesValue, 2) }}</small>
+                            </div>
+                            <div class="avatar-md rounded bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-store text-success fs-2"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

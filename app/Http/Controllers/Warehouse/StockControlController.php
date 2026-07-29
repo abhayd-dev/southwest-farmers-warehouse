@@ -152,7 +152,7 @@ class StockControlController extends Controller
         set_time_limit(300);
         $stores = StoreDetail::where('is_active', true)->get();
         $categories = ProductCategory::where('is_active', true)->get();
-        $departments = Department::where('is_active', true)->get(); // Added
+        $departments = Department::where('is_active', true)->get();
 
         $warehouseValue = ProductStock::where('warehouse_id', 1)
             ->join('products', 'product_stocks.product_id', '=', 'products.id')
@@ -161,42 +161,43 @@ class StockControlController extends Controller
         $storesValue = StoreStock::join('products', 'store_stocks.product_id', '=', 'products.id')
             ->sum(DB::raw('store_stocks.quantity * products.cost_price'));
 
-        $totalValue = $warehouseValue + $storesValue;
-        $totalQty = ProductStock::where('warehouse_id', 1)->sum('quantity') + StoreStock::sum('quantity');
+        $totalWarehouseUnits = ProductStock::where('warehouse_id', 1)->sum('quantity');
+        $totalStoreUnits = StoreStock::sum('quantity');
 
         return view('warehouse.stock-control.valuation', compact(
             'warehouseValue',
             'storesValue',
-            'totalValue',
-            'totalQty',
+            'totalWarehouseUnits',
+            'totalStoreUnits',
             'stores',
             'categories',
-            'departments' // Added
+            'departments'
         ));
     }
 
     public function valuationData(Request $request)
     {
+        $viewType = $request->get('view_type', 'warehouse');
+
         $query = Product::query()
             ->whereNull('products.store_id')
-            ->with('department') // Eager load
+            ->with(['department', 'category'])
             ->select([
                 'products.id',
                 'products.product_name',
                 'products.upc',
                 'products.cost_price',
-                'products.department_id', // Select for relation
+                'products.department_id',
+                'products.category_id',
                 DB::raw('COALESCE(SUM(product_stocks.quantity), 0) as warehouse_qty'),
                 DB::raw('COALESCE(SUM(product_stocks.quantity * products.cost_price), 0) as warehouse_value'),
                 DB::raw('COALESCE(SUM(store_stocks.quantity), 0) as stores_qty'),
                 DB::raw('COALESCE(SUM(store_stocks.quantity * products.cost_price), 0) as stores_value'),
-                DB::raw('(COALESCE(SUM(product_stocks.quantity * products.cost_price), 0) + COALESCE(SUM(store_stocks.quantity * products.cost_price), 0)) as total_value')
             ])
             ->leftJoin('product_stocks', 'products.id', '=', 'product_stocks.product_id')
             ->leftJoin('store_stocks', 'products.id', '=', 'store_stocks.product_id')
-            ->groupBy('products.id', 'products.product_name', 'products.upc', 'products.cost_price', 'products.department_id');
+            ->groupBy('products.id', 'products.product_name', 'products.upc', 'products.cost_price', 'products.department_id', 'products.category_id');
 
-        // Added Department Filter
         if ($request->filled('department_id')) {
             $query->where('products.department_id', $request->department_id);
         }
@@ -205,19 +206,27 @@ class StockControlController extends Controller
             $query->where('products.category_id', $request->category_id);
         }
 
-        if ($request->filled('store_id')) {
+        if ($viewType === 'store' && $request->filled('store_id')) {
             $query->whereHas('storeStocks', fn($q) => $q->where('store_stocks.store_id', $request->store_id));
         }
 
+        if ($request->filled('search_term')) {
+            $term = strtolower($request->search_term);
+            $query->where(function($q) use ($term) {
+                $q->where(DB::raw('LOWER(products.product_name)'), 'like', "%{$term}%")
+                  ->orWhere(DB::raw('LOWER(products.upc)'), 'like', "%{$term}%");
+            });
+        }
+
         return DataTables::of($query)
-            ->addColumn('department_name', fn($row) => $row->department->name ?? '-') // Added column
+            ->addColumn('department_name', fn($row) => $row->department->name ?? '-')
+            ->addColumn('whse_cost_value_fmt', fn($row) => '$ ' . number_format($row->cost_price ?? 0, 2))
             ->addColumn('warehouse_value_fmt', fn($row) => '$ ' . number_format($row->warehouse_value, 2))
             ->addColumn('stores_value_fmt', fn($row) => '$ ' . number_format($row->stores_value, 2))
-            ->addColumn('total_value_fmt', fn($row) => '$ ' . number_format($row->total_value, 2))
             ->addColumn('action', fn($row) => '
                 <a href="' . route('warehouse.stock-control.valuation.product', $row->id) . '" 
                    class="btn btn-sm btn-outline-primary">
-                   <i class="mdi mdi-chart-line"></i> Analytics
+                   <i class="mdi mdi-chart-line me-1"></i> Analytics
                 </a>
             ')
             ->rawColumns(['action'])
