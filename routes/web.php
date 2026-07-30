@@ -21,6 +21,7 @@ use App\Http\Controllers\Warehouse\ProductSubcategoryController;
 use App\Http\Controllers\Warehouse\PurchaseOrderController;
 use App\Http\Controllers\Warehouse\ReceivingController;
 use App\Http\Controllers\Warehouse\RecallController;
+use App\Http\Controllers\Warehouse\RepackagingController;
 use App\Http\Controllers\Warehouse\RoleController;
 use App\Http\Controllers\Warehouse\StaffController;
 use App\Http\Controllers\Warehouse\StockAuditController;
@@ -180,6 +181,11 @@ Route::middleware('auth')->group(function () {
             Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
             Route::get('overview/data', [StockControlController::class, 'overviewData'])->name('overview.data');
             Route::get('overview/export', [StockControlController::class, 'exportOverview'])->name('overview.export');
+
+            // Warehouse Repackaging
+            Route::get('repackaging', [RepackagingController::class, 'index'])->name('repackaging.index');
+            Route::post('repackaging', [RepackagingController::class, 'store'])->name('repackaging.store');
+            Route::get('repackaging/associated/{product}', [RepackagingController::class, 'getAssociatedProducts'])->name('repackaging.associated');
 
             // Recall Stock - NEW 3-TAB STRUCTURE
             Route::get('recall', [RecallController::class, 'indexTabs'])->name('recall');

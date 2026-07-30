@@ -297,6 +297,12 @@
                                             <i class="mdi mdi-view-dashboard-outline me-2"></i> Stock Overview
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.stock-control.repackaging.index') }}"
+                                            class="{{ request()->routeIs('warehouse.stock-control.repackaging.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-package-variant-closed me-2"></i> Warehouse Repackaging
+                                        </a>
+                                    </li>
                                 @endif
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_transfers'))
