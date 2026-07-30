@@ -106,8 +106,20 @@ class RestockPlanningController extends Controller
         // Sort by those needing action first, then fast moving
         $planningData = $planningData->sortByDesc(function ($item) {
             return ($item->action_required ? 100 : 0) + ($item->is_fast_moving ? 10 : 0);
-        });
+        })->values();
 
-        return view('warehouse.stock-control.restock_planning', compact('planningData'));
+        $page = (int) $request->get('page', 1);
+        $perPage = 20;
+        $offset = ($page * $perPage) - $perPage;
+
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $planningData->slice($offset, $perPage)->values(),
+            $planningData->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('warehouse.stock-control.restock_planning', ['planningData' => $paginatedData]);
     }
 }

@@ -116,6 +116,18 @@
                     </table>
                 </div>
             </div>
+            @if ($planningData->hasPages())
+                <div class="card-footer bg-white py-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Showing {{ $planningData->firstItem() }} to {{ $planningData->lastItem() }} of {{ $planningData->total() }} products (20 per page)
+                        </small>
+                        <div>
+                            {{ $planningData->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
     @push('scripts')

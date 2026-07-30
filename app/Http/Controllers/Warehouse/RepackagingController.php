@@ -83,13 +83,15 @@ class RepackagingController extends Controller
             $refId = 'REPACK-' . strtoupper(Str::random(8));
             $remarks = $request->input('remarks') ?: 'repackaging transfer';
 
+            $sourceQty = (float) $request->source_quantity;
+
             // 1. DEDUCT SOURCE BULK PRODUCT STOCK
             $sourceStock = ProductStock::firstOrCreate(
                 ['product_id' => $request->source_product_id, 'warehouse_id' => $warehouseId],
                 ['quantity' => 0]
             );
 
-            $sourceStock->quantity -= $request->source_quantity;
+            $sourceStock->quantity = round(((float)$sourceStock->quantity - $sourceQty), 2);
             $sourceStock->save();
 
             // Create Outbound Transaction Log for Bulk Product
@@ -98,7 +100,7 @@ class RepackagingController extends Controller
                 'warehouse_id'    => $warehouseId,
                 'ware_user_id'    => $userId,
                 'type'            => 'transfer_out',
-                'quantity_change' => -$request->source_quantity,
+                'quantity_change' => -$sourceQty,
                 'running_balance' => $sourceStock->quantity,
                 'reference_id'    => $refId,
                 'remarks'         => $remarks,
@@ -106,12 +108,14 @@ class RepackagingController extends Controller
 
             // 2. ADD TARGET REPACKAGED PRODUCTS STOCK
             foreach ($request->items as $item) {
+                $itemQty = (float) $item['quantity'];
+
                 $targetStock = ProductStock::firstOrCreate(
                     ['product_id' => $item['product_id'], 'warehouse_id' => $warehouseId],
                     ['quantity' => 0]
                 );
 
-                $targetStock->quantity += $item['quantity'];
+                $targetStock->quantity = round(((float)$targetStock->quantity + $itemQty), 2);
                 $targetStock->save();
 
                 // Create Inbound Transaction Log for Repackaged Product
@@ -120,7 +124,7 @@ class RepackagingController extends Controller
                     'warehouse_id'    => $warehouseId,
                     'ware_user_id'    => $userId,
                     'type'            => 'transfer_in',
-                    'quantity_change' => $item['quantity'],
+                    'quantity_change' => $itemQty,
                     'running_balance' => $targetStock->quantity,
                     'reference_id'    => $refId,
                     'remarks'         => $remarks,
