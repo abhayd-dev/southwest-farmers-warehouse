@@ -192,6 +192,7 @@
                                                 <th class="text-uppercase text-muted small fw-bold">UPC</th>
                                                 <th class="text-uppercase text-muted small fw-bold">Department</th>
                                                 <th class="text-center text-uppercase text-muted small fw-bold">Store Qty</th>
+                                                <th class="text-end text-uppercase text-muted small fw-bold">Store Cost Value</th>
                                                 <th class="text-end text-uppercase text-muted small fw-bold">Store Value</th>
                                                 <th class="text-end pe-4 text-uppercase text-muted small fw-bold">Action</th>
                                             </tr>
@@ -259,10 +260,11 @@
                         { data: 'upc', className: 'text-muted small' },
                         { data: 'department_name', name: 'department.name', defaultContent: '-' },
                         { data: 'stores_qty', className: 'text-center' },
+                        { data: 'whse_cost_value_fmt', className: 'text-end text-muted' },
                         { data: 'stores_value_fmt', className: 'text-end fw-bold text-success' },
                         { data: 'action', className: 'text-end pe-4', searchable: false, orderable: false }
                     ],
-                    order: [[4, 'desc']],
+                    order: [[5, 'desc']],
                     language: {
                         processing: '<div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>'
                     }

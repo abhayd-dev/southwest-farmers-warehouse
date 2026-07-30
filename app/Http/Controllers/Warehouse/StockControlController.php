@@ -301,11 +301,16 @@ class StockControlController extends Controller
             ->select([
                 'store_details.store_name',
                 'store_stocks.quantity',
+                'store_stocks.updated_at as last_activity',
                 // FIX: Use the variable $costPrice (which is 0 if null)
                 DB::raw('store_stocks.quantity * ' . $costPrice . ' as value')
             ])
             ->orderByDesc('value')
             ->get();
+
+        $thirtyDaysActivity = StockTransaction::where('product_id', $product->id)
+            ->where('created_at', '>=', now()->subDays(30))
+            ->sum(DB::raw('ABS(quantity_change)'));
 
         $batches = ProductBatch::where('product_id', $product->id)
             ->where('warehouse_id', 1)
@@ -336,7 +341,8 @@ class StockControlController extends Controller
             'totalValue',
             'storeDistribution',
             'batches',
-            'transactions'
+            'transactions',
+            'thirtyDaysActivity'
         ));
     }
 

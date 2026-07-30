@@ -20,7 +20,7 @@
         </div>
 
         <div class="row g-3 mb-4">
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center justify-content-between">
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center justify-content-between">
@@ -53,13 +53,30 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-muted text-uppercase fw-bold mb-1">Activity Trend (30 Days)</h6>
+                                <h3 class="fw-bold text-dark mb-0">{{ number_format($thirtyDaysActivity ?? 0, 0) }} <small class="fs-6 text-muted">Moved</small></h3>
+                                <small class="text-warning fw-semibold"><i class="mdi mdi-chart-line me-1"></i>30 Days Stock Activity</small>
+                            </div>
+                            <div class="avatar-md rounded bg-warning bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <i class="mdi mdi-chart-timeline-variant text-warning fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Store Distribution</h5>
+                        <h5 class="mb-0 fw-bold"><i class="mdi mdi-store-outline me-1"></i> Store Distribution</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
@@ -68,6 +85,7 @@
                                     <tr>
                                         <th class="ps-4">Store</th>
                                         <th class="text-center">Qty</th>
+                                        <th>Date</th>
                                         <th class="text-end pe-4">Value</th>
                                     </tr>
                                 </thead>
@@ -76,12 +94,12 @@
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $sd->store_name }}</td>
                                             <td class="text-center">{{ $sd->quantity }}</td>
+                                            <td class="text-muted small">{{ $sd->last_activity ? \Carbon\Carbon::parse($sd->last_activity)->format('d M Y') : 'N/A' }}</td>
                                             <td class="text-end pe-4">$ {{ number_format($sd->value, 2) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted">No stock in stores.
-                                            </td>
+                                            <td colspan="4" class="text-center py-4 text-muted">No stock in stores.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -94,15 +112,16 @@
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Warehouse Batches (FIFO)</h5>
+                        <h5 class="mb-0 fw-bold"><i class="mdi mdi-package-variant-closed me-1"></i> Warehouse Batches (PO Orders)</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light sticky-top">
                                     <tr>
-                                        <th class="ps-4">Batch No</th>
+                                        <th class="ps-4">Batch No (Order No)</th>
                                         <th>Expiry</th>
+                                        <th class="text-center">Total</th>
                                         <th class="text-end pe-4">Qty</th>
                                     </tr>
                                 </thead>
@@ -116,12 +135,12 @@
                                                     <span class="badge bg-danger ms-1">Expired</span>
                                                 @endif
                                             </td>
+                                            <td class="text-center text-muted">{{ $batch->initial_quantity ?? $batch->quantity }}</td>
                                             <td class="text-end pe-4 fw-bold">{{ $batch->quantity }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted">No active batches in
-                                                warehouse.</td>
+                                            <td colspan="4" class="text-center py-4 text-muted">No active batches in warehouse.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -155,28 +174,25 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-4">Date</th>
-                                    <th>Type</th>
-                                    <th>Ref ID</th>
-                                    <th>Location/Store</th>
-                                    <th>Change</th>
+                                    <th>Type (Ordered / Transfer)</th>
+                                    <th>Store PO / Ref No</th>
+                                    <th>Location Change</th>
+                                    <th>Qty Change</th>
                                     <th>User</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($transactions as $txn)
                                     <tr>
-                                        <td class="ps-4 text-muted small">{{ $txn->created_at->format('d M Y H:i') }}
-                                        </td>
+                                        <td class="ps-4 text-muted small">{{ $txn->created_at->format('d M Y H:i') }}</td>
                                         <td>
-                                            <span
-                                                class="badge bg-{{ $txn->quantity_change > 0 ? 'success' : 'warning' }} text-uppercase">
+                                            <span class="badge bg-{{ $txn->quantity_change > 0 ? 'success' : 'warning' }} text-uppercase">
                                                 {{ $txn->type }}
                                             </span>
                                         </td>
                                         <td class="font-monospace small">{{ $txn->reference_id ?? '-' }}</td>
                                         <td>{{ $txn->store->store_name ?? 'Warehouse' }}</td>
-                                        <td
-                                            class="fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
+                                        <td class="fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                                             {{ $txn->quantity_change > 0 ? '+' : '' }}{{ $txn->quantity_change }}
                                         </td>
                                         <td class="small">{{ $txn->user->name ?? 'System' }}</td>
