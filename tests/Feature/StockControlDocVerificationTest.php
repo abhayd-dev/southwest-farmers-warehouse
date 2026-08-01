@@ -177,4 +177,87 @@ class StockControlDocVerificationTest extends TestCase
         $storeData = $this->get(route('warehouse.stock-control.valuation.data', ['view_type' => 'store']));
         $storeData->assertStatus(200);
     }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_po_draft_reversion_route()
+    {
+        $this->actingAs($this->user);
+
+        $warehouse = \App\Models\Warehouse::first() ?? \App\Models\Warehouse::create(['name' => 'Main Warehouse', 'warehouse_name' => 'Main Warehouse', 'code' => 'MAIN']);
+
+        $vendor = \App\Models\Vendor::first() ?? \App\Models\Vendor::create([
+            'name' => 'Test Vendor',
+            'email' => 'vendor@test.com',
+            'status' => 'active'
+        ]);
+
+        $po = \App\Models\PurchaseOrder::create([
+            'po_number' => 'PO-TEST-' . rand(1000, 9999),
+            'vendor_id' => $vendor->id,
+            'warehouse_id' => $warehouse->id,
+            'created_by' => $this->user->id,
+            'order_date' => now(),
+            'status' => 'approved',
+            'total_amount' => 100
+        ]);
+
+        $response = $this->post(route('warehouse.purchase-orders.revert-draft', $po->id));
+        $response->assertRedirect(route('warehouse.purchase-orders.show', $po->id));
+
+        $this->assertDatabaseHas('purchase_orders', [
+            'id' => $po->id,
+            'status' => 'draft'
+        ]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_non_admin_adjustment_protection()
+    {
+        $staffUser = WareUser::create([
+            'name' => 'Staff Tester',
+            'email' => 'staff@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'staff',
+            'warehouse_id' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($staffUser);
+
+        $category = \App\Models\ProductCategory::first() ?? \App\Models\ProductCategory::create(['name' => 'General', 'code' => 'GEN']);
+        $subcategory = \App\Models\ProductSubcategory::first() ?? \App\Models\ProductSubcategory::create(['category_id' => $category->id, 'name' => 'General Sub', 'code' => 'GENSUB']);
+
+        $product = Product::first() ?? Product::create([
+            'product_name' => 'Test Product',
+            'sku' => 'TEST-001',
+            'category_id' => $category->id,
+            'subcategory_id' => $subcategory->id,
+            'cost_price' => 10,
+            'price' => 15,
+            'unit' => 'pcs',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post(route('warehouse.stocks.store-adjustment'), [
+            'product_id' => $product->id,
+            'action' => 'add',
+            'reason' => 'adjustment',
+            'quantity' => 5
+        ]);
+
+        $response->assertSessionHas('error', 'Inventory adjustments are restricted to ADMIN access only.');
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function test_pallet_builder_department_validation()
+    {
+        $this->actingAs($this->user);
+
+        $response = $this->post(route('warehouse.pallets.store'), [
+            'store_po_id' => null,
+            'max_weight' => 2200
+        ]);
+
+        $response->assertSessionHasErrors(['department_id']);
+    }
 }
