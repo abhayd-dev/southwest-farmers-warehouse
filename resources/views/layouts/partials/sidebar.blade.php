@@ -251,39 +251,30 @@
                                     </a>
                                 </li>
 
-                                {{-- 2. All Orders History (Active if NOT 'pending') --}}
+                                {{-- 2. All Orders History --}}
                                 <li>
                                     <a href="{{ route('warehouse.stock-requests.index') }}"
                                         class="{{ request()->routeIs('warehouse.stock-requests.*') && request()->query('status') !== 'pending' ? 'active' : '' }}">
-                                        <i class="mdi mdi-history me-2"></i> Legacy Orders
+                                        <i class="mdi mdi-history me-2"></i> Stores Request
                                         @if (isset($pendingRequestsCount) && $pendingRequestsCount > 0)
                                             <span
                                                 class="badge bg-danger rounded-pill ms-2">{{ $pendingRequestsCount }}</span>
                                         @endif
                                     </a>
                                 </li>
-
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_discrepancies'))
-                                    <li>
-                                        <a href="{{ route('warehouse.discrepancy.index') }}"
-                                            class="{{ request()->routeIs('warehouse.discrepancy.*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-alert-circle-outline me-2"></i> Discrepancy
-                                        </a>
-                                    </li>
-                                @endif
                             </ul>
                         </div>
                     </li>
                 @endif
 
-                {{-- ================= STOCK CONTROL ================= --}}
+                {{-- ================= INVENTORY CONTROL ================= --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_control'))
-                    <li class="menu-title mt-2">Stock Control</li>
+                    <li class="menu-title mt-2">Inventory Control</li>
                     <li>
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
                             class="{{ request()->routeIs('warehouse.stock-control.*') || request()->routeIs('warehouse.transfers.*') || request()->routeIs('warehouse.free-weight.*') || request()->routeIs('warehouse.pallets.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:chart-line"></iconify-icon>
-                            <span class="sidebar-text">Stock Control</span>
+                            <span class="sidebar-text">Inventory Control</span>
                             <span class="menu-arrow"></span>
                         </a>
                         <div class="collapse {{ request()->routeIs('warehouse.stock-control.*') || request()->routeIs('warehouse.transfers.*') || request()->routeIs('warehouse.free-weight.*') || request()->routeIs('warehouse.pallets.*') ? 'show' : '' }}"
@@ -294,7 +285,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.overview') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.overview') ? 'active' : '' }}">
-                                            <i class="mdi mdi-view-dashboard-outline me-2"></i> Stock Overview
+                                            <i class="mdi mdi-view-dashboard-outline me-2"></i> Inventory Overview
                                         </a>
                                     </li>
                                     <li>
@@ -318,7 +309,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.recall') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.recall') ? 'active' : '' }}">
-                                            <i class="mdi mdi-undo-variant me-2"></i> Recall Stock
+                                            <i class="mdi mdi-undo-variant me-2"></i> Recall Inventory
                                             @if (isset($pendingRecallCount) && $pendingRecallCount > 0)
                                                 <span
                                                     class="badge bg-danger rounded-pill ms-2">{{ $pendingRecallCount }}</span>
@@ -331,7 +322,7 @@
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.valuation') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.valuation') ? 'active' : '' }}">
-                                            <i class="mdi mdi-cash-multiple me-2"></i> Stock Valuations
+                                            <i class="mdi mdi-cash-multiple me-2"></i> Inventory Valuations
                                         </a>
                                     </li>
                                 @endif
@@ -373,12 +364,12 @@
                                         </a>
                                     </li>
                                 @endif
-                                {{-- Restock Planning --}}
+                                {{-- Inventory Planning --}}
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.restock-planning') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.restock-planning*') ? 'active' : '' }}">
-                                            <i class="mdi mdi-clipboard-text-play me-2"></i> Restock Planning
+                                            <i class="mdi mdi-clipboard-text-play me-2"></i> Inventory Planning
                                         </a>
                                     </li>
                                 @endif

@@ -51,7 +51,7 @@
                     { data: 'audit_no', name: 'audit_number', className: 'fw-bold text-primary' },
                     { data: 'type_label', name: 'type' }, 
                     { data: 'status_badge', name: 'status' },
-                    { data: 'initiator.name', name: 'initiator.name', defaultContent: 'System' },
+                    { data: 'initiator_name', name: 'initiator_name', defaultContent: 'System' },
                     { data: 'date', name: 'created_at' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' }
                 ],

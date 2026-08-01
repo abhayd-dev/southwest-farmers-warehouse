@@ -238,6 +238,28 @@ class PurchaseOrderController extends Controller
         return view('warehouse.purchase-orders.show', compact('purchaseOrder'));
     }
 
+    /**
+     * Revert an approved or submitted PO back to DRAFT status
+     */
+    public function revertToDraft(PurchaseOrder $purchaseOrder)
+    {
+        if (in_array($purchaseOrder->status, ['completed', 'received'])) {
+            return back()->with('error', 'Cannot revert a completed or received purchase order.');
+        }
+
+        $purchaseOrder->update(['status' => 'draft']);
+
+        NotificationService::sendToAdmins(
+            'PO Reverted to Draft',
+            "PO #{$purchaseOrder->po_number} was reverted to draft status by " . auth()->user()->name,
+            'warning',
+            route('warehouse.purchase-orders.show', $purchaseOrder->id)
+        );
+
+        return redirect()->route('warehouse.purchase-orders.show', $purchaseOrder->id)
+            ->with('success', 'Purchase order status reset to draft. You can now edit, cancel, or resubmit for approval.');
+    }
+
     public function edit(PurchaseOrder $purchaseOrder)
     {
         if ($purchaseOrder->status !== 'draft') {

@@ -205,52 +205,59 @@ class ProductStockController extends Controller
      */
     public function storeAdjustment(Request $request)
     {
+        if (!Auth::user()->isSuperAdmin()) {
+            return back()->with('error', 'Inventory adjustments are restricted to ADMIN access only.');
+        }
+
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'action'     => 'required|in:add,subtract',
-            'reason'     => 'required|in:adjustment,damage,return,theft', // Theft maps to adjustment/damage
-            'quantity'   => 'required|numeric|min:0.01',
-            'remarks'    => 'nullable|string|max:255',
+            'product_id'           => 'required|exists:products,id',
+            'action'               => 'required|in:add,subtract',
+            'reason'               => 'required|in:adjustment,damage,return,theft',
+            'quantity'             => 'required|numeric|min:0.01',
+            'adjustment_unit_type' => 'nullable|in:unit,case',
+            'remarks'              => 'nullable|string|max:255',
         ]);
 
         try {
             DB::beginTransaction();
 
             $product = Product::findOrFail($request->product_id);
-            $warehouseId = 1; // Default for now
+            $warehouseId = 1;
 
-            // Map UI "Reason" to Database "Transaction Type"
+            $qtyToAdjust = (float) $request->quantity;
+            $unitType = $request->input('adjustment_unit_type', 'unit');
+
+            if ($unitType === 'case') {
+                $unitsPerCase = $product->units_per_case ?? 1;
+                $qtyToAdjust = $qtyToAdjust * $unitsPerCase;
+            }
+
             $txnType = $request->reason;
-            if ($request->reason == 'theft') $txnType = 'adjustment'; // Map theft to adjustment or damage
+            if ($request->reason == 'theft') $txnType = 'adjustment';
+
+            $remarks = $request->remarks ?: "Manual Inventory Adjustment ({$unitType} level)";
 
             if ($request->action == 'add') {
-                // ADD STOCK (Correction/Return)
-                // Note: For adjustments, we might not have specific batch info, 
-                // so we let the system create a "General Adjustment" batch or similar if needed.
-                // For simplicity here, we create a new batch for positive adjustment.
-
                 $batchData = [
                     'batch_number' => 'ADJ-' . date('ymd-His'),
-                    'cost_price'   => $product->cost_price // Use current standard cost
+                    'cost_price'   => $product->cost_price
                 ];
 
                 $product->addStock(
                     $warehouseId,
-                    $request->quantity,
+                    $qtyToAdjust,
                     $txnType,
                     $batchData,
                     Auth::id(),
-                    $request->remarks ?? 'Manual Stock Adjustment'
+                    $remarks
                 );
             } else {
-                // REMOVE STOCK (Damage/Theft/Correction)
-                // Uses FIFO to remove from oldest batches
                 $product->removeStock(
                     $warehouseId,
-                    $request->quantity,
+                    $qtyToAdjust,
                     $txnType,
                     Auth::id(),
-                    $request->remarks ?? 'Manual Stock Deduction'
+                    $remarks
                 );
             }
 

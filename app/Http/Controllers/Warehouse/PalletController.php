@@ -62,20 +62,22 @@ class PalletController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'department_id' => 'nullable|exists:departments,id',
-            'store_po_id'   => 'nullable|exists:store_purchase_orders,id',
-            'max_weight'    => 'nullable|numeric|min:1|max:' . self::MAX_PALLET_WEIGHT,
-            'notes'         => 'nullable|string|max:500',
+            'department_id'    => 'required|exists:departments,id',
+            'store_po_id'      => 'nullable|exists:store_purchase_orders,id',
+            'store_request_id' => 'nullable|exists:stock_requests,id',
+            'max_weight'       => 'nullable|numeric|min:1|max:' . self::MAX_PALLET_WEIGHT,
+            'notes'            => 'nullable|string|max:500',
         ]);
 
         $pallet = Pallet::create([
-            'pallet_number' => Pallet::generatePalletNumber(),
-            'department_id' => $request->department_id,
-            'store_po_id'   => $request->store_po_id,
-            'max_weight'    => $request->max_weight ?? self::MAX_PALLET_WEIGHT,
-            'total_weight'  => 0,
-            'status'        => Pallet::STATUS_PREPARING,
-            'notes'         => $request->notes,
+            'pallet_number'    => Pallet::generatePalletNumber(),
+            'department_id'    => $request->department_id,
+            'store_po_id'      => $request->store_po_id,
+            'store_request_id' => $request->store_request_id,
+            'max_weight'       => $request->max_weight ?? self::MAX_PALLET_WEIGHT,
+            'total_weight'     => 0,
+            'status'           => Pallet::STATUS_PREPARING,
+            'notes'            => $request->notes,
         ]);
 
         return redirect()->route('warehouse.pallets.show', $pallet->id)

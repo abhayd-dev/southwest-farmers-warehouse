@@ -92,13 +92,25 @@
                             </div>
                         </div>
 
-                        {{-- Quantity --}}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" name="quantity" class="form-control" step="0.01" required
-                                    placeholder="0.00">
-                                <span class="input-group-text bg-light fw-bold text-muted" id="unitDisplay">Unit</span>
+                        {{-- Quantity & Adjustment Level --}}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Adjustment Level</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="adjustment_unit_type" id="unitTypeInd" value="unit" autocomplete="off" checked>
+                                    <label class="btn btn-outline-secondary" for="unitTypeInd"><i class="mdi mdi-cube-outline"></i> Individual Units</label>
+
+                                    <input type="radio" class="btn-check" name="adjustment_unit_type" id="unitTypeCase" value="case" autocomplete="off">
+                                    <label class="btn btn-outline-secondary" for="unitTypeCase"><i class="mdi mdi-package-variant-closed"></i> Case / Box</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" name="quantity" class="form-control" step="0.01" required
+                                        placeholder="0.00">
+                                    <span class="input-group-text bg-light fw-bold text-muted" id="unitDisplay">Unit</span>
+                                </div>
                             </div>
                         </div>
 

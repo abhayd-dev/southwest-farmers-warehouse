@@ -16,8 +16,16 @@ class RestockPlanningController extends Controller
 {
     public function index(Request $request)
     {
+        $search = strtolower(trim($request->get('search', '')));
+
         $products = Product::whereNull('store_id')
             ->where('is_active', true)
+            ->when($search !== '', function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where(DB::raw('LOWER(product_name)'), 'like', "%{$search}%")
+                       ->orWhere(DB::raw('LOWER(upc)'), 'like', "%{$search}%");
+                });
+            })
             ->with(['stock' => function($q) {
                 $q->where('warehouse_id', 1);
             }, 'category'])
@@ -71,7 +79,7 @@ class RestockPlanningController extends Controller
             // Reorder Calculation
             $totalEffectiveStock = $qtyInHand + $inTransit;
             $recommendedOrder = 0;
-            $suggestedDate = 'Adequate Stock';
+            $suggestedDate = 'Adequate Inventory';
             $actionRequired = false;
 
             if ($totalEffectiveStock <= $minLevel && $minLevel > 0) {

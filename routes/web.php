@@ -246,6 +246,7 @@ Route::middleware('auth')->group(function () {
         Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
         Route::post('purchase-orders/{purchase_order}/send-to-vendor', [PurchaseOrderController::class, 'sendToVendor'])->name('warehouse.purchase-orders.send-to-vendor');
         Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('warehouse.purchase-orders.cancel');
+        Route::post('purchase-orders/{purchase_order}/revert-draft', [PurchaseOrderController::class, 'revertToDraft'])->name('warehouse.purchase-orders.revert-draft');
         Route::post('purchase-orders/{purchase_order}/send-approval', [PurchaseOrderController::class, 'sendApproval'])->name('warehouse.purchase-orders.send-approval');
 
         // PO Approval Routes (signed URLs for email approval)

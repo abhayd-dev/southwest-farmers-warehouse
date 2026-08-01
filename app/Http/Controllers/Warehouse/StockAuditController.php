@@ -25,6 +25,7 @@ class StockAuditController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('audit_no', fn($row) => $row->audit_number)
+                ->addColumn('initiator_name', fn($row) => $row->initiator->name ?? 'System')
                 ->addColumn('type_label', function($row) {
                     // Show "Department: Frozen" or just "Full"
                     if($row->type === 'department' && $row->department) {

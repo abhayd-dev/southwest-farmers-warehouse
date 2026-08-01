@@ -6,22 +6,24 @@
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
-                    <i class="mdi mdi-clipboard-list text-primary"></i> Stock & Inventory
+                    <i class="mdi mdi-clipboard-list text-primary"></i> Inventory Dashboard
                 </h4>
-                <small class="text-muted">Real-time stock levels across warehouse</small>
+                <small class="text-muted">Real-time inventory levels across warehouse</small>
             </div>
 
             <div class="d-flex flex-wrap gap-2 w-100 w-md-auto justify-content-end">
-                {{-- Adjustment Button --}}
-                <a href="{{ route('warehouse.stocks.adjust') }}"
-                    class="btn btn-warning text-dark flex-fill flex-md-grow-0">
-                    <i class="mdi mdi-scale-balance me-1"></i> Stock Adjustment
-                </a>
+                @if(auth()->user()->isSuperAdmin())
+                    {{-- Adjustment Button --}}
+                    <a href="{{ route('warehouse.stocks.adjust') }}"
+                        class="btn btn-warning text-dark flex-fill flex-md-grow-0">
+                        <i class="mdi mdi-scale-balance me-1"></i> Inventory Adjustment
+                    </a>
 
-                {{-- Purchase Button --}}
-                <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-success flex-fill flex-md-grow-0">
-                    <i class="mdi mdi-plus-box me-1"></i> Stock In (Purchase)
-                </a>
+                    {{-- Purchase Button --}}
+                    <a href="{{ route('warehouse.stocks.create') }}" class="btn btn-success flex-fill flex-md-grow-0">
+                        <i class="mdi mdi-plus-box me-1"></i> Inventory In (Purchase)
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -77,16 +79,19 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 text-nowrap">
-                        <th class="px-3 py-2">Product Info</th>
-                        <th class="py-2">Category</th>
-                        <th class="py-2">Sub-category</th>
-                        <th class="py-2">Bin Loc</th>
-                        <th class="text-center py-2">Current stock quantity</th>
-                        <th class="text-center py-2">Transit stock</th>
-                        <th class="text-end px-3 py-2">Cost</th>
-                        <th class="text-end px-3 py-2">Total inventory value</th>
-                        <th class="text-end px-3 py-2">Action</th>
-                        </tr>
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-3 py-2">Product Info</th>
+                                <th class="py-2">Category</th>
+                                <th class="py-2">Sub-category</th>
+                                <th class="py-2">Bin Loc</th>
+                                <th class="text-center py-2">Whse Case Qty</th>
+                                <th class="text-center py-2">Whse Unit Qty</th>
+                                <th class="text-center py-2">Transit Qty</th>
+                                <th class="text-end px-3 py-2">Cost</th>
+                                <th class="text-end px-3 py-2">Total Value</th>
+                                <th class="text-end px-3 py-2">Action</th>
+                            </tr>
                         </thead>
                         <tbody>
                             @forelse($stocks as $stock)
@@ -128,26 +133,34 @@
                                             <span class="text-muted small fst-italic">--</span>
                                         @endif
                                     </td>
-                                    <td class="text-center py-2">
-                                        @php
-                                            $isLow = $stock->quantity <= ($stock->min_stock_level ?? 0);
-                                            $color =
-                                                $stock->quantity == 0 ? 'danger' : ($isLow ? 'warning' : 'success');
-                                        @endphp
-                                        <h5 class="mb-0 text-{{ $color }} fw-bold">
-                                            {{ number_format($stock->quantity, 2) }}
-                                        </h5>
-                                        @if ($isLow)
-                                            <small class="text-danger fw-bold d-block mt-1">
-                                                <i class="mdi mdi-alert-circle"></i> Low stock alert
-                                            </small>
-                                        @endif
-                                    </td>
-                                    <td class="text-center py-2">
-                                        <h5 class="mb-0 text-dark fw-bold">
-                                            {{ number_format($stock->in_transit_qty, 2) }}
-                                        </h5>
-                                    </td>
+                                     <td class="text-center py-2">
+                                         @php
+                                             $unitsPerCase = max(1, $stock->product?->units_per_case ?? 1);
+                                             $caseQty = floor($stock->quantity / $unitsPerCase);
+                                         @endphp
+                                         <h5 class="mb-0 text-dark fw-bold">{{ number_format($caseQty, 0) }}</h5>
+                                         <small class="text-muted">cases</small>
+                                     </td>
+                                     <td class="text-center py-2">
+                                         @php
+                                             $isLow = $stock->quantity <= ($stock->min_stock_level ?? 0);
+                                             $color =
+                                                 $stock->quantity == 0 ? 'danger' : ($isLow ? 'warning' : 'success');
+                                         @endphp
+                                         <h5 class="mb-0 text-{{ $color }} fw-bold">
+                                             {{ number_format($stock->quantity, 2) }}
+                                         </h5>
+                                         @if ($isLow)
+                                             <small class="text-danger fw-bold d-block mt-1">
+                                                 <i class="mdi mdi-alert-circle"></i> Low inventory alert
+                                             </small>
+                                         @endif
+                                     </td>
+                                     <td class="text-center py-2">
+                                         <h5 class="mb-0 text-dark fw-bold">
+                                             {{ number_format($stock->in_transit_qty, 2) }}
+                                         </h5>
+                                     </td>
                                     <td class="text-end px-3 py-2">
                                         <div class="fw-semibold text-dark">
                                             ${{ number_format($stock->product?->cost_price ?? 0, 2) }}

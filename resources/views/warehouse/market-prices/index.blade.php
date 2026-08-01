@@ -64,8 +64,8 @@
                                                 <th>UPC CODE</th>
                                                 <th>Product Name</th>
 
-                                                <th style="width: 150px;">Market Cost Price</th>
-                                                <th style="width: 150px;">Market Selling Price</th>
+                                                <th style="width: 180px;">Warehouse Price (WHSE Price)</th>
+                                                <th style="width: 220px;">Store Retail Price / Manual Override</th>
                                                 <th style="width: 120px;">Promotion</th>
                                             </tr>
                                         </thead>

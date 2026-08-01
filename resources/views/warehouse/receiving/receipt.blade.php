@@ -199,6 +199,9 @@
             <td>
                 <div class="section-title">ORDER DETAILS</div>
                 <div class="info-row"><span class="info-label">PO Number:</span> {{ $po->po_number }}</div>
+                @if ($po->vendor_invoice_number)
+                    <div class="info-row"><span class="info-label">Vendor Invoice #:</span> <strong>{{ $po->vendor_invoice_number }}</strong></div>
+                @endif
                 <div class="info-row"><span class="info-label">Order Date:</span>
                     {{ $po->order_date->format('F d, Y') }}</div>
                 <div class="info-row"><span class="info-label">RECEIVED DELIVERY:</span>
@@ -214,10 +217,10 @@
             <tr>
                 <th style="width: 5%;">#</th>
                 <th style="width: 15%;">UPC</th>
-                <th style="width: 45%;">Product Description</th>
-                {{-- <th style="width: 10%;" class="text-center">Quantity</th> --}}
-                <th style="width: 12%;" class="text-right">Unit Price</th>
-                <th style="width: 13%;" class="text-right">Total</th>
+                <th style="width: 35%;">Product Description</th>
+                <th style="width: 12%;" class="text-center">QTY</th>
+                <th style="width: 15%;" class="text-right">Unit Price</th>
+                <th style="width: 18%;" class="text-right">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -236,7 +239,7 @@
                         <td class="text-center">{{ $count++ }}</td>
                         <td>{{ $item->product->upc ?? 'N/A' }}</td>
                         <td><strong>{{ $item->product->product_name }}</strong></td>
-                        {{-- <td class="text-center">{{ $item->received_quantity }}</td> --}}
+                        <td class="text-center fw-bold">{{ number_format($item->received_quantity, 0) }}</td>
                         <td class="text-right">${{ number_format($price, 2) }}</td>
                         <td class="text-right">${{ number_format($lineTotal, 2) }}</td>
                     </tr>
