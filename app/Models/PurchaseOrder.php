@@ -95,6 +95,7 @@ class PurchaseOrder extends Model
     public function reject($approverEmail, $reason)
     {
         $this->update([
+            'status' => 'draft',
             'approval_status' => 'rejected',
             'approved_by_email' => $approverEmail,
             'approved_at' => now(),

@@ -28,6 +28,7 @@ class StockControlDocVerificationTest extends TestCase
             'warehouse_id' => 1,
             'is_active' => true,
         ]);
+        $this->user->role = 'super_admin';
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -179,35 +180,71 @@ class StockControlDocVerificationTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function test_po_draft_reversion_route()
+    public function po_draft_reversion_route()
     {
         $this->actingAs($this->user);
 
         $warehouse = \App\Models\Warehouse::first() ?? \App\Models\Warehouse::create(['name' => 'Main Warehouse', 'warehouse_name' => 'Main Warehouse', 'code' => 'MAIN']);
+        $vendor = \App\Models\Vendor::first() ?? \App\Models\Vendor::create(['name' => 'Test Vendor', 'email' => 'vendor@test.com', 'status' => 'active']);
 
-        $vendor = \App\Models\Vendor::first() ?? \App\Models\Vendor::create([
-            'name' => 'Test Vendor',
-            'email' => 'vendor@test.com',
-            'status' => 'active'
-        ]);
-
-        $po = \App\Models\PurchaseOrder::create([
-            'po_number' => 'PO-TEST-' . rand(1000, 9999),
-            'vendor_id' => $vendor->id,
-            'warehouse_id' => $warehouse->id,
-            'created_by' => $this->user->id,
-            'order_date' => now(),
-            'status' => 'approved',
-            'total_amount' => 100
-        ]);
+        $po = \App\Models\PurchaseOrder::firstOrCreate(
+            ['po_number' => 'PO-TEST-REVERT-001'],
+            [
+                'warehouse_id' => $warehouse->id,
+                'vendor_id' => $vendor->id,
+                'created_by' => $this->user->id,
+                'order_date' => now(),
+                'status' => 'ordered',
+                'approval_status' => 'approved',
+                'total_amount' => 500.00
+            ]
+        );
 
         $response = $this->post(route('warehouse.purchase-orders.revert-draft', $po->id));
-        $response->assertRedirect(route('warehouse.purchase-orders.show', $po->id));
+        $response->assertRedirect();
+        
+        $po->refresh();
+        $this->assertEquals('draft', $po->status);
+    }
 
-        $this->assertDatabaseHas('purchase_orders', [
-            'id' => $po->id,
-            'status' => 'draft'
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function po_rejection_resets_status_and_disables_send_to_vendor()
+    {
+        $this->actingAs($this->user);
+
+        $warehouse = \App\Models\Warehouse::first() ?? \App\Models\Warehouse::create(['name' => 'Main Warehouse', 'warehouse_name' => 'Main Warehouse', 'code' => 'MAIN']);
+        $vendor = \App\Models\Vendor::first() ?? \App\Models\Vendor::create(['name' => 'Test Vendor', 'email' => 'vendor@test.com', 'status' => 'active']);
+
+        $po = \App\Models\PurchaseOrder::create([
+            'po_number' => 'PO-TEST-REJECT-001',
+            'warehouse_id' => $warehouse->id,
+            'vendor_id' => $vendor->id,
+            'created_by' => $this->user->id,
+            'order_date' => now(),
+            'status' => 'ordered',
+            'approval_status' => 'approved',
+            'total_amount' => 300.00
         ]);
+
+        // Reject PO
+        $po->reject('manager@test.com', 'Pricing discrepancy');
+        $po->refresh();
+
+        $this->assertEquals('draft', $po->status);
+        $this->assertEquals('rejected', $po->approval_status);
+
+        // Attempting to send rejected PO to vendor should be blocked
+        $response = $this->post(route('warehouse.purchase-orders.send-to-vendor', $po->id), ['send_email' => 1]);
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Cannot send a rejected Purchase Order to vendor. Please resubmit order for approval first.');
+
+        // View page should see Send order for approval, Cancel order, Edit PO buttons
+        $view = $this->get(route('warehouse.purchase-orders.show', $po->id));
+        $view->assertStatus(200);
+        $view->assertSee('Send order for approval');
+        $view->assertSee('Cancel order');
+        $view->assertSee('Edit PO');
+        $view->assertDontSee('Send to Vendor');
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

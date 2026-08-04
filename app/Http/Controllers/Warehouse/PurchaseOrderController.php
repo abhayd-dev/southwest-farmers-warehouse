@@ -462,6 +462,10 @@ class PurchaseOrderController extends Controller
      */
     public function sendToVendor(Request $request, PurchaseOrder $purchaseOrder)
     {
+        if ($purchaseOrder->approval_status === 'rejected' || $purchaseOrder->status === 'rejected') {
+            return back()->with('error', 'Cannot send a rejected Purchase Order to vendor. Please resubmit order for approval first.');
+        }
+
         $request->validate([
             'send_email' => 'sometimes|boolean',
             'send_sms' => 'sometimes|boolean',

@@ -45,7 +45,35 @@
 
                     {{-- ACTIONS --}}
                     <div class="d-flex flex-wrap gap-2">
-                        @if ($purchaseOrder->status === 'draft')
+                        @if ($purchaseOrder->approval_status === 'rejected')
+                            {{-- Rejected --}}
+                            <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
+                                class="btn btn-outline-dark shadow-sm" target="_blank">
+                                <i class="mdi mdi-printer me-1"></i> Print PO
+                            </a>
+                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
+                                <form
+                                    action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
+                                    method="POST" class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-info text-white shadow-sm" type="submit">
+                                        <i class="mdi mdi-email-send me-1"></i> Send order for approval
+                                    </button>
+                                </form>
+                                <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
+                                    method="POST" class="d-inline"
+                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    @csrf
+                                    <button class="btn btn-danger shadow-sm">
+                                        <i class="mdi mdi-cancel me-1"></i> Cancel order
+                                    </button>
+                                </form>
+                            @endif
+                            <a href="{{ route('warehouse.purchase-orders.edit', $purchaseOrder->id) }}"
+                                class="btn btn-success shadow-sm">
+                                <i class="mdi mdi-pencil me-1"></i> Edit PO
+                            </a>
+                        @elseif ($purchaseOrder->status === 'draft')
                             @if ($purchaseOrder->approval_status === 'pending')
                                 {{-- Waiting for Approval --}}
                                 <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
@@ -96,7 +124,7 @@
                                     </button>
                                 </form>
                             @else
-                                {{-- Draft / Rejected --}}
+                                {{-- Draft --}}
                                 <a href="{{ route('warehouse.purchase-orders.print', $purchaseOrder->id) }}"
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
@@ -107,7 +135,7 @@
                                         method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-info text-white shadow-sm" type="submit">
-                                            <i class="mdi mdi-email-send me-1"></i> Send for Order for approval
+                                            <i class="mdi mdi-email-send me-1"></i> Send order for approval
                                         </button>
                                     </form>
                                     <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"

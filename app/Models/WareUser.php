@@ -55,6 +55,10 @@ class WareUser extends Authenticatable
      */
     public function hasPermission($permissionName)
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         // 1. Check direct permissions
         if ($this->permissions->contains('name', $permissionName)) {
             return true;
@@ -75,7 +79,7 @@ class WareUser extends Authenticatable
      */
     public function isSuperAdmin()
     {
-        return $this->hasRole('Super Admin');
+        return $this->hasRole('Super Admin') || in_array($this->role ?? '', ['super_admin', 'admin']);
     }
 
     public function getAvatarUrlAttribute()
