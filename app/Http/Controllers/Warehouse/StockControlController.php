@@ -332,6 +332,21 @@ class StockControlController extends Controller
             ->limit(50)
             ->get();
 
+        $transactions->transform(function ($txn) use ($product, $costPrice) {
+            $txnCost = $costPrice;
+            if ($txn->reference_type && str_contains($txn->reference_type, 'PurchaseOrder')) {
+                $poItem = \App\Models\PurchaseOrderItem::where('purchase_order_id', $txn->reference_id)
+                    ->where('product_id', $product->id)
+                    ->first();
+                if ($poItem && $poItem->unit_cost > 0) {
+                    $txnCost = $poItem->unit_cost;
+                }
+            }
+            $txn->unit_cost = $txnCost;
+            $txn->total_value = abs($txn->quantity_change) * $txnCost;
+            return $txn;
+        });
+
         return view('warehouse.stock-control.product-analytics', compact(
             'product',
             'warehouseQty',

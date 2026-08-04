@@ -121,8 +121,9 @@
                                     <tr>
                                         <th class="ps-4">Batch No (Order No)</th>
                                         <th>Expiry</th>
-                                        <th class="text-center">Total</th>
-                                        <th class="text-end pe-4">Qty</th>
+                                        <th class="text-center">Total Qty</th>
+                                        <th class="text-end">Unit Cost</th>
+                                        <th class="text-end pe-4">Remaining Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -136,11 +137,12 @@
                                                 @endif
                                             </td>
                                             <td class="text-center text-muted">{{ $batch->initial_quantity ?? $batch->quantity }}</td>
+                                            <td class="text-end fw-bold text-success">$ {{ number_format($batch->cost_price ?? $product->cost_price ?? 0, 2) }}</td>
                                             <td class="text-end pe-4 fw-bold">{{ $batch->quantity }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted">No active batches in warehouse.</td>
+                                            <td colspan="5" class="text-center py-4 text-muted">No active batches in warehouse.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -177,8 +179,10 @@
                                     <th>Type (Ordered / Transfer)</th>
                                     <th>Store PO / Ref No</th>
                                     <th>Location Change</th>
-                                    <th>Qty Change</th>
-                                    <th>User</th>
+                                    <th class="text-center">Qty Change</th>
+                                    <th class="text-end">PO Unit Cost</th>
+                                    <th class="text-end">Total Value</th>
+                                    <th class="pe-4">User</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -192,14 +196,16 @@
                                         </td>
                                         <td class="font-monospace small">{{ $txn->reference_id ?? '-' }}</td>
                                         <td>{{ $txn->store->store_name ?? 'Warehouse' }}</td>
-                                        <td class="fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
+                                        <td class="text-center fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                                             {{ $txn->quantity_change > 0 ? '+' : '' }}{{ $txn->quantity_change }}
                                         </td>
-                                        <td class="small">{{ $txn->user->name ?? 'System' }}</td>
+                                        <td class="text-end fw-bold text-dark">$ {{ number_format($txn->unit_cost ?? $product->cost_price ?? 0, 2) }}</td>
+                                        <td class="text-end fw-bold text-success">$ {{ number_format($txn->total_value ?? 0, 2) }}</td>
+                                        <td class="pe-4 small">{{ $txn->user->name ?? 'System' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">No recent history.</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">No recent history.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
