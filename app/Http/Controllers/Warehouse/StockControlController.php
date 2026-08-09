@@ -334,14 +334,32 @@ class StockControlController extends Controller
 
         $transactions->transform(function ($txn) use ($product, $costPrice) {
             $txnCost = $costPrice;
-            if ($txn->reference_type && str_contains($txn->reference_type, 'PurchaseOrder')) {
-                $poItem = \App\Models\PurchaseOrderItem::where('purchase_order_id', $txn->reference_id)
-                    ->where('product_id', $product->id)
-                    ->first();
-                if ($poItem && $poItem->unit_cost > 0) {
-                    $txnCost = $poItem->unit_cost;
+
+            // 1. Try batch cost price if available
+            if ($txn->product_batch_id) {
+                $batch = \App\Models\ProductBatch::find($txn->product_batch_id);
+                if ($batch && floatval($batch->cost_price) > 0) {
+                    $txnCost = floatval($batch->cost_price);
                 }
             }
+
+            // 2. Try PO item unit_cost / receiving_unit_cost
+            if ($txn->reference_id || ($txn->reference_type && str_contains($txn->reference_type, 'PurchaseOrder'))) {
+                $po = \App\Models\PurchaseOrder::where('id', $txn->reference_id)
+                    ->orWhere('po_number', $txn->reference_id)
+                    ->first();
+                if ($po) {
+                    $poItem = \App\Models\PurchaseOrderItem::where('purchase_order_id', $po->id)
+                        ->where('product_id', $product->id)
+                        ->first();
+                    if ($poItem && floatval($poItem->receiving_unit_cost) > 0) {
+                        $txnCost = floatval($poItem->receiving_unit_cost);
+                    } elseif ($poItem && floatval($poItem->unit_cost) > 0) {
+                        $txnCost = floatval($poItem->unit_cost);
+                    }
+                }
+            }
+
             $txn->unit_cost = $txnCost;
             $txn->total_value = abs($txn->quantity_change) * $txnCost;
             return $txn;

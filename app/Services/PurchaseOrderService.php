@@ -136,16 +136,26 @@ class PurchaseOrderService
                     $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad($poItem->product_id, 4, '0', STR_PAD_LEFT) . '-' . rand(100, 999);
                 }
 
+                $unitCost = floatval($data['receiving_price'] ?? $poItem->unit_cost);
+                if ($unitCost <= 0) {
+                    $unitCost = floatval($poItem->unit_cost);
+                }
+
                 $batch = ProductBatch::create([
                     'product_id' => $poItem->product_id,
                     'warehouse_id' => 1,
                     'batch_number' => $batchNumber,
                     'manufacturing_date' => $data['mfg_date'] ?? null,
                     'expiry_date' => $data['expiry_date'] ?? null,
-                    'cost_price' => $poItem->unit_cost,
+                    'cost_price' => $unitCost,
                     'quantity' => $qtyToReceive,
                     'is_active' => true
                 ]);
+
+                // Update product catalog cost_price with latest PO unit cost
+                if ($unitCost > 0 && $poItem->product) {
+                    $poItem->product->update(['cost_price' => $unitCost]);
+                }
 
                 $stock = $warehouseStocks->get($poItem->product_id);
 
@@ -169,12 +179,13 @@ class PurchaseOrderService
                     'quantity_change' => $qtyToReceive,
                     'running_balance' => $stock->quantity,
                     'ware_user_id' => Auth::id(),
-                    'reference_id' => $po->po_number,
-                    'remarks' => "Inv# " . ($invoiceNumber ?? 'N/A')
+                    'reference_id' => $po->id,
+                    'reference_type' => 'App\Models\PurchaseOrder',
+                    'remarks' => "PO# {$po->po_number} / Inv# " . ($invoiceNumber ?? 'N/A')
                 ]);
 
                 $poItem->received_quantity += $qtyToReceive;
-                $poItem->receiving_unit_cost = $data['receiving_price'] ?? $poItem->unit_cost;
+                $poItem->receiving_unit_cost = $unitCost;
                 $poItem->save();
 
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
