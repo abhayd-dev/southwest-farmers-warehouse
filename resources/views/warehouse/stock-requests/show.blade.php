@@ -65,8 +65,8 @@
                                     <i class="mdi mdi-box-seam text-info fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold text-dark">{{ $stockRequest->product->product_name }}</h6>
-                                    <small class="text-muted">UPC: {{ $stockRequest->product->upc }}</small>
+                                    <h6 class="mb-0 fw-bold text-dark">{{ $stockRequest->product->product_name ?? ($stockRequest->items->first()->product->product_name ?? 'Multiple Products') }}</h6>
+                                    <small class="text-muted">UPC: {{ $stockRequest->product->upc ?? ($stockRequest->items->first()->product->upc ?? 'N/A') }}</small>
                                 </div>
                             </div>
                         </div>
@@ -78,14 +78,14 @@
                                 <small class="text-muted d-block mb-1 text-uppercase fw-bold"
                                     style="font-size: 0.7rem;">Requested</small>
                                 <h5 class="text-primary fw-bold mb-0" id="requested-qty">
-                                    {{ $stockRequest->requested_quantity }}
+                                    {{ $stockRequest->requested_quantity ?? ($stockRequest->items ? $stockRequest->items->sum('quantity') : 0) }}
                                 </h5>
                             </div>
                             <div class="col-4 border-end">
                                 <small class="text-muted d-block mb-1 text-uppercase fw-bold"
                                     style="font-size: 0.7rem;">Sent</small>
                                 <h5 class="text-success fw-bold mb-0">
-                                    {{ $stockRequest->fulfilled_quantity ?? 0 }}
+                                    {{ $stockRequest->fulfilled_quantity ?? ($stockRequest->items ? $stockRequest->items->sum('dispatched_quantity') : 0) }}
                                 </h5>
                             </div>
                             <div class="col-4">
@@ -104,7 +104,11 @@
                         <h6 class="card-title text-info fw-bold mb-3 d-flex align-items-center">
                             <i class="mdi mdi-warehouse me-2 fs-5"></i> Warehouse Availability
                         </h6>
-                        @php $totalStock = $stockRequest->product->batches->sum('quantity'); @endphp
+                        @php 
+                            $totalStock = $stockRequest->product 
+                                ? $stockRequest->product->batches->sum('quantity') 
+                                : ($stockRequest->items ? $stockRequest->items->sum(fn($i) => optional($i->product)->batches ? $i->product->batches->sum('quantity') : 0) : 0); 
+                        @endphp
 
                         <div class="d-flex align-items-baseline mb-3">
                             <h2

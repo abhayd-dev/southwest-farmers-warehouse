@@ -49,6 +49,11 @@ class StockRequest extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(StockRequestItem::class);
+    }
+
     public function storeStock()
     {
         return $this->hasOne(StoreStock::class, 'product_id', 'product_id')
