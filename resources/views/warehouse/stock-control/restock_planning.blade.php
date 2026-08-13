@@ -1,17 +1,17 @@
-<x-app-layout title="Restock Planning">
+<x-app-layout title="Inventory Planning">
     <div class="container-fluid">
         @include('warehouse.partials.breadcrumb', [
-            'title' => 'Restock Planning & Alerts',
+            'title' => 'Inventory Planning & Alerts',
             'items' => [
                 ['name' => 'Stock Control', 'url' => route('warehouse.stock-control.overview')],
-                ['name' => 'Restock Planning', 'url' => '#'],
+                ['name' => 'Inventory Planning', 'url' => '#'],
             ],
         ])
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
                 <h5 class="card-title text-primary mb-0 fw-bold">
-                    <i class="mdi mdi-clipboard-text-play me-2"></i> Inventory Restock Forecast
+                    <i class="mdi mdi-clipboard-text-play me-2"></i> Inventory Forecast
                 </h5>
                 <div class="d-flex gap-2">
                     <button type="button" id="createBulkPOBtn" class="btn btn-primary btn-sm d-none"
@@ -100,7 +100,7 @@
                                             <span class="badge bg-danger"><i class="mdi mdi-alert"></i> Low Stock</span>
                                         @endif
                                         @if (!$item->is_fast_moving && !$item->action_required)
-                                            <span class="badge bg-success"><i class="mdi mdi-check"></i> Healthy</span>
+                                            <span class="badge bg-success"><i class="mdi mdi-check"></i> Adequate Inventory</span>
                                         @endif
                                     </td>
                                 </tr>

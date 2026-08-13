@@ -59,7 +59,7 @@
                                 <li>
                                     <a href="{{ route('warehouse.stocks.index') }}"
                                         class="{{ request()->routeIs('warehouse.stocks.index') ? 'active' : '' }}">
-                                        <i class="mdi mdi-package-variant-closed me-2"></i> Stock & Inventory
+                                        <i class="mdi mdi-package-variant-closed me-2"></i> Inventory movement
                                     </a>
                                 </li>
                             </ul>

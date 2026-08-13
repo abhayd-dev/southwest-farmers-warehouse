@@ -201,4 +201,29 @@ class StockRequestController extends Controller
             return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 400);
         }
     }
+
+    public function approveStorePo(Request $request, $id)
+    {
+        $stockRequest = StockRequest::findOrFail($id);
+        $stockRequest->update([
+            'status' => StockRequest::STATUS_PENDING,
+            'approved_at' => now(),
+            'approved_by' => auth()->id()
+        ]);
+
+        NotificationService::sendToAdmins(
+            "Store PO Approved",
+            "Store PO #{$stockRequest->id} for {$stockRequest->store->store_name} was approved by " . auth()->user()->name,
+            'success',
+            route('warehouse.stock-requests.show', $stockRequest->id)
+        );
+
+        return response()->json(['success' => true, 'message' => 'Store PO Approved successfully.']);
+    }
+
+    public function printPickerSheet($id)
+    {
+        $stockRequest = StockRequest::with(['store', 'items.product', 'product'])->findOrFail($id);
+        return view('warehouse.stock-requests.print-picker', compact('stockRequest'));
+    }
 }

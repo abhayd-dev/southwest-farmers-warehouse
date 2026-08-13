@@ -151,6 +151,8 @@ Route::middleware('auth')->group(function () {
             Route::post('stock-requests/change-status', 'changeStatus')->name('warehouse.stock-requests.change-status');
             Route::post('stock-requests/verify-payment', 'verifyPayment')->name('warehouse.stock-requests.verify-payment');
             Route::post('stock-requests/purchase-in', 'purchaseIn')->name('warehouse.stock-requests.purchase-in');
+            Route::post('stock-requests/{id}/approve', 'approveStorePo')->name('warehouse.stock-requests.approve');
+            Route::get('stock-requests/{id}/print-picker', 'printPickerSheet')->name('warehouse.stock-requests.print-picker');
         });
 
         // ===== STORE PURCHASE ORDERS (Phase 3) =====

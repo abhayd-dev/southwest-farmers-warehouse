@@ -328,9 +328,15 @@ class StockControlController extends Controller
             $txnQuery->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $transactions = $txnQuery->latest()
-            ->limit(50)
-            ->get();
+        $rawTxns = $txnQuery->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+
+        $runningBal = 0;
+        foreach ($rawTxns as $txn) {
+            $runningBal += floatval($txn->quantity_change);
+            $txn->calculated_running_balance = $runningBal;
+        }
+
+        $transactions = $rawTxns->reverse()->take(50)->values();
 
         $transactions->transform(function ($txn) use ($product, $costPrice) {
             $txnCost = $costPrice;

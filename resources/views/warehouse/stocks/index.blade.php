@@ -1,4 +1,4 @@
-<x-app-layout title="Stock & Inventory Dashboard">
+<x-app-layout title="Inventory movement">
     <div class="container-fluid p-3 p-md-4">
 
         {{-- HEADER SECTION --}}
@@ -6,7 +6,7 @@
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
                 <h4 class="fw-bold mb-0 text-dark">
-                    <i class="mdi mdi-clipboard-list text-primary"></i> Inventory Dashboard
+                    <i class="mdi mdi-clipboard-list text-primary"></i> Inventory movement
                 </h4>
                 <small class="text-muted">Real-time inventory levels across warehouse</small>
             </div>

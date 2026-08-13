@@ -11,7 +11,7 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class StockAuditController extends Controller
 {
@@ -19,9 +19,7 @@ class StockAuditController extends Controller
     {
         if ($request->ajax()) {
             // Eager load department
-            $query = StockAudit::whereNotNull('warehouse_id')
-                ->with(['initiator', 'department']) 
-                ->latest();
+            $query = StockAudit::with(['initiator', 'department'])->latest();
 
             return DataTables::of($query)
                 ->addColumn('audit_no', fn($row) => $row->audit_number)

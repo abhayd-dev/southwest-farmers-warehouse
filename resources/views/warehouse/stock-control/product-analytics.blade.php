@@ -180,6 +180,7 @@
                                     <th>Store PO / Ref No</th>
                                     <th>Location Change</th>
                                     <th class="text-center">Qty Change</th>
+                                    <th class="text-center">Balance</th>
                                     <th class="text-end">PO Unit Cost</th>
                                     <th class="text-end">Total Value</th>
                                     <th class="pe-4">User</th>
@@ -199,13 +200,14 @@
                                         <td class="text-center fw-bold {{ $txn->quantity_change > 0 ? 'text-success' : 'text-danger' }}">
                                             {{ $txn->quantity_change > 0 ? '+' : '' }}{{ $txn->quantity_change }}
                                         </td>
+                                        <td class="text-center font-monospace fw-bold text-dark">{{ number_format($txn->calculated_running_balance ?? $txn->running_balance ?? 0, 2) }}</td>
                                         <td class="text-end fw-bold text-dark">$ {{ number_format($txn->unit_cost ?? $product->cost_price ?? 0, 2) }}</td>
                                         <td class="text-end fw-bold text-success">$ {{ number_format($txn->total_value ?? 0, 2) }}</td>
                                         <td class="pe-4 small">{{ $txn->user->name ?? 'System' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">No recent history.</td>
+                                        <td colspan="9" class="text-center py-4 text-muted">No recent history.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

@@ -9,6 +9,9 @@
                         <iconify-icon icon="tabler:align-left" class="fs-20 align-middle text-dark topbar-button"></iconify-icon>
                     </button>
                 </li>
+                <li class="ms-2 d-flex align-items-center">
+                    <span class="fw-black text-dark fs-14 text-uppercase tracking-wider">HOMEFOODS DISTRIBUTION, LLC</span>
+                </li>
             </ul>
 
             {{-- RIGHT --}}

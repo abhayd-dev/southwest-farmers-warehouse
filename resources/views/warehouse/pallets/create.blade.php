@@ -32,9 +32,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Department (Optional)</label>
-                                <select name="department_id" class="form-select">
-                                    <option value="">-- No Department --</option>
+                                <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                                <select name="department_id" class="form-select" required>
+                                    <option value="">-- Select Department --</option>
                                     @foreach($departments as $dept)
                                         <option value="{{ $dept->id }}">{{ $dept->name }}</option>
                                     @endforeach

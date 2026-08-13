@@ -204,6 +204,12 @@
                             <td class="info-label">PO Number:</td>
                             <td>{{ $po->po_number }}</td>
                         </tr>
+                        @if ($po->vendor_invoice_number)
+                        <tr>
+                            <td class="info-label">Vendor Inv / BOL No:</td>
+                            <td><strong>{{ $po->vendor_invoice_number }}</strong></td>
+                        </tr>
+                        @endif
                         <tr>
                             <td class="info-label">Order Date:</td>
                             <td>{{ $po->order_date->format('F d, Y') }}</td>

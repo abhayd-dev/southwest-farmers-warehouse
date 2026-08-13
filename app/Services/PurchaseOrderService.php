@@ -123,6 +123,13 @@ class PurchaseOrderService
                 ->where('warehouse_id', 1)
                 ->get()->keyBy('product_id');
 
+            $duties = floatval($receivingData['duties'] ?? 0);
+            $shipping = floatval($receivingData['shipping_cost'] ?? 0);
+            $taxes = floatval($receivingData['taxes'] ?? 0); // Brokerage Fee / Taxes
+
+            $totalReceivedQty = array_sum(array_map(fn($item) => intval($item['receive_qty'] ?? 0), $receivedItems));
+            $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes) / $totalReceivedQty : 0;
+
             foreach ($receivedItems as $itemId => $data) {
                 $qtyToReceive = intval($data['receive_qty'] ?? 0);
 
@@ -136,10 +143,13 @@ class PurchaseOrderService
                     $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad($poItem->product_id, 4, '0', STR_PAD_LEFT) . '-' . rand(100, 999);
                 }
 
-                $unitCost = floatval($data['receiving_price'] ?? $poItem->unit_cost);
-                if ($unitCost <= 0) {
-                    $unitCost = floatval($poItem->unit_cost);
+                $poPrice = floatval($data['receiving_price'] ?? $poItem->unit_cost);
+                if ($poPrice <= 0) {
+                    $poPrice = floatval($poItem->unit_cost);
                 }
+
+                // Actual Cost = ((Duties + Brokerage Fee + Shipping) / Total Received Qty) + PO Price
+                $actualCost = round($poPrice + $landedFeePerUnit, 2);
 
                 $batch = ProductBatch::create([
                     'product_id' => $poItem->product_id,
@@ -147,14 +157,24 @@ class PurchaseOrderService
                     'batch_number' => $batchNumber,
                     'manufacturing_date' => $data['mfg_date'] ?? null,
                     'expiry_date' => $data['expiry_date'] ?? null,
-                    'cost_price' => $unitCost,
+                    'cost_price' => $actualCost,
                     'quantity' => $qtyToReceive,
                     'is_active' => true
                 ]);
 
-                // Update product catalog cost_price with latest PO unit cost
-                if ($unitCost > 0 && $poItem->product) {
-                    $poItem->product->update(['cost_price' => $unitCost]);
+                // Update product catalog cost_price with Actual Cost & send notification
+                if ($actualCost > 0 && $poItem->product) {
+                    $oldCost = floatval($poItem->product->cost_price);
+                    $poItem->product->update(['cost_price' => $actualCost]);
+
+                    if (abs($oldCost - $actualCost) > 0.01) {
+                        NotificationService::sendToAdmins(
+                            'Product Cost Updated',
+                            "Cost for {$poItem->product->product_name} updated from $" . number_format($oldCost, 2) . " to $" . number_format($actualCost, 2) . " (PO #{$po->po_number})",
+                            'info',
+                            route('warehouse.products.show', $poItem->product_id)
+                        );
+                    }
                 }
 
                 $stock = $warehouseStocks->get($poItem->product_id);
