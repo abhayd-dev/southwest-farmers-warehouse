@@ -32,36 +32,59 @@ class RestockPlanningController extends Controller
             ->get();
 
         $thirtyDaysAgo = Carbon::now()->subDays(30);
+        $productIds = $products->pluck('id')->toArray();
+
+        // Bulk load MinMax Levels
+        $minMaxLevels = ProductMinMaxLevel::whereIn('product_id', $productIds)
+            ->get()->keyBy('product_id');
+
+        // Bulk load In Transit Data
+        $inTransitData = PurchaseOrderItem::whereIn('product_id', $productIds)
+            ->whereRaw('(requested_quantity - received_quantity) > 0')
+            ->whereHas('purchaseOrder', function($q) {
+                $q->whereNotIn('status', ['completed', 'cancelled']);
+            })
+            ->selectRaw('product_id, SUM(requested_quantity - received_quantity) as total_pending')
+            ->groupBy('product_id')
+            ->pluck('total_pending', 'product_id');
+
+        // Bulk load Dispatch Volume
+        $dispatchData = StorePurchaseOrderItem::whereIn('product_id', $productIds)
+            ->where('dispatched_qty', '>', 0)
+            ->whereHas('storePurchaseOrder', function($q) use ($thirtyDaysAgo) {
+                $q->where('updated_at', '>=', $thirtyDaysAgo);
+            })
+            ->selectRaw('product_id, SUM(dispatched_qty) as total_dispatched')
+            ->groupBy('product_id')
+            ->pluck('total_dispatched', 'product_id');
+
+        // Bulk load Latest Vendor Lead Time
+        $latestPoItems = DB::table('purchase_order_items as poi')
+            ->join('purchase_orders as po', 'po.id', '=', 'poi.purchase_order_id')
+            ->leftJoin('vendors as v', 'v.id', '=', 'po.vendor_id')
+            ->whereIn('poi.product_id', $productIds)
+            ->where('po.status', 'completed')
+            ->select('poi.product_id', 'v.lead_time_days', 'po.created_at')
+            ->orderBy('po.created_at', 'desc')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function($items) { return $items->first(); });
 
         // Calculate metrics for each product
-        $planningData = $products->map(function ($product) use ($thirtyDaysAgo) {
+        $planningData = $products->map(function ($product) use ($thirtyDaysAgo, $minMaxLevels, $inTransitData, $dispatchData, $latestPoItems) {
             $qtyInHand = $product->stock ? $product->stock->quantity : 0;
             
             // Expected Incoming from Vendor
-            $inTransit = PurchaseOrderItem::where('product_id', $product->id)
-                ->whereRaw('(requested_quantity - received_quantity) > 0')
-                ->whereHas('purchaseOrder', function($q) {
-                    $q->whereNotIn('status', ['completed', 'cancelled']);
-                })
-                ->selectRaw('SUM(requested_quantity - received_quantity) as total_pending')
-                ->value('total_pending') ?? 0;
+            $inTransit = $inTransitData[$product->id] ?? 0;
                 
             // Dispatched Volume (Last 30 days) to calculate burn rate
-            $dispatchVolume = StorePurchaseOrderItem::where('product_id', $product->id)
-                ->where('dispatched_qty', '>', 0)
-                ->whereHas('storePurchaseOrder', function($q) use ($thirtyDaysAgo) {
-                    $q->where('updated_at', '>=', $thirtyDaysAgo);
-                })->sum('dispatched_qty');
+            $dispatchVolume = $dispatchData[$product->id] ?? 0;
 
             // Get last vendor and actual lead time if possible
-            $lastPurchase = PurchaseOrderItem::where('product_id', $product->id)
-                ->whereHas('purchaseOrder', function($q) {
-                    $q->where('status', 'completed');
-                })->with('purchaseOrder.vendor')
-                ->latest()
-                ->first();
-
-            $vendorLeadTime = $lastPurchase ? ($lastPurchase->purchaseOrder->vendor->lead_time_days ?? 7) : 7;
+            $vendorLeadTime = 7;
+            if (isset($latestPoItems[$product->id]) && $latestPoItems[$product->id]->lead_time_days) {
+                $vendorLeadTime = $latestPoItems[$product->id]->lead_time_days;
+            }
                 
             $dailyBurnRate = $dispatchVolume / 30;
             
@@ -72,7 +95,7 @@ class RestockPlanningController extends Controller
                 $isFastMoving = true;
             }
 
-            $minMax = ProductMinMaxLevel::where('product_id', $product->id)->first();
+            $minMax = $minMaxLevels[$product->id] ?? null;
             $minLevel = $minMax ? $minMax->min_level : 0;
             $maxLevel = $minMax ? $minMax->max_level : 0;
             
