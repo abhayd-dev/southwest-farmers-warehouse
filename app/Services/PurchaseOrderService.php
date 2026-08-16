@@ -209,7 +209,7 @@ class PurchaseOrderService
                 ]);
 
                 $poItem->received_quantity += $qtyToReceive;
-                $poItem->receiving_unit_cost = $unitCost;
+                $poItem->receiving_unit_cost = $poPrice;
                 $poItem->save();
 
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
