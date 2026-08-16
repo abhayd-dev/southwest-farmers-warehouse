@@ -95,9 +95,9 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0)
     {
-        return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes) {
+        return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage) {
             $po = PurchaseOrder::findOrFail($poId);
 
             // Update additional costs and invoice number
@@ -106,6 +106,8 @@ class PurchaseOrderService
                 'duties' => $duties,
                 'shipping_cost' => $shippingCost,
                 'taxes' => $taxes,
+                'transportation_cost' => $transportationCost,
+                'demurrage' => $demurrage,
             ]);
 
             $allCompleted = true;
@@ -123,12 +125,14 @@ class PurchaseOrderService
                 ->where('warehouse_id', 1)
                 ->get()->keyBy('product_id');
 
-            $duties = floatval($receivingData['duties'] ?? 0);
-            $shipping = floatval($receivingData['shipping_cost'] ?? 0);
-            $taxes = floatval($receivingData['taxes'] ?? 0); // Brokerage Fee / Taxes
+            $duties = floatval($duties ?? 0);
+            $shipping = floatval($shippingCost ?? 0);
+            $taxes = floatval($taxes ?? 0); // Brokerage Fee / Taxes
+            $transportation = floatval($transportationCost ?? 0);
+            $demurrageCost = floatval($demurrage ?? 0);
 
             $totalReceivedQty = array_sum(array_map(fn($item) => intval($item['receive_qty'] ?? 0), $receivedItems));
-            $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes) / $totalReceivedQty : 0;
+            $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes + $transportation + $demurrageCost) / $totalReceivedQty : 0;
 
             foreach ($receivedItems as $itemId => $data) {
                 $qtyToReceive = intval($data['receive_qty'] ?? 0);

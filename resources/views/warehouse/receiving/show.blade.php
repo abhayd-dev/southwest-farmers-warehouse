@@ -187,7 +187,7 @@
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i
                                                     class="mdi mdi-currency-usd"></i></span>
-                                            <input type="number" name="duties" class="form-control" step="0.01"
+                                            <input type="number" name="duties" class="form-control cost-input" step="0.01"
                                                 min="0" value="{{ $purchaseOrder->duties ?? 0 }}">
                                         </div>
                                     </div>
@@ -196,16 +196,34 @@
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i
                                                     class="mdi mdi-truck-delivery"></i></span>
-                                            <input type="number" name="shipping_cost" class="form-control"
+                                            <input type="number" name="shipping_cost" class="form-control cost-input"
                                                 step="0.01" min="0" value="{{ $purchaseOrder->shipping_cost ?? 0 }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-semibold">Taxes ($)</label>
+                                        <label class="form-label fw-semibold">Taxes/Brokerage Fee (Flat Rate) ($)</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i class="mdi mdi-percent"></i></span>
-                                            <input type="number" name="taxes" class="form-control" step="0.01"
+                                            <input type="number" name="taxes" class="form-control cost-input" step="0.01"
                                                 min="0" value="{{ $purchaseOrder->taxes ?? 0 }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Transportation Cost ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="mdi mdi-truck"></i></span>
+                                            <input type="number" name="transportation_cost" class="form-control cost-input" step="0.01"
+                                                min="0" value="{{ $purchaseOrder->transportation_cost ?? 0 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Demurrage ($)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="mdi mdi-clock-alert"></i></span>
+                                            <input type="number" name="demurrage" class="form-control cost-input" step="0.01"
+                                                min="0" value="{{ $purchaseOrder->demurrage ?? 0 }}">
                                         </div>
                                     </div>
                                 </div>
@@ -220,6 +238,8 @@
                                                 <th class="text-center">PO Price ($)</th>
                                                 <th style="min-width: 130px;">Receive Qty</th>
                                                 <th style="min-width: 130px;">Receiving Price ($)</th>
+                                                <th style="min-width: 120px;">Current Cost ($)</th>
+                                                <th style="min-width: 120px;">True Cost ($)</th>
                                                 <th style="min-width: 150px;">Batch No.</th>
                                                 <th style="min-width: 140px;">Mfg Date</th>
                                                 <th style="min-width: 140px;">Expiry Date</th>
@@ -262,9 +282,15 @@
                                                         <td>
                                                             <input type="number"
                                                                 name="items[{{ $item->id }}][receiving_price]"
-                                                                class="form-control form-control-sm text-center fw-bold text-primary"
+                                                                class="form-control form-control-sm text-center fw-bold text-primary receiving-price-input"
                                                                 step="0.01" min="0"
                                                                 value="{{ $item->unit_cost }}">
+                                                        </td>
+                                                        <td class="text-center fw-medium text-muted">
+                                                            {{ number_format($item->product->cost_price ?? 0, 2) }}
+                                                        </td>
+                                                        <td class="text-center fw-bold text-success true-cost-display">
+                                                            {{ number_format($item->unit_cost, 2) }}
                                                         </td>
                                                         <td>
                                                             <input type="text"
@@ -289,7 +315,7 @@
 
                                             @if (!$hasPendingItems)
                                                 <tr>
-                                                    <td colspan="8" class="text-center py-4 text-success fw-bold">
+                                                    <td colspan="11" class="text-center py-4 text-success fw-bold">
                                                         <i class="mdi mdi-check-circle-outline fs-3 d-block mb-2"></i>
                                                         All items for this order have been fully received.
                                                     </td>
@@ -387,6 +413,54 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // True Cost Calculation Logic
+            function calculateTrueCost() {
+                // Get all overhead costs
+                let duties = parseFloat(document.querySelector('input[name="duties"]').value) || 0;
+                let shipping = parseFloat(document.querySelector('input[name="shipping_cost"]').value) || 0;
+                let taxes = parseFloat(document.querySelector('input[name="taxes"]').value) || 0;
+                let transport = parseFloat(document.querySelector('input[name="transportation_cost"]').value) || 0;
+                let demurrage = parseFloat(document.querySelector('input[name="demurrage"]').value) || 0;
+
+                let totalOverhead = duties + shipping + taxes + transport + demurrage;
+
+                // Get total receiving quantity
+                let totalQty = 0;
+                document.querySelectorAll('.receive-qty-input').forEach(input => {
+                    totalQty += parseInt(input.value) || 0;
+                });
+
+                let landedFeePerUnit = totalQty > 0 ? (totalOverhead / totalQty) : 0;
+
+                // Update True Cost for each row
+                document.querySelectorAll('.receive-qty-input').forEach(input => {
+                    let row = input.closest('tr');
+                    let priceInput = row.querySelector('.receiving-price-input');
+                    if (priceInput) {
+                        let poPrice = parseFloat(priceInput.value) || 0;
+                        let trueCost = poPrice + landedFeePerUnit;
+                        let trueCostDisplay = row.querySelector('.true-cost-display');
+                        if (trueCostDisplay) {
+                            // If receiving qty is 0, true cost might just be PO price for display
+                            let qty = parseInt(input.value) || 0;
+                            if(qty === 0) {
+                                trueCostDisplay.innerText = poPrice.toFixed(2);
+                            } else {
+                                trueCostDisplay.innerText = trueCost.toFixed(2);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Attach event listeners to all related inputs
+            document.querySelectorAll('.cost-input, .receive-qty-input, .receiving-price-input').forEach(input => {
+                input.addEventListener('input', calculateTrueCost);
+            });
+            
+            // Initial calculation
+            calculateTrueCost();
+
             // Scanner Logic
             const scannerInput = document.getElementById('scannerInput');
             if (scannerInput) {

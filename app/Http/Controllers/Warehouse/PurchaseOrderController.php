@@ -382,6 +382,8 @@ class PurchaseOrderController extends Controller
             'duties' => 'nullable|numeric|min:0',
             'shipping_cost' => 'nullable|numeric|min:0',
             'taxes' => 'nullable|numeric|min:0',
+            'transportation_cost' => 'nullable|numeric|min:0',
+            'demurrage' => 'nullable|numeric|min:0',
             'items' => 'required|array',
         ]);
 
@@ -392,7 +394,9 @@ class PurchaseOrderController extends Controller
                 $request->invoice_number,
                 $request->input('duties', 0),
                 $request->input('shipping_cost', 0),
-                $request->input('taxes', 0)
+                $request->input('taxes', 0),
+                $request->input('transportation_cost', 0),
+                $request->input('demurrage', 0)
             );
 
             NotificationService::sendToAdmins(

@@ -26,6 +26,8 @@ class PurchaseOrder extends Model
         'duties',
         'shipping_cost',
         'taxes',
+        'transportation_cost',
+        'demurrage',
         'status',
         'payment_status',
         'notes',
