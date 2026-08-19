@@ -170,4 +170,129 @@ class FinanceReportController extends Controller
         };
         return response()->stream($callback, 200, $headers);
     }
+
+    // ===== 3. PROFIT & LOSS REPORT =====
+    public function profitAndLoss(Request $request)
+    {
+        $range = $request->input('range', 'month'); // month, 3_months, year, custom
+        
+        if ($range === 'custom' && $request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+        } elseif ($range === '3_months') {
+            $startDate = Carbon::now()->subMonths(3)->startOfDay();
+            $endDate = Carbon::now()->endOfDay();
+        } elseif ($range === 'year') {
+            $startDate = Carbon::now()->startOfYear();
+            $endDate = Carbon::now()->endOfDay();
+        } else {
+            // Default: This Month
+            $startDate = Carbon::now()->startOfMonth();
+            $endDate = Carbon::now()->endOfDay();
+        }
+
+        // Fetch sales within date range
+        $sales = \App\Models\Sale::with('items.product.category')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->get();
+
+        $totalRevenue = 0;
+        $totalCogs = 0;
+        $categoryBreakdown = [];
+
+        foreach ($sales as $sale) {
+            // Revenue excluding tax (if subtotal represents pre-tax revenue)
+            $saleRevenue = $sale->total_amount - ($sale->tax_amount ?? 0) - ($sale->gst_amount ?? 0);
+            $totalRevenue += $saleRevenue;
+
+            foreach ($sale->items as $item) {
+                // If total_cogs is saved, use it. Otherwise, estimate for historical data.
+                if (!is_null($item->total_cogs)) {
+                    $itemCogs = $item->total_cogs;
+                } else {
+                    $itemCogs = ($item->product->cost_price ?? 0) * $item->quantity;
+                }
+                $totalCogs += $itemCogs;
+
+                // Category breakdown
+                $catName = $item->product->category->name ?? 'Uncategorized';
+                if (!isset($categoryBreakdown[$catName])) {
+                    $categoryBreakdown[$catName] = ['revenue' => 0, 'cogs' => 0, 'profit' => 0];
+                }
+                
+                // Approximate item revenue (since sale discounts might apply, this is a rough prorated estimate if needed, 
+                // but we'll just use item->total as category revenue)
+                $categoryBreakdown[$catName]['revenue'] += $item->total;
+                $categoryBreakdown[$catName]['cogs'] += $itemCogs;
+                $categoryBreakdown[$catName]['profit'] += ($item->total - $itemCogs);
+            }
+        }
+
+        $grossProfit = $totalRevenue - $totalCogs;
+        $margin = $totalRevenue > 0 ? ($grossProfit / $totalRevenue) * 100 : 0;
+
+        // Sort categories by profit
+        uasort($categoryBreakdown, function($a, $b) {
+            return $b['profit'] <=> $a['profit'];
+        });
+
+        // For trend chart (daily/monthly depending on range)
+        $trendFormat = $range === 'year' ? 'Y-m' : 'Y-m-d';
+        $trendLabelFormat = $range === 'year' ? 'M Y' : 'd M';
+        
+        $trendQuery = \App\Models\Sale::selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, SUM(total_amount - COALESCE(tax_amount, 0) - COALESCE(gst_amount, 0)) as revenue")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('revenue', 'date')->toArray();
+
+        // Calculate COGS trend (since we can't easily SUM a related table dynamically without a complex join, we'll do it via the collection)
+        $cogsTrend = [];
+        foreach ($sales as $sale) {
+            $date = $sale->created_at->format('Y-m-d');
+            if (!isset($cogsTrend[$date])) $cogsTrend[$date] = 0;
+            
+            foreach ($sale->items as $item) {
+                $cogsTrend[$date] += $item->total_cogs ?? (($item->product->cost_price ?? 0) * $item->quantity);
+            }
+        }
+
+        $chartLabels = [];
+        $revenueData = [];
+        $profitData = [];
+
+        $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        foreach ($period as $date) {
+            $fDate = $date->format('Y-m-d');
+            $chartLabels[] = $date->format($trendLabelFormat);
+            $rev = $trendQuery[$fDate] ?? 0;
+            $cogs = $cogsTrend[$fDate] ?? 0;
+            
+            $revenueData[] = $rev;
+            $profitData[] = $rev - $cogs;
+        }
+
+        // De-duplicate labels for 'year' range
+        if ($range === 'year') {
+            $uniqueLabels = array_unique($chartLabels);
+            $monthlyRev = [];
+            $monthlyProf = [];
+            foreach ($uniqueLabels as $lbl) {
+                $keys = array_keys($chartLabels, $lbl);
+                $monthlyRev[] = array_sum(array_intersect_key($revenueData, array_flip($keys)));
+                $monthlyProf[] = array_sum(array_intersect_key($profitData, array_flip($keys)));
+            }
+            $chartLabels = array_values($uniqueLabels);
+            $revenueData = $monthlyRev;
+            $profitData = $monthlyProf;
+        }
+
+        return view('warehouse.finance.pnl', compact(
+            'totalRevenue', 'totalCogs', 'grossProfit', 'margin',
+            'chartLabels', 'revenueData', 'profitData',
+            'range', 'startDate', 'endDate', 'categoryBreakdown'
+        ));
+    }
 }

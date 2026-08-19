@@ -408,6 +408,12 @@
                                             <i class="mdi mdi-book-open-page-variant me-2"></i> Transaction Ledger
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.finance.pnl') }}"
+                                            class="{{ request()->routeIs('warehouse.finance.pnl') ? 'active' : '' }}">
+                                            <i class="mdi mdi-finance me-2"></i> Profit & Loss
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </li>

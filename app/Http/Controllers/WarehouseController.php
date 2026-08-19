@@ -97,7 +97,17 @@ class WarehouseController extends Controller
                 });
         }
 
-        // --- 5. PROCUREMENT ---
+        // --- 5. STORE SALES INVENTORY SOURCE ---
+        if ($user->isSuperAdmin() || $user->hasPermission('view_reports')) {
+            $salesSource = \App\Models\Sale::select('inventory_source', DB::raw('SUM(total_amount) as total_revenue'), DB::raw('COUNT(id) as total_orders'))
+                ->whereBetween('created_at', [$start, $end])
+                ->groupBy('inventory_source')
+                ->get();
+            
+            $data['sales_source'] = $salesSource;
+        }
+
+        // --- 6. PROCUREMENT ---
         if ($user->isSuperAdmin() || $user->hasPermission('view_po')) {
             $data['pending_po_count'] = PurchaseOrder::where('status', 'pending')->count();
             $data['approved_po_count'] = PurchaseOrder::where('status', 'approved')->count();

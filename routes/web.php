@@ -244,6 +244,10 @@ Route::middleware('auth')->group(function () {
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
         Route::post('purchase-orders/{purchase_order}/mark-completed', [PurchaseOrderController::class, 'markCompleted'])->name('warehouse.purchase-orders.mark-completed');
         Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('warehouse.purchase-orders.receive');
+        Route::get('purchase-orders/{purchaseOrder}/cost-approval', [PurchaseOrderController::class, 'showCostApproval'])
+            ->name('warehouse.purchase-orders.cost-approval');
+        Route::post('purchase-orders/{purchaseOrder}/approve-cost', [PurchaseOrderController::class, 'approveCostIncrease'])
+            ->name('warehouse.purchase-orders.approve-cost');
         Route::get('purchase-orders/{purchase_order}/labels', [PurchaseOrderController::class, 'printLabels'])->name('warehouse.purchase-orders.labels');
         Route::get('purchase-orders/{purchase_order}/print', [PurchaseOrderController::class, 'printPO'])->name('warehouse.purchase-orders.print');
         Route::post('purchase-orders/{purchase_order}/send-to-vendor', [PurchaseOrderController::class, 'sendToVendor'])->name('warehouse.purchase-orders.send-to-vendor');
@@ -279,6 +283,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/finance/overview', 'index')->name('warehouse.finance.index');
             Route::get('/finance/ledger', 'ledger')->name('warehouse.finance.ledger');
             Route::get('/finance/ledger/export', 'exportLedger')->name('warehouse.finance.ledger.export');
+            Route::get('/finance/profit-and-loss', 'profitAndLoss')->name('warehouse.finance.pnl');
         });
 
         Route::controller(SupportTicketController::class)

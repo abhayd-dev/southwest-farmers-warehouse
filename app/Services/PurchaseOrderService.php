@@ -155,6 +155,14 @@ class PurchaseOrderService
                 // Actual Cost = ((Duties + Brokerage Fee + Shipping) / Total Received Qty) + PO Price
                 $actualCost = round($poPrice + $landedFeePerUnit, 2);
 
+                // Check for cost increase
+                if ($poItem->product) {
+                    $currentCost = floatval($poItem->product->cost_price);
+                    if ($actualCost > $currentCost && !$po->cost_increase_approved) {
+                        throw new \Exception("CostIncreaseException");
+                    }
+                }
+
                 $batch = ProductBatch::create([
                     'product_id' => $poItem->product_id,
                     'warehouse_id' => 1,
@@ -218,6 +226,8 @@ class PurchaseOrderService
             }
 
             $po->status = $allCompleted ? PurchaseOrder::STATUS_COMPLETED : PurchaseOrder::STATUS_PARTIAL;
+            // Reset approval flag for future partial receipts
+            $po->cost_increase_approved = false;
             $po->save();
 
             if ($allCompleted && $po->vendor) {

@@ -408,9 +408,43 @@ class PurchaseOrderController extends Controller
             return redirect()->route('warehouse.receiving.show', $purchaseOrder->id)
                 ->with('success', 'Inventory updated successfully.');
         } catch (\Exception $e) {
+            if ($e->getMessage() === 'CostIncreaseException') {
+                $approvalUrl = route('warehouse.purchase-orders.cost-approval', $purchaseOrder->id);
+                NotificationService::sendToAdmins(
+                    'Cost Increase Approval Required',
+                    "PO #{$purchaseOrder->po_number} requires approval due to increased receiving cost.",
+                    'warning',
+                    $approvalUrl
+                );
+                return back()->with('error', 'Cannot proceed. True cost is higher than current cost. Sent for approval.');
+            }
+            
             Log::error('Receive failed: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Something went wrong. Please try again later.');
         }
+    }
+
+    public function showCostApproval(PurchaseOrder $purchaseOrder)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            return redirect()->route('warehouse.purchase-orders.index')->with('error', 'Unauthorized access.');
+        }
+
+        $purchaseOrder->load(['items.product', 'vendor']);
+
+        return view('warehouse.purchase-orders.cost-approval', compact('purchaseOrder'));
+    }
+
+    public function approveCostIncrease(PurchaseOrder $purchaseOrder)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            return redirect()->route('warehouse.purchase-orders.index')->with('error', 'Unauthorized access.');
+        }
+
+        $purchaseOrder->update(['cost_increase_approved' => true]);
+
+        return redirect()->route('warehouse.receiving.show', $purchaseOrder->id)
+            ->with('success', 'Cost increase approved. You can now process the receiving.');
     }
 
     public function printLabels(PurchaseOrder $purchaseOrder)

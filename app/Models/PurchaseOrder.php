@@ -28,6 +28,7 @@ class PurchaseOrder extends Model
         'taxes',
         'transportation_cost',
         'demurrage',
+        'cost_increase_approved',
         'status',
         'payment_status',
         'notes',

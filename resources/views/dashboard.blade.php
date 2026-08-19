@@ -193,6 +193,26 @@
             </div>
             @endif
 
+                        {{-- Store Sales Inventory Source Pie Chart --}}
+            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_reports')) && isset($data['sales_source']))
+            <div class="col-12 col-md-6">
+                <div class="card border-0 shadow-sm rounded-3 h-100">
+                    <div class="card-header bg-white border-0 py-3 px-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="card-title mb-0 fw-bold text-dark">Store Sales Source (Last 30 Days)</h6>
+                                <p class="text-muted mb-0 small">Revenue by inventory type</p>
+                            </div>
+                            <i class="mdi mdi-chart-pie text-success fs-5"></i>
+                        </div>
+                    </div>
+                    <div class="card-body px-2 pb-3 pt-1">
+                        <div id="salesSourceChart" class="d-flex justify-content-center"></div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Recent POs --}}
             @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po')) && isset($data['recent_pos']))
             <div class="col-12 col-md-6">
