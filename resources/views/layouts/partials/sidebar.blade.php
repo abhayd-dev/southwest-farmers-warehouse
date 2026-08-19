@@ -71,30 +71,18 @@
                 <li class="menu-title mt-2">Kitchen & Catering</li>
                 <li>
                     <a href="#sidebarKitchen" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('kitchen.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('kitchen.*') ? 'active' : '' }}">
                         <iconify-icon icon="tabler:chef-hat"></iconify-icon>
                         <span class="sidebar-text">Kitchen & Catering</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('kitchen.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'show' : '' }}"
+                    <div class="collapse {{ request()->routeIs('kitchen.*') ? 'show' : '' }}"
                         id="sidebarKitchen">
                         <ul class="nav-second-level">
                             <li>
                                 <a href="{{ route('kitchen.kds.index') }}"
                                     class="{{ request()->routeIs('kitchen.kds.index') ? 'active' : '' }}">
                                     <i class="mdi mdi-monitor-dashboard me-2"></i> KDS Screen
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('warehouse.categories.index') }}"
-                                    class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
-                                    <i class="mdi mdi-shape-outline me-2"></i> Menu Categories
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('warehouse.product-options.index') }}"
-                                    class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
-                                    <i class="mdi mdi-format-list-checks me-2"></i> Menu Options
                                 </a>
                             </li>
                         </ul>
@@ -106,12 +94,12 @@
                     <li class="menu-title mt-2">Product Catalog</li>
                     <li>
                         <a href="#sidebarProducts" data-bs-toggle="collapse"
-                            class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') || request()->routeIs('warehouse.product-options.*') || request()->routeIs('warehouse.departments.*') || request()->routeIs('warehouse.markets.*') || request()->routeIs('warehouse.market-prices.*') ? 'active' : '' }}">
+                            class="{{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') || request()->routeIs('warehouse.departments.*') || request()->routeIs('warehouse.markets.*') || request()->routeIs('warehouse.market-prices.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:box-seam"></iconify-icon>
                             <span class="sidebar-text">Products</span>
                             <span class="menu-arrow"></span>
                         </a>
-                        <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') || request()->routeIs('warehouse.product-options.*') || request()->routeIs('warehouse.departments.*') || request()->routeIs('warehouse.markets.*') || request()->routeIs('warehouse.market-prices.*') ? 'show' : '' }}"
+                        <div class="collapse {{ request()->routeIs('warehouse.products.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.subcategories.*') || request()->routeIs('warehouse.departments.*') || request()->routeIs('warehouse.markets.*') || request()->routeIs('warehouse.market-prices.*') ? 'show' : '' }}"
                             id="sidebarProducts">
                             <ul class="nav-second-level">
                                 <li>
@@ -151,12 +139,12 @@
                                             <i class="mdi mdi-shape-plus-outline me-2"></i> Subcategories
                                         </a>
                                     </li>
-                                    <li>
+                                    {{-- <li>
                                         <a href="{{ route('warehouse.product-options.index') }}"
                                             class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-format-list-checks me-2"></i> Product Options
                                         </a>
-                                    </li>
+                                    </li> --}}
                                     <li>
                                         <a href="{{ route('warehouse.departments.index') }}"
                                             class="{{ request()->routeIs('warehouse.departments.*') ? 'active' : '' }}">
