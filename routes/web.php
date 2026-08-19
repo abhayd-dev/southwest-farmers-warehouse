@@ -1,6 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+Route::get('/debug-logs', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return 'No log file found.';
+    $lines = array_slice(file($logFile), -1000);
+    return response('<pre>' . implode('', $lines) . '</pre>');
+});
 use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
