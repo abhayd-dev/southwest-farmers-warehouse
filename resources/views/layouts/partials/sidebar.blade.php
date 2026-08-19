@@ -71,18 +71,30 @@
                 <li class="menu-title mt-2">Kitchen & Catering</li>
                 <li>
                     <a href="#sidebarKitchen" data-bs-toggle="collapse"
-                        class="{{ request()->routeIs('kitchen.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('kitchen.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
                         <iconify-icon icon="tabler:chef-hat"></iconify-icon>
-                        <span class="sidebar-text">Kitchen Ops</span>
+                        <span class="sidebar-text">Kitchen & Catering</span>
                         <span class="menu-arrow"></span>
                     </a>
-                    <div class="collapse {{ request()->routeIs('kitchen.*') ? 'show' : '' }}"
+                    <div class="collapse {{ request()->routeIs('kitchen.*') || request()->routeIs('warehouse.categories.*') || request()->routeIs('warehouse.product-options.*') ? 'show' : '' }}"
                         id="sidebarKitchen">
                         <ul class="nav-second-level">
                             <li>
                                 <a href="{{ route('kitchen.kds.index') }}"
                                     class="{{ request()->routeIs('kitchen.kds.index') ? 'active' : '' }}">
                                     <i class="mdi mdi-monitor-dashboard me-2"></i> KDS Screen
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('warehouse.categories.index') }}"
+                                    class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-shape-outline me-2"></i> Menu Categories
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('warehouse.product-options.index') }}"
+                                    class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-format-list-checks me-2"></i> Menu Options
                                 </a>
                             </li>
                         </ul>
@@ -137,6 +149,12 @@
                                         <a href="{{ route('warehouse.subcategories.index') }}"
                                             class="{{ request()->routeIs('warehouse.subcategories.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-shape-plus-outline me-2"></i> Subcategories
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('warehouse.product-options.index') }}"
+                                            class="{{ request()->routeIs('warehouse.product-options.*') ? 'active' : '' }}">
+                                            <i class="mdi mdi-format-list-checks me-2"></i> Product Options
                                         </a>
                                     </li>
                                     <li>
