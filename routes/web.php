@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 Route::get('/debug-logs', function () {
     $logFile = storage_path('logs/laravel.log');
@@ -8,6 +9,15 @@ Route::get('/debug-logs', function () {
     $lines = array_slice(file($logFile), -1000);
     return response('<pre>' . implode('', $lines) . '</pre>');
 });
+
+Route::get('/clear-cache', function() {
+    Artisan::call('cache:clear');
+    Artisan::call('view:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    return 'Cache cleared successfully!';
+});
+
 use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
