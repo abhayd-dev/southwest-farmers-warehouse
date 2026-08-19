@@ -68,7 +68,7 @@
                 @endif
 
                 {{-- ================= KITCHEN & CATERING ================= --}}
-                <li class="menu-title mt-2">Kitchen & Catering</li>
+                {{-- <li class="menu-title mt-2">Kitchen & Catering</li>
                 <li>
                     <a href="#sidebarKitchen" data-bs-toggle="collapse"
                         class="{{ request()->routeIs('kitchen.*') ? 'active' : '' }}">
@@ -87,7 +87,7 @@
                             </li>
                         </ul>
                     </div>
-                </li>
+                </li> --}}
 
                 {{-- ================= PRODUCT CATALOG ================= --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
