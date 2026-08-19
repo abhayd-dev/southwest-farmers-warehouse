@@ -71,6 +71,12 @@ Route::middleware('auth')->group(function () {
 
     // require __DIR__.'/auth.php';
 
+    // Kitchen & Catering Routes
+    Route::prefix('kitchen')->name('kitchen.')->group(function () {
+        Route::get('kds', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'index'])->name('kds.index');
+        Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateStatus'])->name('kds.status');
+    });
+
     // API Endpoints for POS Synchronization
     Route::prefix('api/v1')->name('api.')->group(function () {
         Route::get('/store/{storeCode}/sync', [\App\Http\Controllers\Api\V1\PosSyncController::class, 'syncProducts'])->name('store.sync');

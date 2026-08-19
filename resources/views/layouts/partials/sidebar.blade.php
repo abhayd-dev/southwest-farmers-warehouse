@@ -67,6 +67,28 @@
                     </li>
                 @endif
 
+                {{-- ================= KITCHEN & CATERING ================= --}}
+                <li class="menu-title mt-2">Kitchen & Catering</li>
+                <li>
+                    <a href="#sidebarKitchen" data-bs-toggle="collapse"
+                        class="{{ request()->routeIs('kitchen.*') ? 'active' : '' }}">
+                        <iconify-icon icon="tabler:chef-hat"></iconify-icon>
+                        <span class="sidebar-text">Kitchen Ops</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('kitchen.*') ? 'show' : '' }}"
+                        id="sidebarKitchen">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a href="{{ route('kitchen.kds.index') }}"
+                                    class="{{ request()->routeIs('kitchen.kds.index') ? 'active' : '' }}">
+                                    <i class="mdi mdi-monitor-dashboard me-2"></i> KDS Screen
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 {{-- ================= PRODUCT CATALOG ================= --}}
                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
                     <li class="menu-title mt-2">Product Catalog</li>
