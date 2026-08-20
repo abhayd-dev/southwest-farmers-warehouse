@@ -351,9 +351,13 @@ class StockControlController extends Controller
 
             // 2. Try PO item unit_cost / receiving_unit_cost
             if ($txn->reference_id || ($txn->reference_type && str_contains($txn->reference_type, 'PurchaseOrder'))) {
-                $po = \App\Models\PurchaseOrder::where('id', $txn->reference_id)
-                    ->orWhere('po_number', $txn->reference_id)
-                    ->first();
+                $query = \App\Models\PurchaseOrder::query();
+                if (is_numeric($txn->reference_id)) {
+                    $query->where('id', $txn->reference_id)->orWhere('po_number', $txn->reference_id);
+                } else {
+                    $query->where('po_number', $txn->reference_id);
+                }
+                $po = $query->first();
                 if ($po) {
                     $poItem = \App\Models\PurchaseOrderItem::where('purchase_order_id', $po->id)
                         ->where('product_id', $product->id)
