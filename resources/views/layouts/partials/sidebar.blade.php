@@ -85,6 +85,54 @@
                                     <i class="mdi mdi-monitor-dashboard me-2"></i> KDS Screen
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('kitchen.menu-categories.index') }}"
+                                    class="{{ request()->routeIs('kitchen.menu-categories.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-folder-outline me-2"></i> Menu Categories
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.menu-items.index') }}"
+                                    class="{{ request()->routeIs('kitchen.menu-items.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-food me-2"></i> Menu Items
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.cookbook.index') }}"
+                                    class="{{ request()->routeIs('kitchen.cookbook.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-book-open-page-variant me-2"></i> Cookbook Builder
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.production.index') }}"
+                                    class="{{ request()->routeIs('kitchen.production.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-pot-steam me-2"></i> Production Logs
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.production.leftovers') }}"
+                                    class="{{ request()->routeIs('kitchen.production.leftovers') ? 'active' : '' }}">
+                                    <i class="mdi mdi-food-off me-2"></i> Leftover Report
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.reports.sales-ranking') }}"
+                                    class="{{ request()->routeIs('kitchen.reports.sales-ranking') ? 'active' : '' }}">
+                                    <i class="mdi mdi-chart-bar me-2"></i> Sales Ranking
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.availability.index') }}"
+                                    class="{{ request()->routeIs('kitchen.availability.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-calendar-clock me-2"></i> Daily Availability & Catering
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kitchen.staff.index') }}"
+                                    class="{{ request()->routeIs('kitchen.staff.*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-account-clock me-2"></i> Staff & Timesheets
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li> --}}

@@ -92,6 +92,34 @@ Route::middleware('auth')->group(function () {
     Route::prefix('kitchen')->name('kitchen.')->group(function () {
         Route::get('kds', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'index'])->name('kds.index');
         Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateStatus'])->name('kds.status');
+        
+        Route::get('menu-categories', [App\Http\Controllers\Warehouse\MenuCategoryController::class, 'index'])->name('menu-categories.index');
+        Route::get('menu-items', [App\Http\Controllers\Warehouse\MenuItemController::class, 'index'])->name('menu-items.index');
+
+        // Cookbook / Recipes
+        Route::resource('cookbook', App\Http\Controllers\Warehouse\CookbookController::class);
+
+        // Production Logging
+        Route::get('production', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'index'])->name('production.index');
+        Route::get('production/create', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'create'])->name('production.create');
+        Route::post('production', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'store'])->name('production.store');
+        Route::get('production/leftovers', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'leftovers'])->name('production.leftovers');
+
+        // Advanced Kitchen Reporting
+        Route::get('reports/sales-ranking', [App\Http\Controllers\Warehouse\KitchenReportController::class, 'salesRanking'])->name('reports.sales-ranking');
+
+        // Daily Availability & Catering Parameters
+        Route::get('availability', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'index'])->name('availability.index');
+        Route::put('availability/{menuItem}', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'update'])->name('availability.update');
+        Route::post('availability/{menuItem}/toggle-today', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'toggleToday'])->name('availability.toggle-today');
+
+        // Staff Scheduling & Time Clock
+        Route::get('staff-timesheets', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'index'])->name('staff.index');
+        Route::post('staff-timesheets/shift', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');
+        Route::put('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'updateShift'])->name('staff.shift.update');
+        Route::delete('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'destroyShift'])->name('staff.shift.destroy');
+        Route::post('staff-timesheets/clock-in', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'clockIn'])->name('staff.clock-in');
+        Route::post('staff-timesheets/clock-out/{timeLog}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'clockOut'])->name('staff.clock-out');
     });
 
     // API Endpoints for POS Synchronization
@@ -201,6 +229,15 @@ Route::middleware('auth')->group(function () {
 
         // ===== STOCK CONTROL MODULE ROUTES (COMPLETE) =====
         Route::prefix('stock-control')->name('warehouse.stock-control.')->group(function () {
+
+            // KDS Screen
+            Route::get('kds', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'index'])->name('kds.index');
+            Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateStatus'])->name('kds.update-status');
+            Route::post('kds/{sale}/notes', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateNotes'])->name('kds.update-notes');
+
+            // Kitchen Menu Management
+            Route::get('menu-categories', [App\Http\Controllers\Warehouse\MenuCategoryController::class, 'index'])->name('menu-categories.index');
+            Route::get('menu-items', [App\Http\Controllers\Warehouse\MenuItemController::class, 'index'])->name('menu-items.index');
 
             // Stock Overview
             Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
