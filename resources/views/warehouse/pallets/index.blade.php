@@ -9,9 +9,19 @@
                 </h4>
                 <small class="text-muted">Organize dispatch items onto pallets (Max 2,200 lbs each)</small>
             </div>
-            <a href="{{ route('warehouse.pallets.create') }}" class="btn btn-primary">
-                <i class="mdi mdi-plus me-1"></i> New Pallet
-            </a>
+            <div class="d-flex align-items-center gap-3">
+                <form action="{{ route('warehouse.pallets.index') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
+                    <input type="hidden" name="status" value="{{ $status }}">
+                    <label class="form-label mb-0 fw-bold small text-muted text-nowrap">Filter by Date:</label>
+                    <input type="date" name="date" class="form-control form-control-sm" value="{{ request('date') }}" onchange="this.form.submit()">
+                    @if(request()->filled('date'))
+                        <a href="{{ route('warehouse.pallets.index', ['status' => $status]) }}" class="btn btn-sm btn-outline-secondary" title="Clear Date Filter"><i class="mdi mdi-close"></i></a>
+                    @endif
+                </form>
+                <a href="{{ route('warehouse.pallets.create') }}" class="btn btn-primary text-nowrap">
+                    <i class="mdi mdi-plus me-1"></i> New Pallet
+                </a>
+            </div>
         </div>
 
         {{-- STATUS TABS --}}
@@ -22,7 +32,7 @@
                       'delivered' => ['label' => 'Delivered', 'count' => $deliveredCount, 'color' => 'secondary'],
                       'all'       => ['label' => 'All',       'count' => null,             'color' => 'dark']] as $key => $tab)
                 <li class="nav-item">
-                    <a href="{{ route('warehouse.pallets.index', ['status' => $key]) }}"
+                    <a href="{{ route('warehouse.pallets.index', ['status' => $key, 'date' => request('date')]) }}"
                        class="nav-link {{ $status === $key ? 'active fw-bold' : '' }}">
                         {{ $tab['label'] }}
                         @if($tab['count'] !== null && $tab['count'] > 0)

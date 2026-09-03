@@ -152,34 +152,11 @@ class StorePurchaseOrderController extends Controller
                     continue;
                 }
 
-                $warehouseQty = $warehouseStocks->get($item->product_id, 0);
-                $minMax = $minMaxLevels->get($item->product_id);
-                $warehouseMin = $minMax?->min_level ?? 0;
-
-                // Rationing: if warehouse stock <= min, dispatch only 25%
-                $availableAboveMin = max(0, $warehouseQty - $warehouseMin);
-
-                if ($availableAboveMin <= 0) {
-                    // Warehouse at minimum — reject this item
-                    $item->update([
-                        'status'           => StorePurchaseOrderItem::STATUS_REJECTED,
-                        'rejection_reason' => 'Warehouse stock at minimum level.',
-                        'pending_qty'      => 0,
-                    ]);
-                } elseif ($availableAboveMin < $item->requested_qty) {
-                    // Rationing: only 25% of requested
-                    $rationedQty = max(1, (int) ceil($item->requested_qty * 0.25));
-                    $approvedQty = min($rationedQty, $availableAboveMin);
-                    $item->update([
-                        'status'      => StorePurchaseOrderItem::STATUS_APPROVED,
-                        'pending_qty' => $approvedQty,
-                    ]);
-                } else {
-                    $item->update([
-                        'status'      => StorePurchaseOrderItem::STATUS_APPROVED,
-                        'pending_qty' => $item->requested_qty,
-                    ]);
-                }
+                // We no longer strictly ration based on min limits
+                $item->update([
+                    'status'      => StorePurchaseOrderItem::STATUS_APPROVED,
+                    'pending_qty' => $item->requested_qty,
+                ]);
             }
 
             $storeOrder->approve(Auth::id());

@@ -21,6 +21,13 @@ class StockAuditController extends Controller
             // Eager load department
             $query = StockAudit::with(['initiator', 'department'])->latest();
 
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
             return DataTables::of($query)
                 ->addColumn('audit_no', fn($row) => $row->audit_number)
                 ->addColumn('initiator_name', fn($row) => $row->initiator->name ?? 'System')

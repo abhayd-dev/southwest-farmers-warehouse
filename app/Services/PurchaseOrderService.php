@@ -155,12 +155,12 @@ class PurchaseOrderService
                 // Actual Cost = ((Duties + Brokerage Fee + Shipping) / Total Received Qty) + PO Price
                 $actualCost = round($poPrice + $landedFeePerUnit, 2);
 
-                // Check for cost increase
+                // Check for cost increase (Bypassed to allow cost updates)
                 if ($poItem->product) {
                     $currentCost = floatval($poItem->product->cost_price);
-                    if ($actualCost > $currentCost && !$po->cost_increase_approved) {
-                        throw new \Exception("CostIncreaseException");
-                    }
+                    // if ($actualCost > $currentCost && !$po->cost_increase_approved) {
+                    //     throw new \Exception("CostIncreaseException");
+                    // }
                 }
 
                 $batch = ProductBatch::create([

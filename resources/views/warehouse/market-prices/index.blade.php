@@ -214,6 +214,73 @@
                         </script>
                     @endpush
 
+                @else
+                    {{-- Active Promotions View (Default when no market selected) --}}
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-dark fw-bold"><i class="mdi mdi-tag-multiple text-danger me-2"></i> Active Promotions (All Stores)</h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('warehouse.market-prices.index') }}" method="GET" class="row align-items-end mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small">Filter by Store:</label>
+                                    <select name="promo_market_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">All Stores</option>
+                                        @foreach ($markets as $market)
+                                            <option value="{{ $market->id }}" {{ request('promo_market_id') == $market->id ? 'selected' : '' }}>
+                                                {{ $market->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small">Filter by Day:</label>
+                                    <input type="date" name="promo_date" class="form-control form-control-sm" value="{{ request('promo_date') }}" onchange="this.form.submit()">
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{{ route('warehouse.market-prices.index') }}" class="btn btn-sm btn-outline-secondary"><i class="mdi mdi-refresh"></i> Clear</a>
+                                </div>
+                            </form>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Store</th>
+                                            <th>UPC</th>
+                                            <th>Product Name</th>
+                                            <th>Regular Price</th>
+                                            <th>Promo Price</th>
+                                            <th>Valid Dates</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($activePromotions as $promo)
+                                            <tr>
+                                                <td class="fw-bold">{{ $promo->market->name ?? 'N/A' }}</td>
+                                                <td><span class="badge bg-secondary">{{ $promo->product->upc }}</span></td>
+                                                <td class="fw-semibold">{{ $promo->product->product_name }}</td>
+                                                <td><s class="text-muted">${{ number_format($promo->sale_price, 2) }}</s></td>
+                                                <td class="text-danger fw-bold fs-5">${{ number_format($promo->promotion_price, 2) }}</td>
+                                                <td class="small">
+                                                    {{ \Carbon\Carbon::parse($promo->promotion_start_date)->format('M d, Y') }} - 
+                                                    {{ \Carbon\Carbon::parse($promo->promotion_end_date)->format('M d, Y') }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4 text-muted">No active promotions found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-3">
+                                {{ $activePromotions->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                    </div>
                 @endif
 
             </div>

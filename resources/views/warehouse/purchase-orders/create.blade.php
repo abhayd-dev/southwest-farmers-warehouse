@@ -103,13 +103,39 @@
                 {{-- RIGHT: Items Table --}}
                 <div class="col-12 col-lg-8">
                     <div class="card border-0 shadow-sm h-100">
-                        <div
-                            class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h6 class="mb-0 fw-bold text-dark"><i class="mdi mdi-format-list-bulleted me-1"></i> Order
-                                Items</h6>
-                            <button type="button" class="btn btn-sm btn-primary shadow-sm" id="addRowBtn">
-                                <i class="mdi mdi-plus-circle me-1"></i> Add Item
-                            </button>
+                        <div class="card-header bg-white border-bottom py-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="mdi mdi-format-list-bulleted me-1"></i> Order Items</h6>
+                                <button type="button" class="btn btn-sm btn-primary shadow-sm" id="addRowBtn">
+                                    <i class="mdi mdi-plus-circle me-1"></i> Add Item
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select id="filterDepartment" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                        <option value="">All Departments</option>
+                                        @foreach($departments as $dept)
+                                            <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="filterCategory" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                        <option value="">All Categories</option>
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="filterSubcategory" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                        <option value="">All Subcategories</option>
+                                        @foreach($subcategories as $subcat)
+                                            <option value="{{ $subcat->id }}">{{ $subcat->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card-body p-0">
@@ -158,14 +184,36 @@
         <script>
             const products = @json($products);
             let rowIdx = 0;
-
-            // Pre-generate the options HTML once
             let productOptionsHtml = '<option value="">Select Product</option>';
-            products.forEach(p => {
-                const barcode = p.barcode || 'NO-BARCODE';
-                productOptionsHtml +=
-                    `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
-            });
+
+            function filterProducts() {
+                const deptId = document.getElementById('filterDepartment').value;
+                const catId = document.getElementById('filterCategory').value;
+                const subcatId = document.getElementById('filterSubcategory').value;
+
+                let filteredProducts = products;
+                if (deptId) filteredProducts = filteredProducts.filter(p => p.department_id == deptId);
+                if (catId) filteredProducts = filteredProducts.filter(p => p.category_id == catId);
+                if (subcatId) filteredProducts = filteredProducts.filter(p => p.subcategory_id == subcatId);
+
+                productOptionsHtml = '<option value="">Select Product</option>';
+                filteredProducts.forEach(p => {
+                    const barcode = p.barcode || 'NO-BARCODE';
+                    productOptionsHtml += `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
+                });
+
+                // Update all existing dropdowns (optional: might clear unsaved rows if product is filtered out, but keeps it simple)
+                $('.product-select').each(function() {
+                    const currentVal = $(this).val();
+                    $(this).html(productOptionsHtml);
+                    if (currentVal) {
+                        $(this).val(currentVal);
+                    }
+                });
+            }
+
+            // Initial build
+            filterProducts();
 
             function addRow() {
                 const html = `

@@ -141,9 +141,10 @@
                                 <table class="table table-hover align-middle mb-0" id="repackagedItemsTable">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="width: 55%" class="ps-4">Product (Search by UPC / Name) <span class="text-danger">*</span></th>
-                                            <th style="width: 30%">Quantity (QTY) <span class="text-danger">*</span></th>
-                                            <th style="width: 15%" class="text-end pe-4">Action</th>
+                                            <th style="width: 45%" class="ps-4">Product (Search by UPC / Name) <span class="text-danger">*</span></th>
+                                            <th style="width: 20%">Quantity (QTY) <span class="text-danger">*</span></th>
+                                            <th style="width: 25%">Weight Per Pkt <span class="text-danger">*</span></th>
+                                            <th style="width: 10%" class="text-end pe-4">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="repackagedItemsBody">
@@ -196,6 +197,12 @@
                         </td>
                         <td>
                             <input type="number" step="0.01" min="0.01" name="items[${rowCounter}][quantity]" class="form-control shadow-none" value="${qty}" required>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" name="items[${rowCounter}][weight_per_packet]" class="form-control shadow-none" placeholder="e.g. 10">
+                                <span class="input-group-text bg-light text-muted">lbs</span>
+                            </div>
                         </td>
                         <td class="text-end pe-4">
                             <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" data-row-id="row-${rowCounter}">

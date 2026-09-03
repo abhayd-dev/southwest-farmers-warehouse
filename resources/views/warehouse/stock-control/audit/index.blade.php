@@ -20,6 +20,25 @@
         @endif
 
         <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <form id="auditFilterForm" class="row align-items-center g-2">
+                    <div class="col-md-auto">
+                        <label class="form-label fw-bold mb-0 small text-muted">Date Range:</label>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_from" id="date_from" class="form-control form-control-sm" placeholder="Start Date">
+                    </div>
+                    <div class="col-md-auto text-center px-1">
+                        <span class="text-muted small">to</span>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_to" id="date_to" class="form-control form-control-sm" placeholder="End Date">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-sm btn-primary w-100"><i class="mdi mdi-filter"></i> Filter</button>
+                    </div>
+                </form>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                 <table id="auditsTable" class="table table-hover align-middle" style="width:100%">
@@ -43,19 +62,30 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
-            $('#auditsTable').DataTable({
+            var table = $('#auditsTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('warehouse.stock-control.audit.index') }}",
+                ajax: {
+                    url: "{{ route('warehouse.stock-control.audit.index') }}",
+                    data: function(d) {
+                        d.date_from = $('#date_from').val();
+                        d.date_to = $('#date_to').val();
+                    }
+                },
                 columns: [
                     { data: 'audit_no', name: 'audit_number', className: 'fw-bold text-primary' },
                     { data: 'type_label', name: 'type' }, 
                     { data: 'status_badge', name: 'status' },
-                    { data: 'initiator_name', name: 'initiator_name', defaultContent: 'System' },
+                    { data: 'initiator_name', name: 'initiator.name', defaultContent: 'System' },
                     { data: 'date', name: 'created_at' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' }
                 ],
                 order: [[4, 'desc']]
+            });
+
+            $('#auditFilterForm').on('submit', function(e) {
+                e.preventDefault();
+                table.draw();
             });
         });
     </script>

@@ -107,8 +107,11 @@ class RepackagingController extends Controller
             ]);
 
             // 2. ADD TARGET REPACKAGED PRODUCTS STOCK
+            $totalTargetWeight = 0;
             foreach ($request->items as $item) {
                 $itemQty = (float) $item['quantity'];
+                $itemWeight = isset($item['weight_per_packet']) ? (float) $item['weight_per_packet'] : 0;
+                $totalTargetWeight += ($itemQty * $itemWeight);
 
                 $targetStock = ProductStock::firstOrCreate(
                     ['product_id' => $item['product_id'], 'warehouse_id' => $warehouseId],
@@ -129,6 +132,23 @@ class RepackagingController extends Controller
                     'reference_id'    => $refId,
                     'remarks'         => $remarks,
                 ]);
+            }
+
+            // 3. LOG PROCESSING LOSS / SHRINKAGE
+            if ($totalTargetWeight > 0) {
+                $shrinkage = round($sourceQty - $totalTargetWeight, 2);
+                if ($shrinkage > 0) {
+                    StockTransaction::create([
+                        'product_id'      => $request->source_product_id,
+                        'warehouse_id'    => $warehouseId,
+                        'ware_user_id'    => $userId,
+                        'type'            => 'shrinkage',
+                        'quantity_change' => 0, // Quantity was already deducted in transfer_out, this is an informational log
+                        'running_balance' => $sourceStock->quantity, 
+                        'reference_id'    => $refId,
+                        'remarks'         => 'Processing Loss / Shrinkage (' . $shrinkage . ' lbs)',
+                    ]);
+                }
             }
 
             DB::commit();

@@ -168,10 +168,17 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         $vendors = Vendor::active()->get();
-        // Only get Warehouse Products
-        $products = Product::warehouse()->active()->select('id', 'product_name', 'sku', 'barcode', 'cost_price')->get();
+        
+        $departments = \App\Models\Department::where('is_active', true)->get();
+        $categories = \App\Models\ProductCategory::where('is_active', true)->get();
+        $subcategories = \App\Models\ProductSubcategory::where('is_active', true)->get();
 
-        return view('warehouse.purchase-orders.create', compact('vendors', 'products'));
+        // Only get Warehouse Products
+        $products = Product::warehouse()->active()
+            ->select('id', 'product_name', 'sku', 'barcode', 'cost_price', 'department_id', 'category_id', 'subcategory_id')
+            ->get();
+
+        return view('warehouse.purchase-orders.create', compact('vendors', 'products', 'departments', 'categories', 'subcategories'));
     }
 
     public function store(Request $request)

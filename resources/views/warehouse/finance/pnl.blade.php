@@ -29,6 +29,12 @@
         </div>
     </div>
 
+    @if(empty($categoryBreakdown))
+    <div class="alert alert-info shadow-sm mb-4">
+        <i class="mdi mdi-information-outline me-2"></i> No sales data found for this date range. Try selecting a different period.
+    </div>
+    @endif
+
     {{-- Summary Cards --}}
     <div class="row mb-4 g-3">
         <div class="col-12 col-md-3">

@@ -98,7 +98,11 @@
                                             </td>
                                             <td class="py-3 text-center fw-bold">{{ $item->requested_qty }}</td>
                                             <td class="py-3 text-center text-success fw-bold">
-                                                {{ $item->dispatched_qty }}</td>
+                                                {{ $item->dispatched_qty }}
+                                                @if($item->dispatched_qty > $item->requested_qty)
+                                                    <br><span class="badge bg-danger mt-1 px-2 py-1" style="font-size: 0.75rem;"><i class="mdi mdi-alert-circle"></i> Over-shipped (+{{ $item->dispatched_qty - $item->requested_qty }})</span>
+                                                @endif
+                                            </td>
                                             <td class="py-3 text-center text-warning fw-bold">{{ $item->pending_qty }}
                                             </td>
                                             <td class="py-3 text-center">

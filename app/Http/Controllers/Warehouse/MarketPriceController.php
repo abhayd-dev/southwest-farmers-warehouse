@@ -16,6 +16,8 @@ class MarketPriceController extends Controller
         $selectedMarket = $request->market_id ? Market::find($request->market_id) : null;
 
         $products = collect();
+        $activePromotions = collect();
+
         if ($selectedMarket) {
             $query = Product::whereNull('store_id')->where('is_active', true)
                 ->with(['marketPrices' => function ($q) use ($selectedMarket) {
@@ -40,9 +42,25 @@ class MarketPriceController extends Controller
             }
 
             $products = $query->paginate(30)->appends($request->query());
+        } else {
+            // When no specific market is selected for pricing, show all active promotions by default
+            $promoQuery = ProductMarketPrice::with(['product', 'market'])
+                ->where('promotion_price', '>', 0)
+                ->whereDate('promotion_end_date', '>=', now());
+
+            if ($request->filled('promo_market_id')) {
+                $promoQuery->where('market_id', $request->promo_market_id);
+            }
+            if ($request->filled('promo_date')) {
+                $date = $request->promo_date;
+                $promoQuery->whereDate('promotion_start_date', '<=', $date)
+                           ->whereDate('promotion_end_date', '>=', $date);
+            }
+
+            $activePromotions = $promoQuery->paginate(30)->appends($request->query());
         }
 
-        return view('warehouse.market-prices.index', compact('markets', 'selectedMarket', 'products'));
+        return view('warehouse.market-prices.index', compact('markets', 'selectedMarket', 'products', 'activePromotions'));
     }
 
     public function update(Request $request)

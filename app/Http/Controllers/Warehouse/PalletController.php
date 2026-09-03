@@ -25,6 +25,7 @@ class PalletController extends Controller
 
         $pallets = Pallet::with(['items.product', 'department', 'storePO.store'])
             ->when($status !== 'all', fn($q) => $q->where('status', $status))
+            ->when($request->filled('date'), fn($q) => $q->whereDate('created_at', $request->date))
             ->latest()
             ->paginate(15)
             ->withQueryString();
