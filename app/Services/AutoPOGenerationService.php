@@ -140,6 +140,9 @@ class AutoPOGenerationService
                 route('warehouse.store-orders.show', $po->id)
             );
 
+            // Notify Warehouse Manager(s) of the incoming order (email + PDF)
+            app(\App\Services\WarehouseManagerNotificationService::class)->notifyIncomingOrder($po);
+
             // Email Notifications to Store + Schedule Recipients
             $emails = array_unique(array_merge([$store->email], $recipients));
             foreach ($emails as $email) {

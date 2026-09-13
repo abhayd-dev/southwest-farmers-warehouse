@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             WarehouseSeeder::class,
             WareRolePermissionSeeder::class,
             WareStockControlPermissionsSeeder::class,
+            Phase7WarehouseManagerRoleSeeder::class,
             WareUserSeeder::class,
 
             // Store

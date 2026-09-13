@@ -12,7 +12,7 @@ class ApprovalService
     /**
      * Send approval email for a purchase order
      */
-    public function sendApprovalEmail(PurchaseOrder $po)
+    public function sendApprovalEmail(PurchaseOrder $po, bool $isReminder = false)
     {
         if (!$po->approval_email) {
             throw new \Exception('No approval email specified for this PO');
@@ -40,12 +40,24 @@ class ApprovalService
             'po' => $po,
             'approveUrl' => $approveUrl,
             'rejectUrl' => $rejectUrl,
-        ], function ($message) use ($po) {
-            $message->to($po->approval_email)
-                ->subject("Purchase Order #{$po->po_number} - Approval Required");
+            'isReminder' => $isReminder,
+        ], function ($message) use ($po, $isReminder) {
+            $subject = $isReminder
+                ? "Reminder: Purchase Order #{$po->po_number} - Approval Still Needed"
+                : "Purchase Order #{$po->po_number} - Approval Required";
+            $message->to($po->approval_email)->subject($subject);
         });
 
         return true;
+    }
+
+    /**
+     * Same email as sendApprovalEmail(), reworded as a reminder — used by the
+     * every-30-minutes nudge for POs still sitting unapproved (item 16).
+     */
+    public function sendApprovalReminder(PurchaseOrder $po)
+    {
+        return $this->sendApprovalEmail($po, true);
     }
 
     /**
@@ -57,12 +69,27 @@ class ApprovalService
             $po->approve($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'approved', $reason);
 
-            // Automatically send to vendor upon approval
+            // Automatically send to vendor upon approval — the approver gets a
+            // bcc'd copy of the exact email that went to the vendor.
             try {
                 $vendorComm = app(\App\Services\VendorCommunicationService::class);
-                $vendorComm->sendPOToVendor($po, true, false); // Send email by default
+                $vendorComm->sendPOToVendor($po, true, false, $approverEmail);
             } catch (\Exception $e) {
                 \Log::error("Failed to auto-send PO #{$po->po_number} to vendor: " . $e->getMessage());
+            }
+
+            // Separate confirmation email to the approver with a durable cancel
+            // link — usable anytime, not just on the immediate result page.
+            try {
+                $cancelUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'warehouse.purchase-orders.approver-cancel',
+                    now()->addDays(14),
+                    ['purchaseOrder' => $po->id]
+                );
+                \Illuminate\Support\Facades\Mail::to($approverEmail)
+                    ->send(new \App\Mail\ApproverPOConfirmation($po, $cancelUrl));
+            } catch (\Exception $e) {
+                \Log::error("Failed to send approver confirmation for PO #{$po->po_number}: " . $e->getMessage());
             }
 
             \App\Services\NotificationService::sendToAdmins(

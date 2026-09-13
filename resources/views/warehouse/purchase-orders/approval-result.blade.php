@@ -56,6 +56,16 @@
                         </div>
                         @endif
 
+                        @if(isset($cancelUrl))
+                        <div class="mt-3 pt-3 border-top">
+                            <p class="text-muted small mb-2">Need to reverse this? You can still cancel the order.</p>
+                            <a href="{{ $cancelUrl }}" class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('Cancel this purchase order?');">
+                                Cancel This Order
+                            </a>
+                        </div>
+                        @endif
+
                     {{-- ERROR BLOCK --}}
                     @else
 

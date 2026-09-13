@@ -27,9 +27,9 @@
                         <div class="card-header bg-info text-white fw-bold"><i class="mdi mdi-lock-reset me-1"></i>
                             Login & Role</div>
                         <div class="card-body">
-                            {{-- Employee ID — primary login credential --}}
+                            {{-- Login ID — primary login credential --}}
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Employee ID <span
+                                <label class="form-label fw-semibold">Login ID <span
                                         class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="mdi mdi-badge-account-outline"></i></span>
@@ -57,6 +57,11 @@
                                     <i class="mdi mdi-information-outline"></i>
                                     Used for password reset only — <em>not</em> for login.
                                 </small>
+                                @if ($user->email)
+                                    <div class="mt-1">
+                                        <x-email-verify-badge :verified="$user->email_verified_at" type="staff" :id="$user->id" :label="'Staff account: ' . $user->name" />
+                                    </div>
+                                @endif
                             </div>
                             {{-- Role --}}
                             <div class="mb-3">
@@ -87,7 +92,7 @@
                                         value="{{ $user->name }}" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold">Employee ID</label>
+                                    <label class="form-label fw-bold">Login ID</label>
                                     <input type="text" name="emp_code" class="form-control"
                                         value="{{ $user->emp_code }}" required>
                                 </div>

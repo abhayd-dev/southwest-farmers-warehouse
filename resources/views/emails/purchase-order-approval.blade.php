@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #f4f6f9; color: #333; }
         .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 30px; text-align: center; }
+        .header { background-color: #1a73e8; background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 30px; text-align: center; }
         .header h1 { font-size: 22px; margin-bottom: 6px; }
         .header p { font-size: 14px; opacity: 0.85; }
         .body { padding: 30px; }
@@ -32,11 +32,16 @@
 <body>
     <div class="wrapper">
         <div class="header">
-            <h1>📋 Purchase Order Approval Required</h1>
+            <h1>Purchase Order Approval Required</h1>
             <p>Your review is needed for PO #{{ $po->po_number }}</p>
         </div>
 
         <div class="body">
+            @if(!empty($isReminder))
+            <div class="warning" style="margin-bottom: 15px;">
+                This purchase order is still awaiting your approval. This is an automatic reminder sent every 30 minutes until it's actioned.
+            </div>
+            @endif
             <p style="margin-bottom: 15px;">You have been requested to review and approve the following Purchase Order:</p>
 
             <div class="po-box">
@@ -97,12 +102,12 @@
             </table>
 
             <div class="btn-row">
-                <a href="{{ $approveUrl }}" class="btn btn-approve">✓ Approve PO</a>
-                <a href="{{ $rejectUrl }}" class="btn btn-reject">✗ Reject PO</a>
+                <a href="{{ $approveUrl }}" class="btn btn-approve">Approve PO</a>
+                <a href="{{ $rejectUrl }}" class="btn btn-reject">Reject PO</a>
             </div>
 
             <div class="warning">
-                ⚠️ These approval links are valid for <strong>7 days</strong>. After that, they will expire and a new approval request will need to be sent.
+                These approval links are valid for <strong>7 days</strong>. After that, they will expire and a new approval request will need to be sent.
             </div>
         </div>
 

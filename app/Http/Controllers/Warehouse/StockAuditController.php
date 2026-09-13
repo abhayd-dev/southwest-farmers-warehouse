@@ -38,7 +38,7 @@ class StockAuditController extends Controller
                     }
                     return '<span class="text-dark">Full Inventory</span>';
                 })
-                ->addColumn('date', fn($row) => $row->created_at->format('d M Y'))
+                ->addColumn('date', fn($row) => $row->created_at->timezone(config('app.display_timezone'))->format('d M Y'))
                 ->addColumn('status_badge', function($row) {
                     $colors = ['draft' => 'secondary', 'in_progress' => 'warning', 'completed' => 'success'];
                     return '<span class="badge bg-'.($colors[$row->status]??'primary').'">'.ucfirst(str_replace('_',' ',$row->status)).'</span>';

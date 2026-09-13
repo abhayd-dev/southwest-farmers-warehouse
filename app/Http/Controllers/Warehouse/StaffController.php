@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Warehouse;
 use App\Http\Controllers\Controller;
 use App\Models\WareUser;
 use App\Models\WareRole;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -100,6 +101,9 @@ class StaffController extends Controller
             }
 
             DB::commit();
+
+            app(EmailVerificationService::class)->send('staff', $user, "Staff account: {$user->name}");
+
             return redirect()->route('warehouse.staff.index')->with('success', 'Staff Member Created Successfully.');
 
         } catch (\Exception $e) {
@@ -131,6 +135,8 @@ class StaffController extends Controller
             'profile_image' => 'nullable|image|max:2048',
         ]);
 
+        $oldEmail = $user->email;
+
         try {
             DB::beginTransaction();
 
@@ -158,6 +164,9 @@ class StaffController extends Controller
             }
 
             DB::commit();
+
+            app(EmailVerificationService::class)->handleEmailChange('staff', $user, $oldEmail, "Staff account: {$user->name}");
+
             return redirect()->route('warehouse.staff.index')->with('success', 'Staff Member Updated Successfully.');
 
         } catch (\Exception $e) {

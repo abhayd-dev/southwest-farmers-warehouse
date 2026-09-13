@@ -39,6 +39,8 @@ class NotificationLog extends Model
     public const FOR_LATE_ORDER     = 'late_order';
     public const FOR_LOW_STOCK      = 'low_stock';
     public const FOR_AUTO_PO        = 'auto_po';
+    public const FOR_WAREHOUSE_MANAGER_INCOMING_ORDER = 'warehouse_manager_incoming_order';
+    public const FOR_PURCHASE_MANAGER_SHORTAGE        = 'purchase_manager_shortage';
 
     // Status
     public const STATUS_SENT    = 'sent';

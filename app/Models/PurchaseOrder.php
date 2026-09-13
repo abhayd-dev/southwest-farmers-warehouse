@@ -39,13 +39,18 @@ class PurchaseOrder extends Model
         'approval_status',
         'approved_by_email',
         'approved_at',
-        'approval_reason'
+        'approval_reason',
+        'vendor_response_status',
+        'vendor_response_at',
+        'vendor_denial_reason',
     ];
 
     protected $casts = [
         'order_date' => 'date',
         'expected_delivery_date' => 'date',
         'approved_at' => 'datetime',
+        'approval_email_verified_at' => 'datetime',
+        'vendor_response_at' => 'datetime',
     ];
 
     // Status Constants
@@ -119,5 +124,34 @@ class PurchaseOrder extends Model
     public function isRejected()
     {
         return $this->approval_status === 'rejected';
+    }
+
+    // Vendor response (acknowledge/deny) — separate from internal approval_status.
+    public function vendorAcknowledge()
+    {
+        $this->update([
+            'vendor_response_status' => 'acknowledged',
+            'vendor_response_at' => now(),
+            'vendor_denial_reason' => null,
+        ]);
+    }
+
+    public function vendorDeny(string $reason)
+    {
+        $this->update([
+            'vendor_response_status' => 'denied',
+            'vendor_response_at' => now(),
+            'vendor_denial_reason' => $reason,
+        ]);
+    }
+
+    public function isVendorAcknowledged()
+    {
+        return $this->vendor_response_status === 'acknowledged';
+    }
+
+    public function isVendorDenied()
+    {
+        return $this->vendor_response_status === 'denied';
     }
 }

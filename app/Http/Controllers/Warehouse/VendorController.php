@@ -7,6 +7,7 @@ use App\Models\Vendor;
 use App\Models\ImportTask;
 use App\Imports\VendorImport;
 use App\Exports\Samples\VendorSampleExport;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -93,7 +94,11 @@ class VendorController extends Controller
             'lead_time_days' => 'nullable|integer|min:0',
         ]);
 
-        Vendor::create($request->all());
+        $vendor = Vendor::create($request->all());
+
+        if ($vendor->email) {
+            app(EmailVerificationService::class)->send('vendor', $vendor, "Vendor: {$vendor->name}");
+        }
 
         return redirect()->route('warehouse.vendors.index')
             ->with('success', 'Vendor created successfully');
@@ -113,7 +118,10 @@ class VendorController extends Controller
             'lead_time_days' => 'nullable|integer|min:0',
         ]);
 
+        $oldEmail = $vendor->email;
         $vendor->update($request->all());
+
+        app(EmailVerificationService::class)->handleEmailChange('vendor', $vendor, $oldEmail, "Vendor: {$vendor->name}");
 
         return redirect()->route('warehouse.vendors.index')
             ->with('success', 'Vendor updated successfully');

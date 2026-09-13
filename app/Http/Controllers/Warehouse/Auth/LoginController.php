@@ -39,7 +39,7 @@ class LoginController extends Controller
         }
 
         return back()->withErrors([
-            'emp_code' => 'Invalid Employee ID or password.',
+            'emp_code' => 'Invalid Login ID or password.',
         ])->onlyInput('emp_code');
     }
 

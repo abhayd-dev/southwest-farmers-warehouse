@@ -112,7 +112,8 @@
                             </div>
                             <div class="row g-2">
                                 <div class="col-md-4">
-                                    <select id="filterDepartment" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                    <label class="form-label small text-muted fw-bold mb-1">Department</label>
+                                    <select id="filterDepartment" class="form-select form-select-sm shadow-none" onchange="onDepartmentChange()">
                                         <option value="">All Departments</option>
                                         @foreach($departments as $dept)
                                             <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -120,19 +121,15 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <select id="filterCategory" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                    <label class="form-label small text-muted fw-bold mb-1">Category</label>
+                                    <select id="filterCategory" class="form-select form-select-sm shadow-none" onchange="onCategoryChange()">
                                         <option value="">All Categories</option>
-                                        @foreach($categories as $cat)
-                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-bold mb-1">Subcategory</label>
                                     <select id="filterSubcategory" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
                                         <option value="">All Subcategories</option>
-                                        @foreach($subcategories as $subcat)
-                                            <option value="{{ $subcat->id }}">{{ $subcat->name }}</option>
-                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -183,8 +180,101 @@
     @push('scripts')
         <script>
             const products = @json($products);
+            const allCategories = @json($categories);
+            const allSubcategories = @json($subcategories);
             let rowIdx = 0;
             let productOptionsHtml = '<option value="">Select Product</option>';
+
+            // Category has no direct department_id in the schema, so "which categories
+            // belong to this department" is derived from the products actually in it.
+            function categoryIdsForDepartment(deptId) {
+                if (!deptId) return null; // null = no restriction
+                return new Set(products.filter(p => p.department_id == deptId).map(p => p.category_id));
+            }
+
+            function rebuildCategoryOptions(deptId, keepValue) {
+                const allowedIds = categoryIdsForDepartment(deptId);
+                const $sel = $('#filterCategory');
+                let html = '<option value="">All Categories</option>';
+                allCategories.forEach(c => {
+                    if (!allowedIds || allowedIds.has(c.id)) {
+                        html += `<option value="${c.id}">${c.name}</option>`;
+                    }
+                });
+                $sel.html(html);
+                if (keepValue && (!allowedIds || allowedIds.has(parseInt(keepValue)))) {
+                    $sel.val(keepValue);
+                }
+            }
+
+            function rebuildSubcategoryOptions(catId, deptId, keepValue) {
+                const $sel = $('#filterSubcategory');
+                let html = '<option value="">All Subcategories</option>';
+                let list = allSubcategories;
+                if (catId) {
+                    list = list.filter(s => s.category_id == catId);
+                } else if (deptId) {
+                    const allowedSubcatIds = new Set(products.filter(p => p.department_id == deptId).map(p => p.subcategory_id));
+                    list = list.filter(s => allowedSubcatIds.has(s.id));
+                }
+                list.forEach(s => { html += `<option value="${s.id}">${s.name}</option>`; });
+                $sel.html(html);
+                if (keepValue && list.some(s => s.id == keepValue)) {
+                    $sel.val(keepValue);
+                }
+            }
+
+            window.onDepartmentChange = function() {
+                // Selecting a department narrows Category, which narrows Subcategory —
+                // both downstream filters reset since they may no longer apply.
+                rebuildCategoryOptions($('#filterDepartment').val(), null);
+                rebuildSubcategoryOptions(null, $('#filterDepartment').val(), null);
+                filterProducts();
+            }
+
+            window.onCategoryChange = function() {
+                rebuildSubcategoryOptions($('#filterCategory').val(), $('#filterDepartment').val(), null);
+                filterProducts();
+            }
+
+            // Per-row memory of which filters were active when that row's product was
+            // chosen, so switching filters for the NEXT row never disturbs earlier rows,
+            // and clicking back into an earlier row restores the filters that found it.
+            function rememberRowFilters(idx) {
+                const $row = $(`#row-${idx}`);
+                const productId = $row.find('.product-select').val();
+                let dept = $('#filterDepartment').val();
+                let cat = $('#filterCategory').val();
+                let subcat = $('#filterSubcategory').val();
+
+                // No filters were used to find this product — fall back to the
+                // product's own department/category/subcategory so "click back"
+                // still has something correct to restore.
+                if (!dept && !cat && !subcat && productId) {
+                    const p = products.find(prod => prod.id == productId);
+                    if (p) {
+                        dept = p.department_id || '';
+                        cat = p.category_id || '';
+                        subcat = p.subcategory_id || '';
+                    }
+                }
+
+                $row.attr('data-dept', dept || '');
+                $row.attr('data-cat', cat || '');
+                $row.attr('data-subcat', subcat || '');
+            }
+
+            window.restoreRowFilters = function(idx) {
+                const $row = $(`#row-${idx}`);
+                const dept = $row.attr('data-dept') || '';
+                const cat = $row.attr('data-cat') || '';
+                const subcat = $row.attr('data-subcat') || '';
+
+                $('#filterDepartment').val(dept);
+                rebuildCategoryOptions(dept, cat);
+                rebuildSubcategoryOptions($('#filterCategory').val(), dept, subcat);
+                filterProducts();
+            }
 
             function filterProducts() {
                 const deptId = document.getElementById('filterDepartment').value;
@@ -202,17 +292,34 @@
                     productOptionsHtml += `<option value="${p.id}" data-cost="${p.cost_price}">${barcode} - ${p.product_name}</option>`;
                 });
 
-                // Update all existing dropdowns (optional: might clear unsaved rows if product is filtered out, but keeps it simple)
+                // Update all existing dropdowns, but never drop a row's already-selected
+                // product just because a filter no longer matches it — the filters are
+                // for finding a NEW product, not for un-choosing one already on the order.
                 $('.product-select').each(function() {
                     const currentVal = $(this).val();
-                    $(this).html(productOptionsHtml);
+                    let optionsForThisRow = productOptionsHtml;
+
+                    if (currentVal && !filteredProducts.some(p => p.id == currentVal)) {
+                        const selectedProduct = products.find(p => p.id == currentVal);
+                        if (selectedProduct) {
+                            const barcode = selectedProduct.barcode || 'NO-BARCODE';
+                            optionsForThisRow += `<option value="${selectedProduct.id}" data-cost="${selectedProduct.cost_price}">${barcode} - ${selectedProduct.product_name}</option>`;
+                        }
+                    }
+
+                    $(this).html(optionsForThisRow);
                     if (currentVal) {
                         $(this).val(currentVal);
                     }
+                    // Force Select2's own rendered display to resync immediately —
+                    // otherwise it can take a second filter change before it visually updates.
+                    $(this).trigger('change.select2');
                 });
             }
 
             // Initial build
+            rebuildCategoryOptions(null, null);
+            rebuildSubcategoryOptions(null, null, null);
             filterProducts();
 
             function addRow() {
@@ -243,11 +350,15 @@
                 $('#itemsTable tbody').append(html);
 
                 // Re-initialize Select2 for this newly added row's select
-                $(`#row-${rowIdx} .product-select`).select2({
+                const thisRowIdx = rowIdx;
+                $(`#row-${thisRowIdx} .product-select`).select2({
                     theme: 'bootstrap-5',
                     width: 'style',
                     placeholder: 'Select Product',
                     allowClear: true
+                }).on('select2:opening', function() {
+                    // Clicking back into this row restores the filters that found its product.
+                    restoreRowFilters(thisRowIdx);
                 });
 
                 rowIdx++;
@@ -259,6 +370,7 @@
             window.updateCost = function(idx) {
                 const select = $(`#row-${idx} .product-select`);
                 const cost = select.find(':selected').data('cost');
+                rememberRowFilters(idx);
                 if (cost) {
                     $(`#row-${idx} .cost-input`).val(cost);
                 }
@@ -289,7 +401,16 @@
             }
 
             // Init
-            document.getElementById('addRowBtn').addEventListener('click', addRow);
+            document.getElementById('addRowBtn').addEventListener('click', function() {
+                // New row for a new product: keep the department filter, but
+                // category/subcategory reset to "All" so the new pick isn't
+                // accidentally narrowed by whatever the previous row was using.
+                const dept = $('#filterDepartment').val();
+                rebuildCategoryOptions(dept, null);
+                rebuildSubcategoryOptions(null, dept, null);
+                filterProducts();
+                addRow();
+            });
 
             @if (session('prefilled_items'))
                 const prefilled = @json(session('prefilled_items'));

@@ -18,6 +18,33 @@ Route::get('/clear-cache', function() {
     return 'Cache cleared successfully!';
 });
 
+// Public, signed link clicked from a "confirm your email" message — no login required.
+Route::get('/verify-contact-email/{type}/{id}', [\App\Http\Controllers\ContactEmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('contact-email.verify');
+
+// PO Approval Routes (signed URLs clicked from the "Approval Required" email).
+// Deliberately OUTSIDE the `auth` group — the external approver clicking this
+// link from their inbox has no warehouse login. Previously nested inside the
+// auth-protected `warehouse` group, so it silently redirected every such
+// click to the login page; same URI/name preserved so already-sent emails
+// with this signed link keep working.
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleApproval'])
+    ->name('warehouse.purchase-orders.approve')
+    ->middleware('signed:reason');
+
+// Vendor acknowledge/deny response to a sent Purchase Order — same reasoning:
+// the vendor has no warehouse login, so this must sit outside the auth group.
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleVendorResponse'])
+    ->name('warehouse.purchase-orders.vendor-response')
+    ->middleware('signed:reason');
+
+// Lets the external approver cancel a PO they already approved — same "no
+// login" reasoning as the two routes above.
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleApproverCancel'])
+    ->name('warehouse.purchase-orders.approver-cancel')
+    ->middleware('signed');
+
 use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
@@ -134,6 +161,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/warehouse/update-status', [WarehouseController::class, 'updateStatus'])->name('warehouse.update-status');
 
     Route::prefix('warehouse')->group(function () {
+
+        Route::post('contact-email/resend', [\App\Http\Controllers\ContactEmailVerificationController::class, 'resend'])
+            ->name('warehouse.contact-email.resend');
 
         Route::resource('product-options', ProductOptionController::class)->names('warehouse.product-options')->except(['show']);
         Route::post('product-options/status', [ProductOptionController::class, 'changeStatus'])->name('warehouse.product-options.status');
@@ -315,10 +345,8 @@ Route::middleware('auth')->group(function () {
         Route::post('purchase-orders/{purchase_order}/revert-draft', [PurchaseOrderController::class, 'revertToDraft'])->name('warehouse.purchase-orders.revert-draft');
         Route::post('purchase-orders/{purchase_order}/send-approval', [PurchaseOrderController::class, 'sendApproval'])->name('warehouse.purchase-orders.send-approval');
 
-        // PO Approval Routes (signed URLs for email approval)
-        Route::get('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'handleApproval'])
-            ->name('warehouse.purchase-orders.approve')
-            ->middleware('signed:reason');
+        // (PO Approval Routes moved outside the auth group — see top of file:
+        // an external approver clicking the email link is not logged in.)
 
         Route::get('purchase-orders/{purchaseOrder}/receiving-history', [PurchaseOrderController::class, 'receivingHistory'])
             ->name('warehouse.purchase-orders.receiving-history');

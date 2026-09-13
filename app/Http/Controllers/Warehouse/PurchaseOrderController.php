@@ -135,8 +135,8 @@ class PurchaseOrderController extends Controller
                 ->addColumn('action', function ($row) {
                     $viewUrl = route('warehouse.purchase-orders.show', $row->id);
                     return '<div class="action-btns">
-                                <a href="' . $viewUrl . '" class="btn btn-sm btn-outline-info btn-view" title="View / Receive">
-                                    <i class="mdi mdi-eye"></i>
+                                <a href="' . $viewUrl . '" class="btn btn-sm btn-outline-info btn-view" title="View">
+                                    <i class="mdi mdi-eye"></i> View
                                 </a>
                             </div>';
                 })
@@ -582,6 +582,9 @@ class PurchaseOrderController extends Controller
             $approverEmail = $purchaseOrder->approval_email;
             $reason = $request->input('reason');
 
+            // ApprovalService::processApproval() already notifies admins internally
+            // (was also happening here — duplicated every "PO Approved"/"PO Rejected"
+            // notification, matching the client-reported duplicate pairs).
             $message = $this->approvalService->processApproval(
                 $purchaseOrder,
                 $action,
@@ -589,18 +592,19 @@ class PurchaseOrderController extends Controller
                 $reason
             );
 
-            // Notify warehouse staff
-            NotificationService::sendToAdmins(
-                'PO ' . ucfirst($action),
-                "PO #{$purchaseOrder->po_number} has been {$action}ed by {$approverEmail}",
-                $action === 'approve' ? 'success' : 'warning',
-                route('warehouse.purchase-orders.show', $purchaseOrder->id)
-            );
+            $cancelUrl = $action === 'approve'
+                ? \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'warehouse.purchase-orders.approver-cancel',
+                    now()->addDays(14),
+                    ['purchaseOrder' => $purchaseOrder->id]
+                )
+                : null;
 
             return view('warehouse.purchase-orders.approval-result', [
                 'success' => true,
                 'message' => $message,
                 'po' => $purchaseOrder,
+                'cancelUrl' => $cancelUrl,
             ]);
         } catch (\Exception $e) {
             Log::error('Approval processing failed: ' . $e->getMessage(), ['exception' => $e]);
@@ -609,5 +613,90 @@ class PurchaseOrderController extends Controller
                 'message' => 'Something went wrong. Please try again later.',
             ]);
         }
+    }
+
+    /**
+     * Handle a vendor's acknowledge/deny response to a sent PO (from email link).
+     * Mirrors handleApproval() above but for the vendor's own response, which is
+     * tracked separately from the internal approval workflow.
+     */
+    public function handleVendorResponse(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        $action = $request->query('action'); // 'acknowledge' or 'deny'
+
+        if (!in_array($action, ['acknowledge', 'deny'])) {
+            return view('warehouse.purchase-orders.vendor-response-result', [
+                'success' => false,
+                'message' => 'Invalid action',
+            ]);
+        }
+
+        // If denying, show a form to collect the reason first
+        if ($action === 'deny' && !$request->has('reason')) {
+            return view('warehouse.purchase-orders.vendor-denial-form', compact('purchaseOrder'));
+        }
+
+        try {
+            if ($action === 'acknowledge') {
+                $purchaseOrder->vendorAcknowledge();
+                $message = "Thank you — PO #{$purchaseOrder->po_number} has been marked as acknowledged.";
+            } else {
+                $reason = $request->input('reason');
+                if (!$reason) {
+                    throw new \Exception('A reason is required to deny this order.');
+                }
+                $purchaseOrder->vendorDeny($reason);
+                $message = "PO #{$purchaseOrder->po_number} has been marked as denied.";
+            }
+
+            NotificationService::sendToAdmins(
+                'Vendor ' . ucfirst($action) . 'd Order',
+                "Vendor {$purchaseOrder->vendor?->name} has {$action}d PO #{$purchaseOrder->po_number}" .
+                    ($action === 'deny' ? ": {$purchaseOrder->vendor_denial_reason}" : '.'),
+                $action === 'acknowledge' ? 'success' : 'warning',
+                route('warehouse.purchase-orders.show', $purchaseOrder->id)
+            );
+
+            return view('warehouse.purchase-orders.vendor-response-result', [
+                'success' => true,
+                'message' => $message,
+                'po' => $purchaseOrder,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Vendor response processing failed: ' . $e->getMessage(), ['exception' => $e]);
+            return view('warehouse.purchase-orders.vendor-response-result', [
+                'success' => false,
+                'message' => 'Something went wrong. Please try again later.',
+            ]);
+        }
+    }
+
+    /**
+     * Let the external approver cancel a PO they just approved — via the same
+     * signed-link mechanism, since they have no warehouse login (item 16).
+     */
+    public function handleApproverCancel(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        if (!in_array($purchaseOrder->status, ['ordered', 'draft'])) {
+            return view('warehouse.purchase-orders.approval-result', [
+                'success' => false,
+                'message' => 'This purchase order can no longer be cancelled (it has already progressed to receiving or been cancelled).',
+            ]);
+        }
+
+        $purchaseOrder->update(['status' => 'cancelled']);
+
+        NotificationService::sendToAdmins(
+            'PO Cancelled by Approver',
+            "PO #{$purchaseOrder->po_number} was cancelled by the approver ({$purchaseOrder->approved_by_email}).",
+            'warning',
+            route('warehouse.purchase-orders.show', $purchaseOrder->id)
+        );
+
+        return view('warehouse.purchase-orders.approval-result', [
+            'success' => true,
+            'message' => "PO #{$purchaseOrder->po_number} has been cancelled.",
+            'po' => $purchaseOrder,
+        ]);
     }
 }

@@ -27,6 +27,7 @@ class Vendor extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'lead_time_days' => 'integer',
+        'email_verified_at' => 'datetime',
     ];
 
     public function scopeActive($query)

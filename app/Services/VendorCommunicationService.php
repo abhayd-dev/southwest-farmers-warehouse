@@ -5,22 +5,40 @@ namespace App\Services;
 use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class VendorCommunicationService
 {
     /**
      * Send PO to vendor via email
      */
-    public function sendPOEmail(PurchaseOrder $po)
+    public function sendPOEmail(PurchaseOrder $po, ?string $bccEmail = null)
     {
         if (!$po->vendor->email) {
             throw new \Exception('Vendor does not have an email address');
         }
 
-        Mail::send('emails.vendor-purchase-order', ['po' => $po], function ($message) use ($po) {
+        $acknowledgeUrl = URL::temporarySignedRoute(
+            'warehouse.purchase-orders.vendor-response',
+            now()->addDays(14),
+            ['purchaseOrder' => $po->id, 'action' => 'acknowledge']
+        );
+
+        $denyUrl = URL::temporarySignedRoute(
+            'warehouse.purchase-orders.vendor-response',
+            now()->addDays(14),
+            ['purchaseOrder' => $po->id, 'action' => 'deny']
+        );
+
+        Mail::send('emails.vendor-purchase-order', ['po' => $po, 'acknowledgeUrl' => $acknowledgeUrl, 'denyUrl' => $denyUrl], function ($message) use ($po, $bccEmail) {
             $message->to($po->vendor->email, $po->vendor->name)
                     ->subject("Purchase Order #{$po->po_number} from Southwest Farmers Warehouse")
                     ->replyTo(config('app.warehouse_email', config('mail.from.address')));
+
+            // Give the approver a copy once their approval routes the PO to the vendor.
+            if ($bccEmail) {
+                $message->bcc($bccEmail);
+            }
         });
 
         // Log the communication
@@ -80,7 +98,7 @@ class VendorCommunicationService
     /**
      * Send PO to vendor via both email and SMS
      */
-    public function sendPOToVendor(PurchaseOrder $po, $includeEmail = true, $includeSMS = false)
+    public function sendPOToVendor(PurchaseOrder $po, $includeEmail = true, $includeSMS = false, ?string $bccEmail = null)
     {
         $results = [
             'email' => false,
@@ -90,7 +108,7 @@ class VendorCommunicationService
 
         if ($includeEmail) {
             try {
-                $this->sendPOEmail($po);
+                $this->sendPOEmail($po, $bccEmail);
                 $results['email'] = true;
             } catch (\Exception $e) {
                 $results['errors'][] = 'Email: ' . $e->getMessage();

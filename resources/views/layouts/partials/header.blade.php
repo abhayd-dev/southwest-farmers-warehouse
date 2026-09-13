@@ -10,7 +10,7 @@
                     </button>
                 </li>
                 <li class="ms-2 d-flex align-items-center">
-                    <span class="fw-black text-dark fs-14 text-uppercase tracking-wider">HOMEFOODS DISTRIBUTION, LLC</span>
+                    <span class="fw-black text-dark fs-14 text-uppercase tracking-wider">HOMEFOODS DISTRIBUTORS LLC</span>
                 </li>
             </ul>
 

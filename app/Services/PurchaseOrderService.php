@@ -7,6 +7,7 @@ use App\Models\PurchaseOrderItem;
 use App\Models\ProductBatch;
 use App\Models\ProductStock;
 use App\Models\StockTransaction;
+use App\Services\EmailVerificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -52,6 +53,15 @@ class PurchaseOrderService
             // 3. Update Total
             $po->update(['total_amount' => $grandTotal]);
 
+            // Verify the approval email address, if one was provided
+            if ($po->approval_email) {
+                app(EmailVerificationService::class)->send(
+                    'po_approval',
+                    $po,
+                    "Purchase Order #{$po->po_number} approvals"
+                );
+            }
+
             return $po;
         });
     }
@@ -59,6 +69,8 @@ class PurchaseOrderService
     public function updatePO(PurchaseOrder $po, $data)
     {
         return DB::transaction(function () use ($po, $data) {
+            $oldApprovalEmail = $po->approval_email;
+
             // 1. Update Header
             $po->update([
                 'vendor_id' => $data['vendor_id'],
@@ -69,6 +81,14 @@ class PurchaseOrderService
                 'notes' => $data['notes'] ?? null,
                 'vendor_notes' => $data['vendor_notes'] ?? null,
             ]);
+
+            // Re-verify only if the approval email actually changed
+            app(EmailVerificationService::class)->handleEmailChange(
+                'po_approval',
+                $po,
+                $oldApprovalEmail,
+                "Purchase Order #{$po->po_number} approvals"
+            );
 
             // 2. Re-create Items (Delete existing and insert new ones)
             $po->items()->delete();
@@ -97,7 +117,9 @@ class PurchaseOrderService
 
     public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0)
     {
-        return DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage) {
+        $shortageItemIds = [];
+
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, &$shortageItemIds) {
             $po = PurchaseOrder::findOrFail($poId);
 
             // Update additional costs and invoice number
@@ -184,7 +206,7 @@ class PurchaseOrderService
                             'Product Cost Updated',
                             "Cost for {$poItem->product->product_name} updated from $" . number_format($oldCost, 2) . " to $" . number_format($actualCost, 2) . " (PO #{$po->po_number})",
                             'info',
-                            route('warehouse.products.show', $poItem->product_id)
+                            route('warehouse.products.edit', $poItem->product_id)
                         );
                     }
                 }
@@ -222,6 +244,8 @@ class PurchaseOrderService
 
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
                     $allCompleted = false;
+                    // Shortage: less arrived (so far) than was requested on this line.
+                    $shortageItemIds[] = $poItem->id;
                 }
             }
 
@@ -237,5 +261,13 @@ class PurchaseOrderService
 
             return $po;
         });
+
+        // Notify Purchase Manager(s) of any shortfall on this receipt — sent only
+        // after the transaction commits, so a mail hiccup can never roll back a receiving.
+        if (!empty($shortageItemIds)) {
+            app(\App\Services\PurchaseManagerNotificationService::class)->notifyShortage($po, $shortageItemIds);
+        }
+
+        return $po;
     }
 }

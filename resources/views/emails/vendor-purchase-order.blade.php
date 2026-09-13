@@ -113,6 +113,26 @@
             margin: 20px 0;
             border-left: 4px solid #ffc107;
         }
+        .response-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 2px solid #206bc4;
+            text-align: center;
+        }
+        .btn-row { margin: 16px 0; }
+        .btn-response {
+            display: inline-block;
+            padding: 12px 32px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 0 8px;
+        }
+        .btn-acknowledge { background-color: #28a745; color: #fff; }
+        .btn-deny { background-color: #dc3545; color: #fff; }
     </style>
 </head>
 <body>
@@ -222,9 +242,24 @@
         </div>
         @endif
 
+        @if(isset($acknowledgeUrl) && isset($denyUrl))
+        <div class="response-section">
+            <h4 style="color: #206bc4; margin-top: 0;">Please Respond</h4>
+            <p style="margin-bottom: 4px;">Can you fulfill this order as specified?</p>
+            <div class="btn-row">
+                <a href="{{ $acknowledgeUrl }}" class="btn-response btn-acknowledge">Acknowledge Order</a>
+                <a href="{{ $denyUrl }}" class="btn-response btn-deny">Deny Order</a>
+            </div>
+            <p style="font-size: 12px; color: #888; margin-top: 8px;">These links are valid for 14 days.</p>
+        </div>
+        @endif
+
         <div style="background: white; padding: 20px; border-radius: 5px; margin-top: 20px;">
             <h4 style="color: #206bc4; margin-top: 0;">Delivery Instructions:</h4>
             <p>Please confirm receipt of this purchase order and provide an estimated delivery date.</p>
+            @if(config('app.loading_dock_notice'))
+            <p><strong>{{ config('app.loading_dock_notice') }}</strong></p>
+            @endif
             <p>For any questions or concerns, please contact us at {{ config('app.warehouse_phone') }} or {{ config('app.warehouse_email') }}.</p>
         </div>
     </div>

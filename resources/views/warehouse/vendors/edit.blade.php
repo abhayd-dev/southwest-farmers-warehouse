@@ -47,6 +47,11 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Email</label>
                                     <input type="email" name="email" class="form-control" value="{{ $vendor->email }}">
+                                    @if ($vendor->email)
+                                        <div class="mt-1">
+                                            <x-email-verify-badge :verified="$vendor->email_verified_at" type="vendor" :id="$vendor->id" :label="'Vendor: ' . $vendor->name" />
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-semibold">Phone</label>

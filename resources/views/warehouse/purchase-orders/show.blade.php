@@ -290,6 +290,7 @@
                                         </h6>
                                         <small class="text-muted">Approver:
                                             {{ $purchaseOrder->approval_email }}</small><br>
+                                        <x-email-verify-badge :verified="$purchaseOrder->approval_email_verified_at" type="po_approval" :id="$purchaseOrder->id" :label="'Purchase Order #' . $purchaseOrder->po_number . ' approvals'" />
                                         @if ($purchaseOrder->approver_phone)
                                             <small class="text-muted">Approver's Number:
                                                 {{ $purchaseOrder->approver_phone }}</small>
@@ -319,7 +320,40 @@
             </div>
         @endif
 
-
+        {{-- VENDOR RESPONSE SECTION --}}
+        @if ($purchaseOrder->vendor_response_status)
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm border-start border-4 border-{{ $purchaseOrder->isVendorAcknowledged() ? 'success' : 'danger' }}">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-{{ $purchaseOrder->isVendorAcknowledged() ? 'success' : 'danger' }} bg-opacity-10 text-{{ $purchaseOrder->isVendorAcknowledged() ? 'success' : 'danger' }} rounded p-3 me-3">
+                                        <i class="mdi mdi-{{ $purchaseOrder->isVendorAcknowledged() ? 'check-circle' : 'close-circle' }} fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Vendor Response:
+                                            <span class="badge bg-{{ $purchaseOrder->isVendorAcknowledged() ? 'success' : 'danger' }}">
+                                                {{ strtoupper($purchaseOrder->vendor_response_status) }}
+                                            </span>
+                                        </h6>
+                                        @if ($purchaseOrder->vendor_response_at)
+                                            <small class="text-muted">{{ $purchaseOrder->vendor_response_at->timezone(config('app.display_timezone'))->format('d M Y, h:i A') }}</small>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @if ($purchaseOrder->vendor_denial_reason)
+                                <div class="mt-3 pt-3 border-top">
+                                    <strong class="text-muted small">Vendor's Reason:</strong>
+                                    <p class="mb-0 mt-1">{{ $purchaseOrder->vendor_denial_reason }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- ITEMS LIST (READ ONLY) --}}
         <div class="card border-0 shadow-sm">

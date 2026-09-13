@@ -69,6 +69,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | All timestamps are stored in UTC ('timezone' above). This is the
+    | timezone used to convert timestamps for display to warehouse staff.
+    | Change DISPLAY_TIMEZONE in .env if the business location changes.
+    |
+    */
+
+    'display_timezone' => env('DISPLAY_TIMEZONE', 'America/Chicago'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Loading Dock Notice
+    |--------------------------------------------------------------------------
+    |
+    | Shown to vendors on the Purchase Order email. Change LOADING_DOCK_NOTICE
+    | in .env if dock hours change — no code deploy needed.
+    |
+    */
+
+    'loading_dock_notice' => env('LOADING_DOCK_NOTICE', 'Loading dock will be closing at 4pm CST.'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

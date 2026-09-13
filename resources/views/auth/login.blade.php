@@ -45,7 +45,7 @@
                                         Welcome Back
                                     </h3>
                                     <p class="text-muted fs-14 mb-0">
-                                        Enter your <strong>Employee ID</strong> and password to sign in.
+                                        Enter your <strong>Login ID</strong> and password to sign in.
                                     </p>
                                 </div>
 
@@ -54,10 +54,10 @@
                                         <form method="POST" action="{{ route('login') }}" class="mt-0" data-form>
                                             @csrf
 
-                                            {{-- EMPLOYEE ID --}}
+                                            {{-- LOGIN ID --}}
                                             <div class="form-group mb-3">
                                                 <label for="emp_code" class="form-label fw-medium">
-                                                    Employee ID
+                                                    Login ID
                                                 </label>
 
                                                 <input

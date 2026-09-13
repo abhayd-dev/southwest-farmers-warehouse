@@ -12,6 +12,7 @@ use App\Mail\SupportTicketStatusChanged;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -118,7 +119,7 @@ class SupportTicketController extends Controller
     {
         $ticket = SupportTicket::findOrFail($id);
 
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status !== $ticket->status) {
             $oldStatus = $ticket->status;
             $ticket->update(['status' => $request->status]);
 
@@ -131,9 +132,13 @@ class SupportTicketController extends Controller
                 'changed_by_type' => get_class(Auth::user()),
             ]);
 
-            // Notify Store
-            $recipient = $ticket->createdBy->email ?? $ticket->store->email;
-            Mail::to($recipient)->send(new SupportTicketStatusChanged($ticket));
+            // Notify Store (best-effort: a mail outage must not block the status/assignment save)
+            try {
+                $recipient = $ticket->createdBy->email ?? $ticket->store->email;
+                Mail::to($recipient)->send(new SupportTicketStatusChanged($ticket));
+            } catch (\Throwable $e) {
+                Log::error('Failed to send SupportTicketStatusChanged email for ticket #' . $ticket->id . ': ' . $e->getMessage());
+            }
 
             if ($ticket->created_by && $ticket->created_by != auth()->id()) {
                 NotificationService::send(
@@ -147,7 +152,7 @@ class SupportTicketController extends Controller
         }
 
         if ($request->has('assigned_to_id')) {
-            $ticket->update(['assigned_to_id' => $request->assigned_to_id]);
+            $ticket->update(['assigned_to_id' => $request->assigned_to_id ?: null]);
         }
 
         return back()->with('success', 'Ticket updated.');

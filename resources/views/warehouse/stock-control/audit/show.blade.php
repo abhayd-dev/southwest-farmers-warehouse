@@ -6,7 +6,7 @@
             <div>
                 <h4 class="fw-bold text-dark mb-1">{{ $audit->audit_number }}</h4>
                 <div class="d-flex align-items-center gap-3 text-muted small">
-                    <span><i class="mdi mdi-calendar me-1"></i> {{ $audit->created_at->format('d M Y, h:i A') }}</span>
+                    <span><i class="mdi mdi-calendar me-1"></i> {{ $audit->created_at->timezone(config('app.display_timezone'))->format('d M Y, h:i A') }}</span>
                     <span><i class="mdi mdi-account me-1"></i> {{ $audit->initiator->name ?? 'System' }}</span>
                     <span class="badge bg-{{ $audit->status == 'completed' ? 'success' : 'warning' }}">
                         {{ ucfirst(str_replace('_', ' ', $audit->status)) }}
@@ -38,7 +38,6 @@
                             </button>
                         </form>
                     @endif
-                @endif
             </div>
         </div>
 
