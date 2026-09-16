@@ -1,7 +1,7 @@
 <x-app-layout title="Market-Level Pricing">
     <div class="container-fluid">
         @include('warehouse.partials.breadcrumb', [
-            'title' => 'Market-Level Pricing',
+            'title' => 'Market Pricing',
             'items' => [],
         ])
 

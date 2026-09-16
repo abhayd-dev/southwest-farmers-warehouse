@@ -1,10 +1,18 @@
 <x-app-layout title="All Notifications">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="mdi mdi-bell-ring-outline text-primary"></i> Notifications
-            </h4>
-            
+            <div>
+                <nav class="mb-1">
+                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                        <li class="breadcrumb-item text-muted">Notifications</li>
+                    </ol>
+                </nav>
+                <h4 class="fw-bold mb-0 text-dark">
+                    <i class="mdi mdi-bell-ring-outline text-primary"></i> Notifications
+                </h4>
+            </div>
+
             <form action="{{ route('warehouse.notifications.readAll') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-outline-primary btn-sm">

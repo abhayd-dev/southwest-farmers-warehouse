@@ -5,7 +5,7 @@
         
         {{-- 1. Fixed Dashboard Link --}}
         <li class="breadcrumb-item">
-            <a href="{{ route('dashboard') }}" class="text-decoration-none text-dark">
+            <a href="{{ route('dashboard') }}" class="page-breadcrumb-link">
                 <i class="mdi mdi-home-outline me-1"></i> Dashboard
             </a>
         </li>
@@ -15,7 +15,7 @@
             <li class="breadcrumb-item">
                 @php $label = $item['text'] ?? $item['name'] ?? 'Link'; @endphp
                 @if(isset($item['url']) && $item['url'] != '#')
-                    <a href="{{ $item['url'] }}" class="text-decoration-none text-dark">
+                    <a href="{{ $item['url'] }}" class="page-breadcrumb-link">
                         {{ $label }}
                     </a>
                 @else

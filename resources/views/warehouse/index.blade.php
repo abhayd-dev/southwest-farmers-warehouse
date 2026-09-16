@@ -24,12 +24,12 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                                    <a href="{{ route('dashboard') }}" class="page-breadcrumb-link">
                                         <i class="mdi mdi-home-outline"></i> Dashboard
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item active" aria-current="page">
-                                    Warehouse
+                                    My Warehouse
                                 </li>
                             </ol>
                         </nav>

@@ -1,6 +1,12 @@
 <x-app-layout title="Completed & Cancelled Orders">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        <div class="mb-4 bg-white p-3 shadow-sm rounded">
+            <nav class="mb-1">
+                <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                    <li class="breadcrumb-item text-muted">Completed Orders</li>
+                </ol>
+            </nav>
             <h4 class="fw-bold mb-0 text-dark"><i class="mdi mdi-check-network me-2 text-success"></i>Completed &amp;
                 Cancelled Orders</h4>
         </div>

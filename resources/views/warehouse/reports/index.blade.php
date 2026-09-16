@@ -4,7 +4,13 @@
     <div class="container-fluid">
         <div class="row mb-4">
             <div class="col-12">
-                <h1 class="h3 mb-0 text-gray-800">📊 Reports & Analytics</h1>
+                <nav class="mb-1">
+                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                        <li class="breadcrumb-item text-muted">Analytics Dashboard</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 mb-0 text-gray-800">📊 Analytics Dashboard</h1>
                 <p class="text-muted">Gain insights into warehouse operations and sales performance.</p>
             </div>
         </div>

@@ -6,6 +6,12 @@
             <div class="py-3 px-3">
                 <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
                     <div class="d-flex flex-column gap-1">
+                        <nav class="mb-1">
+                            <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                                <li class="breadcrumb-item text-muted">Audit Logs</li>
+                            </ol>
+                        </nav>
                         <h4 class="fw-bold mb-0 text-dark">
                             <i class="mdi mdi-shield-search text-primary me-2"></i> Audit Logs
                         </h4>
