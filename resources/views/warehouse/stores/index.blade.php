@@ -4,6 +4,12 @@
         {{-- HEADER SECTION --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 bg-white p-3 rounded shadow-sm gap-3">
             <div>
+                <nav class="mb-1">
+                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                        <li class="breadcrumb-item text-muted">All Stores List</li>
+                    </ol>
+                </nav>
                 <h4 class="mb-0 text-primary fw-bold">
                     <i class="mdi mdi-store me-2"></i> All Stores
                 </h4>

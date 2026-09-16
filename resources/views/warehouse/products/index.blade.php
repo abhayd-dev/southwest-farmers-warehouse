@@ -7,9 +7,16 @@
             <div class="py-3">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div class="d-flex flex-column gap-2">
+                        <nav class="mb-1">
+                            <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                                <li class="breadcrumb-item text-muted">Products</li>
+                            </ol>
+                        </nav>
                         <h4 class="fw-bold mb-0 text-dark">
                             <i class="mdi mdi-cube-outline text-primary"></i> Products Management
                         </h4>
+                        <p class="text-muted small mb-0">Create, edit, and manage every product in the catalog.</p>
                     </div>
                     <div class="flex-shrink-0">
                         {{-- Only Show Header Actions if user has permission --}}

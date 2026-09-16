@@ -4,6 +4,12 @@
         {{-- PAGE HEADER --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 bg-white p-3 shadow-sm rounded">
             <div>
+                <nav class="mb-1">
+                    <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                        <li class="breadcrumb-item text-muted">Warehouse Staff</li>
+                    </ol>
+                </nav>
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-account-group text-primary"></i> Staff Management
                 </h4>

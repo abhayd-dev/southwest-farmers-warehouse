@@ -7,6 +7,12 @@
                 <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
                     {{-- Title --}}
                     <div>
+                        <nav class="mb-1">
+                            <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                                <li class="breadcrumb-item text-muted">Total Revenue</li>
+                            </ol>
+                        </nav>
                         <h4 class="fw-bold mb-0 text-dark">
                             <i class="mdi mdi-chart-line text-primary me-2"></i> Financial Overview
                         </h4>
