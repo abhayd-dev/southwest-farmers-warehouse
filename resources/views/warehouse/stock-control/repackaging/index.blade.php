@@ -24,6 +24,9 @@
                             <h4 class="fw-bold mb-0 text-dark">
                                 <i class="mdi mdi-package-variant-closed text-primary me-2"></i> Warehouse Repackaging
                             </h4>
+                            <p class="text-muted small mb-0 mt-1">
+                                One-off conversion: move stock directly from one product into another (e.g. a case broken into individual units). For ongoing bulk-to-package production with a running history, use <a href="{{ route('warehouse.free-weight.index') }}">Free Weight</a> instead.
+                            </p>
                         </div>
                         <div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
                             <a href="{{ route('warehouse.stock-control.overview') }}" class="btn btn-light border text-muted shadow-sm">Cancel</a>

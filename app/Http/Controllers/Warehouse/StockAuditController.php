@@ -120,14 +120,24 @@ class StockAuditController extends Controller
                 throw new \Exception("No products found for this audit criteria.");
             }
 
-            foreach ($stocks as $stock) {
-                StockAuditItem::create([
-                    'stock_audit_id' => $audit->id,
-                    'product_id' => $stock->product_id,
-                    'system_qty' => $stock->quantity,
-                    'physical_qty' => 0, 
-                    'cost_price' => $stock->product->cost_price ?? 0,
-                ]);
+            // Was one StockAuditItem::create() call per stock row — for a
+            // department (or full warehouse) with hundreds of products, that's
+            // hundreds of individual round-trips to the DB, sequentially, easily
+            // taking minutes and timing out the request ("Audit section is not
+            // working" — starting an audit just hung). One bulk insert instead.
+            $now = now();
+            $rows = $stocks->map(fn ($stock) => [
+                'stock_audit_id' => $audit->id,
+                'product_id' => $stock->product_id,
+                'system_qty' => $stock->quantity,
+                'physical_qty' => 0,
+                'cost_price' => $stock->product->cost_price ?? 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            foreach (array_chunk($rows, 500) as $chunk) {
+                StockAuditItem::insert($chunk);
             }
 
             DB::commit();

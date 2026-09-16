@@ -8,7 +8,10 @@
                 <h4 class="fw-bold mb-0 text-dark">
                     <i class="mdi mdi-scale text-primary"></i> Free Weight System
                 </h4>
-                <small class="text-muted">Manage bulk weight products and convert them into sellable packages</small>
+                <small class="text-muted">
+                    Track a bulk-weight product (e.g. a sack of rice) and repeatedly produce packages from it over time, with a running history.
+                    For a simple one-off product-to-product conversion, use <a href="{{ route('warehouse.stock-control.repackaging.index') }}">Warehouse Repackaging</a> instead.
+                </small>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('warehouse.free-weight.history') }}" class="btn btn-outline-secondary">
