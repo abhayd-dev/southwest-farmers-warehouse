@@ -20,6 +20,9 @@ class Sale extends Model
         'total_amount',
         'payment_method',
         'created_by',
+        'kitchen_status',
+        'order_type',
+        'special_instructions',
     ];
 
     public function store()
