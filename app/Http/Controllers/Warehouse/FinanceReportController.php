@@ -240,8 +240,13 @@ class FinanceReportController extends Controller
         // For trend chart (daily/monthly depending on range)
         $trendFormat = $range === 'year' ? 'Y-m' : 'Y-m-d';
         $trendLabelFormat = $range === 'year' ? 'M Y' : 'd M';
-        
-        $trendQuery = \App\Models\Sale::selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, SUM(total_amount - COALESCE(tax_amount, 0) - COALESCE(gst_amount, 0)) as revenue")
+
+        // DATE_FORMAT() is MySQL-only — this app runs on Postgres, so this query
+        // crashed on every request. TO_CHAR() is the Postgres equivalent. Stays
+        // grouped by day regardless of $range — the 'year' case is rolled up into
+        // months further down by matching $trendLabelFormat labels, which expects
+        // day-level keys here to look up against.
+        $trendQuery = \App\Models\Sale::selectRaw("TO_CHAR(created_at, 'YYYY-MM-DD') as date, SUM(total_amount - COALESCE(tax_amount, 0) - COALESCE(gst_amount, 0)) as revenue")
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->groupBy('date')

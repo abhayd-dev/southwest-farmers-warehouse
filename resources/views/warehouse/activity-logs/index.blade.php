@@ -35,7 +35,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <select name="action" class="form-select border-light shadow-sm">
                             <option value="">All Action Types</option>
                             <option value="created" {{ request('action') == 'created' ? 'selected' : '' }}>Created</option>
@@ -44,15 +44,20 @@
                             <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>Login</option>
                         </select>
                     </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <input type="date" name="date" class="form-control border-light shadow-sm" value="{{ request('date') }}">
+                    <div class="col-6 col-md-2">
+                        <input type="date" name="date_from" class="form-control border-light shadow-sm"
+                            value="{{ request('date_from') }}" placeholder="From">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <input type="date" name="date_to" class="form-control border-light shadow-sm"
+                            value="{{ request('date_to') }}" placeholder="To">
                     </div>
                     <div class="col-12 col-md-3">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary w-100 shadow-sm">
                                 <i class="mdi mdi-filter me-1"></i> Apply Filter
                             </button>
-                            @if(request()->anyFilled(['user_id', 'action', 'date']))
+                            @if(request()->anyFilled(['user_id', 'action', 'date_from', 'date_to']))
                                 <a href="{{ route('warehouse.activity-logs.index') }}" class="btn btn-outline-danger shadow-sm">
                                     <i class="mdi mdi-refresh"></i>
                                 </a>

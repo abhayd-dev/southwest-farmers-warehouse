@@ -35,4 +35,20 @@ class NotificationService
             self::send($admin->id, $title, $message, $type, $url);
         }
     }
+
+    /**
+     * Send to Super Admin(s) specifically — used for the top tier of the
+     * enquiry escalation flow (Store -> Warehouse -> Main Super Admin), where
+     * VP Operations shouldn't be pulled in, only the actual Super Admin(s).
+     */
+    public static function sendToSuperAdmins($title, $message, $type = 'info', $url = null)
+    {
+        $admins = WareUser::whereHas('roles', function($q){
+            $q->where('name', 'Super Admin');
+        })->where('is_active', true)->get();
+
+        foreach($admins as $admin) {
+            self::send($admin->id, $title, $message, $type, $url);
+        }
+    }
 }

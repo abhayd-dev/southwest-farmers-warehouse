@@ -22,7 +22,15 @@ class ActivityLogController extends Controller
             $query->where('action', $request->action);
         }
 
-        if ($request->filled('date')) {
+        // Date range (was a single "date" field — kept working for any old links,
+        // but the filter form now sends date_from/date_to).
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('date') && !$request->filled('date_from') && !$request->filled('date_to')) {
             $query->whereDate('created_at', $request->date);
         }
 

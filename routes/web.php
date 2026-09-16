@@ -323,6 +323,18 @@ Route::middleware('auth')->group(function () {
             });
         });
 
+        Route::get('promotions', [\App\Http\Controllers\Warehouse\PromotionController::class, 'index'])->name('warehouse.promotions.index');
+
+        Route::controller(\App\Http\Controllers\Warehouse\EnquiryController::class)
+            ->prefix('enquiries')
+            ->name('warehouse.enquiries.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{id}', 'show')->name('show');
+                Route::post('/{id}/escalate-admin', 'escalateToAdmin')->name('escalate-admin');
+                Route::post('/{id}/resolve', 'resolve')->name('resolve');
+            });
+
         Route::post('vendors/import', [VendorController::class, 'import'])->name('warehouse.vendors.import');
         Route::get('vendors/sample', [VendorController::class, 'sample'])->name('warehouse.vendors.sample');
         Route::resource('vendors', VendorController::class)

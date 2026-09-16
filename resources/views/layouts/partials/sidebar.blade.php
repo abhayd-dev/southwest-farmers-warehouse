@@ -168,7 +168,8 @@
 
                                 @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_promotions'))
                                     <li>
-                                        <a href="#" class="">
+                                        <a href="{{ route('warehouse.promotions.index') }}"
+                                            class="{{ request()->routeIs('warehouse.promotions.*') ? 'active' : '' }}">
                                             <i class="mdi mdi-ticket-percent-outline me-2"></i> Promotions
                                         </a>
                                     </li>
@@ -635,6 +636,22 @@
                             @endif
                         </a>
                     </li>
+
+                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_enquiries'))
+                    <li>
+                        <a href="{{ route('warehouse.enquiries.index') }}"
+                            class="tp-link {{ request()->routeIs('warehouse.enquiries.*') ? 'active' : '' }}">
+                            <iconify-icon icon="tabler:help-circle"></iconify-icon>
+                            <span class="sidebar-text">Enquiries</span>
+                            @php
+                                $escalatedEnquiries = \App\Models\Enquiry::whereIn('status', ['escalated_warehouse', 'escalated_admin'])->count();
+                            @endphp
+                            @if ($escalatedEnquiries > 0)
+                                <span class="badge bg-warning rounded-pill ms-auto">{{ $escalatedEnquiries }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    @endif
                 @endif
             </ul>
         </div>
