@@ -23,21 +23,42 @@
                                 PO #{{ $purchaseOrder->po_number }}
                             </h4>
                             @php
-                                $statusColors = [
-                                    'draft' => 'secondary',
-                                    'ordered' => 'primary',
-                                    'received' => 'info',
-                                    'completed' => 'success',
-                                    'cancelled' => 'danger',
-                                ];
-                                $color = $statusColors[$purchaseOrder->status] ?? 'secondary';
+                                $displayStatus = strtoupper($purchaseOrder->status);
+                                $color = 'secondary';
+
+                                if ($purchaseOrder->approval_status === 'rejected') {
+                                    $displayStatus = 'REJECTED';
+                                    $color = 'danger';
+                                } elseif ($purchaseOrder->status === 'draft') {
+                                    if ($purchaseOrder->approval_status === 'pending') {
+                                        $displayStatus = 'WAITING FOR APPROVAL';
+                                        $color = 'warning';
+                                    } elseif ($purchaseOrder->approval_status === 'approved') {
+                                        $displayStatus = 'APPROVED';
+                                        $color = 'primary';
+                                    } else {
+                                        $displayStatus = 'DRAFT';
+                                        $color = 'secondary';
+                                    }
+                                } elseif ($purchaseOrder->status === 'ordered') {
+                                    $color = 'primary';
+                                } elseif ($purchaseOrder->status === 'received') {
+                                    $color = 'info';
+                                } elseif ($purchaseOrder->status === 'partial') {
+                                    $displayStatus = 'IN TRANSIT';
+                                    $color = 'warning';
+                                } elseif ($purchaseOrder->status === 'completed') {
+                                    $color = 'success';
+                                } elseif ($purchaseOrder->status === 'cancelled') {
+                                    $color = 'danger';
+                                }
                             @endphp
                             @if ($purchaseOrder->status === 'completed' && $purchaseOrder->progress < 100)
                                 <span class="badge rounded-pill text-uppercase px-3 py-2"
                                     style="background-color: purple; color: white;">PARTIAL COMPLETED</span>
                             @else
                                 <span class="badge bg-{{ $color }} fs-6 px-3 py-2 rounded-pill text-uppercase">
-                                    {{ $purchaseOrder->status }}
+                                    {{ $displayStatus }}
                                 </span>
                             @endif
                         </div>

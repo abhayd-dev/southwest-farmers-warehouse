@@ -63,7 +63,7 @@ class ApprovalService
     /**
      * Process approval/rejection from email link
      */
-    public function processApproval(PurchaseOrder $po, string $action, string $approverEmail, string $reason = null)
+    public function processApproval(PurchaseOrder $po, string $action, string $approverEmail, ?string $reason = null)
     {
         if ($action === 'approve') {
             $po->approve($approverEmail, $reason);
@@ -107,6 +107,13 @@ class ApprovalService
             $po->reject($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'rejected', $reason);
 
+            try {
+                \Illuminate\Support\Facades\Mail::to($approverEmail)
+                    ->send(new \App\Mail\ApproverPORejected($po));
+            } catch (\Exception $e) {
+                \Log::error("Failed to send approver rejection confirmation for PO #{$po->po_number}: " . $e->getMessage());
+            }
+
             \App\Services\NotificationService::sendToAdmins(
                 'PO Rejected',
                 "Purchase Order #{$po->po_number} has been rejected. Reason: {$reason}",
@@ -123,7 +130,7 @@ class ApprovalService
     /**
      * Log approval action
      */
-    protected function logApproval(PurchaseOrder $po, string $approverEmail, string $decision, string $reason = null)
+    protected function logApproval(PurchaseOrder $po, string $approverEmail, string $decision, ?string $reason = null)
     {
         // You can log to a separate approvals table or activity log
         \Log::info("PO #{$po->po_number} {$decision} by {$approverEmail}", [

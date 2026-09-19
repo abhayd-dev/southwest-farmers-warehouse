@@ -173,7 +173,7 @@
                 const html = `
                 <tr id="row-${rowIdx}">
                     <td>
-                        <select name="items[${rowIdx}][product_id]" class="form-select product-select border-0 bg-light" onchange="updateCost(${rowIdx})" required>
+                        <select name="items[${rowIdx}][product_id]" class="form-select product-select border-0 bg-light" required>
                             ${productOptionsHtml}
                         </select>
                     </td>
@@ -197,11 +197,17 @@
                 $('#itemsTable tbody').append(html);
 
                 // Re-initialize Select2 for this newly added row's select
-                $(`#row-${rowIdx} .product-select`).select2({
+                const thisRowIdx = rowIdx;
+                $(`#row-${thisRowIdx} .product-select`).select2({
                     theme: 'bootstrap-5',
                     width: 'style',
                     placeholder: 'Select Product',
                     allowClear: true
+                }).on('select2:select', function() {
+                    updateCost(thisRowIdx);
+                }).on('select2:clear', function() {
+                    $(`#row-${thisRowIdx} .cost-input`).val('');
+                    calculateRow(thisRowIdx);
                 });
 
                 rowIdx++;
@@ -213,28 +219,11 @@
             window.updateCost = function(idx) {
                 const select = $(`#row-${idx} .product-select`);
                 const cost = select.find(':selected').data('cost');
-                // if (cost) {
-                //     $(`#row-${idx} .cost-input`).val(cost);
-                // }
-                // Commented out automatic update cost when changing products because on edit we might load custom costs
-                // The cost will be updated below if it's a new row, else it preserves the original cost
-                
+                if (cost !== undefined && cost !== null && cost !== '') {
+                    $(`#row-${idx} .cost-input`).val(cost);
+                }
                 calculateRow(idx);
             }
-
-            // Update cost explicitly for new items
-            $('#itemsTable').on('change', '.product-select', function() {
-                const tr = $(this).closest('tr');
-                const idx = tr.attr('id').split('-')[1];
-                if (!tr.data('loaded')) {
-                    const cost = $(this).find(':selected').data('cost');
-                    if (cost) {
-                        tr.find('.cost-input').val(cost);
-                    }
-                }
-                tr.data('loaded', true);
-                calculateRow(idx);
-            });
 
             window.calculateRow = function(idx) {
                 const qty = parseFloat($(`#row-${idx} .qty-input`).val()) || 0;
@@ -267,11 +256,10 @@
                     addRow();
                     const lastRowIdx = rowIdx - 1;
                     const select = $(`#row-${lastRowIdx} .product-select`);
-                    const tr = $(`#row-${lastRowIdx}`);
-                    tr.data('loaded', true); // Prevent auto-updating cost for existing items
-                    select.val(item.product_id).trigger('change');
-                    $(`#row-${lastRowIdx} .qty-input`).val(item.requested_quantity).trigger('input');
-                    $(`#row-${lastRowIdx} .cost-input`).val(item.unit_cost).trigger('input');
+                    select.val(item.product_id).trigger('change.select2');
+                    $(`#row-${lastRowIdx} .qty-input`).val(item.requested_quantity);
+                    $(`#row-${lastRowIdx} .cost-input`).val(item.unit_cost);
+                    calculateRow(lastRowIdx);
                 });
             } else {
                 addRow(); // Add one row by default

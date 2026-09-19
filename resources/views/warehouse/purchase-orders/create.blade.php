@@ -326,7 +326,7 @@
                 const html = `
                 <tr id="row-${rowIdx}">
                     <td>
-                        <select name="items[${rowIdx}][product_id]" class="form-select product-select border-0 bg-light" onchange="updateCost(${rowIdx})" required>
+                        <select name="items[${rowIdx}][product_id]" class="form-select product-select border-0 bg-light" required>
                             ${productOptionsHtml}
                         </select>
                     </td>
@@ -356,6 +356,11 @@
                     width: 'style',
                     placeholder: 'Select Product',
                     allowClear: true
+                }).on('select2:select', function() {
+                    updateCost(thisRowIdx);
+                }).on('select2:clear', function() {
+                    $(`#row-${thisRowIdx} .cost-input`).val('');
+                    calculateRow(thisRowIdx);
                 }).on('select2:opening', function() {
                     // Clicking back into this row restores the filters that found its product.
                     restoreRowFilters(thisRowIdx);
@@ -371,7 +376,7 @@
                 const select = $(`#row-${idx} .product-select`);
                 const cost = select.find(':selected').data('cost');
                 rememberRowFilters(idx);
-                if (cost) {
+                if (cost !== undefined && cost !== null && cost !== '') {
                     $(`#row-${idx} .cost-input`).val(cost);
                 }
                 calculateRow(idx);
@@ -421,8 +426,15 @@
                         addRow();
                         const lastRowIdx = rowIdx - 1;
                         const select = $(`#row-${lastRowIdx} .product-select`);
-                        select.val(p.id).trigger('change');
-                        $(`#row-${lastRowIdx} .qty-input`).val(item.quantity).trigger('input');
+                        select.val(p.id).trigger('change.select2');
+                        rememberRowFilters(lastRowIdx);
+                        if (item.cost !== undefined && item.cost !== null) {
+                            $(`#row-${lastRowIdx} .cost-input`).val(item.cost);
+                        } else if (p.cost_price) {
+                            $(`#row-${lastRowIdx} .cost-input`).val(p.cost_price);
+                        }
+                        $(`#row-${lastRowIdx} .qty-input`).val(item.quantity);
+                        calculateRow(lastRowIdx);
                     }
                 });
             @else

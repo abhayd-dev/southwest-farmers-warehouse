@@ -107,7 +107,10 @@ class PurchaseOrderController extends Controller
                     $displayStatus = strtoupper($row->status);
                     $color = 'secondary';
 
-                    if ($row->status === 'draft') {
+                    if ($row->approval_status === 'rejected') {
+                        $displayStatus = 'REJECTED';
+                        $color = 'danger';
+                    } elseif ($row->status === 'draft') {
                         if ($row->approval_status === 'pending') {
                             $displayStatus = 'WAITING FOR APPROVAL';
                             $color = 'warning';
