@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Warehouse\BulkDraftPurchaseOrderRequest;
+use App\Http\Requests\Warehouse\ReceivePurchaseOrderRequest;
+use App\Http\Requests\Warehouse\SavePurchaseOrderRequest;
 use App\Models\PurchaseOrder;
 use App\Models\ProductBatch;
 use App\Models\Vendor;
@@ -10,14 +13,12 @@ use App\Models\Product;
 use App\Services\NotificationService;
 use App\Services\PurchaseOrderService;
 use App\Services\ApprovalService;
+use App\Services\PurchaseOrderListing;
 use App\Services\VendorCommunicationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Yajra\DataTables\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Picqer\Barcode\BarcodeGeneratorPNG;
-use Carbon\Carbon;
 
 class PurchaseOrderController extends Controller
 {
@@ -35,116 +36,26 @@ class PurchaseOrderController extends Controller
         $this->vendorService = $vendorService;
     }
 
-    public function index(Request $request)
+    /** 403 unless the user holds at least one of the permissions (Super Admin always passes). */
+    private function authorizeAnyOf(string ...$permissions): void
     {
-        // Stats endpoint for summary cards
+        abort_unless(
+            collect($permissions)->contains(fn ($permission) => auth()->user()->can($permission)),
+            403,
+            'Unauthorized'
+        );
+    }
+
+    public function index(Request $request, PurchaseOrderListing $listing)
+    {
+        // Summary cards
         if ($request->filled('stats')) {
-            $all = PurchaseOrder::selectRaw('status, COUNT(*) as count, SUM(total_amount) as total')->groupBy('status')->get();
-            $byStatus = $all->pluck('count', 'status')->toArray();
-            return response()->json([
-                'stats' => [
-                    'total'     => array_sum($byStatus),
-                    'pending'   => ($byStatus['ordered'] ?? 0) + ($byStatus['partial'] ?? 0),
-                    'completed' => $byStatus['completed'] ?? 0,
-                    'value'     => number_format(PurchaseOrder::sum('total_amount'), 0),
-                    'by_status' => $byStatus,
-                ]
-            ]);
+            return response()->json(['stats' => $listing->stats()]);
         }
 
+        // DataTable feed
         if ($request->ajax()) {
-            $query = PurchaseOrder::with('vendor', 'creator')->latest();
-
-            if ($request->filled('status') && $request->status !== 'all') {
-                $status = $request->status;
-                if ($status === 'pending_approval') {
-                    $query->where('status', 'draft')->where('approval_status', 'pending');
-                } elseif ($status === 'approved') {
-                    $query->where('status', 'draft')->where('approval_status', 'approved');
-                } elseif ($status === 'draft') {
-                    $query->where('status', 'draft')->whereNull('approval_status');
-                } else {
-                    $query->where('status', $status);
-                }
-            } else {
-                // Default view: exclude completed and cancelled
-                $query->whereNotIn('status', ['completed', 'cancelled']);
-            }
-            if ($request->filled('po_number')) {
-                $query->where('po_number', 'like', '%' . $request->po_number . '%');
-            }
-            if ($request->filled('vendor')) {
-                $query->whereHas('vendor', function ($q) use ($request) {
-                    $q->where('name', 'like', '%' . $request->vendor . '%');
-                });
-            }
-            if ($request->filled('date_from')) {
-                $query->whereDate('order_date', '>=', $request->date_from);
-            }
-            if ($request->filled('date_to')) {
-                $query->whereDate('order_date', '<=', $request->date_to);
-            }
-
-            return DataTables::of($query)
-                ->addIndexColumn()
-                ->addColumn('vendor_name', fn($row) => optional($row->vendor)->name ?? 'N/A')
-                ->editColumn('order_date', function ($row) {
-                    return $row->order_date ? Carbon::parse($row->order_date)->format('d M Y') : '-';
-                })
-                ->addColumn('total_amount', fn($row) => '$ ' . number_format($row->total_amount, 2))
-                ->addColumn('progress', function ($row) {
-                    $color = $row->progress == 100 ? 'success' : 'primary';
-                    return '<div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-' . $color . '" role="progressbar" style="width: ' . $row->progress . '%"></div>
-                            </div>
-                            <small class="text-muted">' . $row->progress . '% Received</small>';
-                })
-                ->addColumn('status_badge', function ($row) {
-                    if ($row->status === 'completed' && $row->progress < 100) {
-                        return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">PARTIAL COMPLETED</span>';
-                    }
-
-                    $displayStatus = strtoupper($row->status);
-                    $color = 'secondary';
-
-                    if ($row->approval_status === 'rejected') {
-                        $displayStatus = 'REJECTED';
-                        $color = 'danger';
-                    } elseif ($row->status === 'draft') {
-                        if ($row->approval_status === 'pending') {
-                            $displayStatus = 'WAITING FOR APPROVAL';
-                            $color = 'warning';
-                        } elseif ($row->approval_status === 'approved') {
-                            $displayStatus = 'APPROVED';
-                            $color = 'primary';
-                        } else {
-                            $displayStatus = 'DRAFT';
-                            $color = 'secondary';
-                        }
-                    } elseif ($row->status === 'ordered') {
-                        $color = 'info';
-                    } elseif ($row->status === 'partial') {
-                        $displayStatus = 'IN TRANSIT';
-                        $color = 'warning';
-                    } elseif ($row->status === 'completed') {
-                        $color = 'success';
-                    } elseif ($row->status === 'cancelled') {
-                        $color = 'danger';
-                    }
-
-                    return '<span class="badge bg-' . $color . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
-                })
-
-                ->addColumn('action', function ($row) {
-                    $viewUrl = route('warehouse.purchase-orders.show', $row->id);
-                    return '<div class="action-btns">
-                                <a href="' . $viewUrl . '" class="btn btn-sm btn-outline-info btn-view" title="View">
-                                    <i class="mdi mdi-eye"></i> View
-                                </a>
-                            </div>';
-                })
-                ->rawColumns(['progress', 'status_badge', 'action'])
-                ->make(true);
+            return $listing->dataTable($request);
         }
 
         return view('warehouse.purchase-orders.index');
@@ -184,19 +95,8 @@ class PurchaseOrderController extends Controller
         return view('warehouse.purchase-orders.create', compact('vendors', 'products', 'departments', 'categories', 'subcategories'));
     }
 
-    public function store(Request $request)
+    public function store(SavePurchaseOrderRequest $request)
     {
-        $request->validate([
-            'vendor_id' => 'required|exists:vendors,id',
-            'order_date' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.cost' => 'required|numeric|min:0',
-            'approval_email' => 'nullable|email',
-            'approver_phone' => 'nullable|string|max:20',
-        ]);
-
         try {
             $po = $this->poService->createPO($request->all());
 
@@ -218,15 +118,8 @@ class PurchaseOrderController extends Controller
     /**
      * Create a DRAFT PO from Restock Planning data
      */
-    public function bulkStoreDraft(Request $request)
+    public function bulkStoreDraft(BulkDraftPurchaseOrderRequest $request)
     {
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.cost' => 'required|numeric|min:0',
-        ]);
-
         try {
             // Find a common vendor if possible, otherwise use a placeholder or ask
             // For now, we'll assign to the first available vendor or the last vendor of the product
@@ -253,11 +146,11 @@ class PurchaseOrderController extends Controller
      */
     public function revertToDraft(PurchaseOrder $purchaseOrder)
     {
-        if (in_array($purchaseOrder->status, ['completed', 'received'])) {
+        if (in_array($purchaseOrder->status, [PurchaseOrder::STATUS_COMPLETED, 'received'])) {
             return back()->with('error', 'Cannot revert a completed or received purchase order.');
         }
 
-        $purchaseOrder->update(['status' => 'draft']);
+        $purchaseOrder->update(['status' => PurchaseOrder::STATUS_DRAFT]);
 
         NotificationService::sendToAdmins(
             'PO Reverted to Draft',
@@ -272,7 +165,7 @@ class PurchaseOrderController extends Controller
 
     public function edit(PurchaseOrder $purchaseOrder)
     {
-        if ($purchaseOrder->status !== 'draft') {
+        if ($purchaseOrder->status !== PurchaseOrder::STATUS_DRAFT) {
             return back()->with('error', 'Only draft purchase orders can be edited.');
         }
 
@@ -283,22 +176,11 @@ class PurchaseOrderController extends Controller
         return view('warehouse.purchase-orders.edit', compact('purchaseOrder', 'vendors', 'products'));
     }
 
-    public function update(Request $request, PurchaseOrder $purchaseOrder)
+    public function update(SavePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
-        if ($purchaseOrder->status !== 'draft') {
+        if ($purchaseOrder->status !== PurchaseOrder::STATUS_DRAFT) {
             return back()->with('error', 'Only draft purchase orders can be edited.');
         }
-
-        $request->validate([
-            'vendor_id' => 'required|exists:vendors,id',
-            'order_date' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.cost' => 'required|numeric|min:0',
-            'approval_email' => 'nullable|email',
-            'approver_phone' => 'nullable|string|max:20',
-        ]);
 
         try {
             $this->poService->updatePO($purchaseOrder, $request->all());
@@ -313,12 +195,10 @@ class PurchaseOrderController extends Controller
 
     public function markOrdered(PurchaseOrder $purchaseOrder)
     {
-        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po')) {
-            abort(403, 'Unauthorized');
-        }
-        if ($purchaseOrder->status !== 'draft') abort(403);
+        $this->authorizeAnyOf('approve_po');
+        if ($purchaseOrder->status !== PurchaseOrder::STATUS_DRAFT) abort(403);
 
-        $purchaseOrder->update(['status' => 'ordered']);
+        $purchaseOrder->update(['status' => PurchaseOrder::STATUS_ORDERED]);
 
         NotificationService::sendToAdmins(
             'PO Ordered',
@@ -332,21 +212,17 @@ class PurchaseOrderController extends Controller
 
     public function cancel(PurchaseOrder $purchaseOrder)
     {
-        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po')) {
-            abort(403, 'Unauthorized');
-        }
-        if ($purchaseOrder->status !== 'ordered' && $purchaseOrder->status !== 'draft') abort(403);
+        $this->authorizeAnyOf('approve_po');
+        if (!in_array($purchaseOrder->status, [PurchaseOrder::STATUS_ORDERED, PurchaseOrder::STATUS_DRAFT])) abort(403);
 
-        $purchaseOrder->update(['status' => 'cancelled']);
+        $purchaseOrder->update(['status' => PurchaseOrder::STATUS_CANCELLED]);
 
         return back()->with('success', 'Purchase Order has been cancelled.');
     }
 
     public function sendApproval(PurchaseOrder $purchaseOrder)
     {
-        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('approve_po') && !\Auth::user()->hasPermission('create_po')) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizeAnyOf('approve_po', 'create_po');
 
         try {
             if (!$purchaseOrder->approval_email) {
@@ -354,7 +230,7 @@ class PurchaseOrderController extends Controller
             }
             
             // Update status first so it changes even if email fails
-            $purchaseOrder->update(['approval_status' => 'pending']);
+            $purchaseOrder->update(['approval_status' => PurchaseOrder::APPROVAL_PENDING]);
             
             $this->approvalService->sendApprovalEmail($purchaseOrder);
             
@@ -367,12 +243,10 @@ class PurchaseOrderController extends Controller
 
     public function markCompleted(PurchaseOrder $purchaseOrder)
     {
-        if (!\Auth::user()->isSuperAdmin() && !\Auth::user()->hasPermission('receive_po')) {
-            abort(403, 'Unauthorized');
-        }
-        if ($purchaseOrder->status !== 'partial') abort(403);
+        $this->authorizeAnyOf('receive_po');
+        if ($purchaseOrder->status !== PurchaseOrder::STATUS_PARTIAL) abort(403);
 
-        $purchaseOrder->update(['status' => 'completed']);
+        $purchaseOrder->update(['status' => PurchaseOrder::STATUS_COMPLETED]);
 
         NotificationService::sendToAdmins(
             'PO Completed',
@@ -383,19 +257,9 @@ class PurchaseOrderController extends Controller
         return back()->with('success', 'PO marked as Completed (Partially Received).');
     }
 
-    public function receive(Request $request, PurchaseOrder $purchaseOrder)
+    public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
         set_time_limit(300);
-
-        $request->validate([
-            'invoice_number' => 'required|string',
-            'duties' => 'nullable|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'taxes' => 'nullable|numeric|min:0',
-            'transportation_cost' => 'nullable|numeric|min:0',
-            'demurrage' => 'nullable|numeric|min:0',
-            'items' => 'required|array',
-        ]);
 
         try {
             $this->poService->receiveItems(
@@ -510,7 +374,7 @@ class PurchaseOrderController extends Controller
      */
     public function sendToVendor(Request $request, PurchaseOrder $purchaseOrder)
     {
-        if ($purchaseOrder->approval_status === 'rejected' || $purchaseOrder->status === 'rejected') {
+        if ($purchaseOrder->approval_status === PurchaseOrder::APPROVAL_REJECTED || $purchaseOrder->status === 'rejected') {
             return back()->with('error', 'Cannot send a rejected Purchase Order to vendor. Please resubmit order for approval first.');
         }
 
@@ -543,8 +407,8 @@ class PurchaseOrderController extends Controller
             }
 
             // Update status to ordered if it was draft/approved
-            if (in_array($purchaseOrder->status, ['draft', 'approved']) || $purchaseOrder->approval_status === 'approved') {
-                $purchaseOrder->update(['status' => 'ordered']);
+            if (in_array($purchaseOrder->status, [PurchaseOrder::STATUS_DRAFT, 'approved']) || $purchaseOrder->approval_status === PurchaseOrder::APPROVAL_APPROVED) {
+                $purchaseOrder->update(['status' => PurchaseOrder::STATUS_ORDERED]);
             }
 
             // Notify admins
@@ -560,146 +424,5 @@ class PurchaseOrderController extends Controller
             Log::error('Failed to send PO: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Something went wrong. Please try again later.');
         }
-    }
-
-    /**
-     * Handle approval/rejection from email link
-     */
-    public function handleApproval(Request $request, PurchaseOrder $purchaseOrder)
-    {
-        $action = $request->query('action'); // 'approve' or 'reject'
-
-        if (!in_array($action, ['approve', 'reject'])) {
-            return view('warehouse.purchase-orders.approval-result', [
-                'success' => false,
-                'message' => 'Invalid action',
-            ]);
-        }
-
-        // If rejecting, show form to collect reason
-        if ($action === 'reject' && !$request->has('reason')) {
-            return view('warehouse.purchase-orders.rejection-form', compact('purchaseOrder'));
-        }
-
-        try {
-            $approverEmail = $purchaseOrder->approval_email;
-            $reason = $request->input('reason');
-
-            // ApprovalService::processApproval() already notifies admins internally
-            // (was also happening here — duplicated every "PO Approved"/"PO Rejected"
-            // notification, matching the client-reported duplicate pairs).
-            $message = $this->approvalService->processApproval(
-                $purchaseOrder,
-                $action,
-                $approverEmail,
-                $reason
-            );
-
-            $cancelUrl = $action === 'approve'
-                ? \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                    'warehouse.purchase-orders.approver-cancel',
-                    now()->addDays(14),
-                    ['purchaseOrder' => $purchaseOrder->id]
-                )
-                : null;
-
-            return view('warehouse.purchase-orders.approval-result', [
-                'success' => true,
-                'message' => $message,
-                'po' => $purchaseOrder,
-                'cancelUrl' => $cancelUrl,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Approval processing failed: ' . $e->getMessage(), ['exception' => $e]);
-            return view('warehouse.purchase-orders.approval-result', [
-                'success' => false,
-                'message' => 'Something went wrong. Please try again later.',
-            ]);
-        }
-    }
-
-    /**
-     * Handle a vendor's acknowledge/deny response to a sent PO (from email link).
-     * Mirrors handleApproval() above but for the vendor's own response, which is
-     * tracked separately from the internal approval workflow.
-     */
-    public function handleVendorResponse(Request $request, PurchaseOrder $purchaseOrder)
-    {
-        $action = $request->query('action'); // 'acknowledge' or 'deny'
-
-        if (!in_array($action, ['acknowledge', 'deny'])) {
-            return view('warehouse.purchase-orders.vendor-response-result', [
-                'success' => false,
-                'message' => 'Invalid action',
-            ]);
-        }
-
-        // If denying, show a form to collect the reason first
-        if ($action === 'deny' && !$request->has('reason')) {
-            return view('warehouse.purchase-orders.vendor-denial-form', compact('purchaseOrder'));
-        }
-
-        try {
-            if ($action === 'acknowledge') {
-                $purchaseOrder->vendorAcknowledge();
-                $message = "Thank you — PO #{$purchaseOrder->po_number} has been marked as acknowledged.";
-            } else {
-                $reason = $request->input('reason');
-                if (!$reason) {
-                    throw new \Exception('A reason is required to deny this order.');
-                }
-                $purchaseOrder->vendorDeny($reason);
-                $message = "PO #{$purchaseOrder->po_number} has been marked as denied.";
-            }
-
-            NotificationService::sendToAdmins(
-                'Vendor ' . ucfirst($action) . 'd Order',
-                "Vendor {$purchaseOrder->vendor?->name} has {$action}d PO #{$purchaseOrder->po_number}" .
-                    ($action === 'deny' ? ": {$purchaseOrder->vendor_denial_reason}" : '.'),
-                $action === 'acknowledge' ? 'success' : 'warning',
-                route('warehouse.purchase-orders.show', $purchaseOrder->id)
-            );
-
-            return view('warehouse.purchase-orders.vendor-response-result', [
-                'success' => true,
-                'message' => $message,
-                'po' => $purchaseOrder,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Vendor response processing failed: ' . $e->getMessage(), ['exception' => $e]);
-            return view('warehouse.purchase-orders.vendor-response-result', [
-                'success' => false,
-                'message' => 'Something went wrong. Please try again later.',
-            ]);
-        }
-    }
-
-    /**
-     * Let the external approver cancel a PO they just approved — via the same
-     * signed-link mechanism, since they have no warehouse login (item 16).
-     */
-    public function handleApproverCancel(Request $request, PurchaseOrder $purchaseOrder)
-    {
-        if (!in_array($purchaseOrder->status, ['ordered', 'draft'])) {
-            return view('warehouse.purchase-orders.approval-result', [
-                'success' => false,
-                'message' => 'This purchase order can no longer be cancelled (it has already progressed to receiving or been cancelled).',
-            ]);
-        }
-
-        $purchaseOrder->update(['status' => 'cancelled']);
-
-        NotificationService::sendToAdmins(
-            'PO Cancelled by Approver',
-            "PO #{$purchaseOrder->po_number} was cancelled by the approver ({$purchaseOrder->approved_by_email}).",
-            'warning',
-            route('warehouse.purchase-orders.show', $purchaseOrder->id)
-        );
-
-        return view('warehouse.purchase-orders.approval-result', [
-            'success' => true,
-            'message' => "PO #{$purchaseOrder->po_number} has been cancelled.",
-            'po' => $purchaseOrder,
-        ]);
     }
 }

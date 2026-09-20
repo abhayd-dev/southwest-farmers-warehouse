@@ -59,6 +59,31 @@ class PurchaseOrder extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
 
+    // approval_status values (separate from the fulfilment status above)
+    const APPROVAL_DRAFT = 'draft';
+    const APPROVAL_PENDING = 'pending';
+    const APPROVAL_APPROVED = 'approved';
+    const APPROVAL_REJECTED = 'rejected';
+
+    /**
+     * The list screen's status dropdown. "Draft", "Waiting for Approval" and
+     * "Approved" are all fulfilment status = draft, told apart by approval_status.
+     * With no tab (or "all"), completed and cancelled POs are hidden.
+     */
+    public function scopeForListTab($query, ?string $tab)
+    {
+        return match ($tab) {
+            null, '', 'all' => $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]),
+            'pending_approval' => $query->where('status', self::STATUS_DRAFT)->where('approval_status', self::APPROVAL_PENDING),
+            'approved' => $query->where('status', self::STATUS_DRAFT)->where('approval_status', self::APPROVAL_APPROVED),
+            // approval_status is NOT NULL and new POs are saved as 'draft'; the old
+            // whereNull() here could never match, so this tab was always empty.
+            'draft' => $query->where('status', self::STATUS_DRAFT)
+                ->where(fn ($q) => $q->where('approval_status', self::APPROVAL_DRAFT)->orWhereNull('approval_status')),
+            default => $query->where('status', $tab),
+        };
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

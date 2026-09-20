@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\ProductReferenceCleaner;
 use App\Models\ProductOption;
 use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
@@ -203,11 +204,19 @@ class ProductController extends Controller
         }
     }
 
+    /** Deleting products needs delete_products or manage_products (Super Admin always passes). */
+    private function authorizeDelete(): void
+    {
+        abort_unless(
+            auth()->user()->can('delete_products') || auth()->user()->can('manage_products'),
+            403,
+            'Unauthorized action.'
+        );
+    }
+
     public function destroy(Product $product)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorizeDelete();
 
         if ($product->store_id !== null) {
             abort(403, 'Unauthorized access to store product');
@@ -216,13 +225,7 @@ class ProductController extends Controller
         try {
             DB::transaction(function () use ($product) {
                 // Delete from referencing tables without automatic database cascade
-                DB::table('pallet_items')->where('product_id', $product->id)->delete();
-                DB::table('sale_return_items')->where('product_id', $product->id)->delete();
-                DB::table('sale_items')->where('product_id', $product->id)->delete();
-                DB::table('stock_transfers')->where('product_id', $product->id)->delete();
-                DB::table('stock_audit_items')->where('product_id', $product->id)->delete();
-                DB::table('purchase_order_items')->where('product_id', $product->id)->delete();
-                DB::table('store_purchase_order_items')->where('product_id', $product->id)->delete();
+                app(ProductReferenceCleaner::class)->deleteFor([$product->id]);
 
                 // Delete the product itself (which triggers automatic DB-level cascades)
                 $product->delete();
@@ -237,9 +240,7 @@ class ProductController extends Controller
 
     public function destroyAll()
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorizeDelete();
 
         try {
             DB::transaction(function () {
@@ -248,13 +249,7 @@ class ProductController extends Controller
 
                 if (!empty($productIds)) {
                     // Delete from referencing tables without automatic database cascade for these products
-                    DB::table('pallet_items')->whereIn('product_id', $productIds)->delete();
-                    DB::table('sale_return_items')->whereIn('product_id', $productIds)->delete();
-                    DB::table('sale_items')->whereIn('product_id', $productIds)->delete();
-                    DB::table('stock_transfers')->whereIn('product_id', $productIds)->delete();
-                    DB::table('stock_audit_items')->whereIn('product_id', $productIds)->delete();
-                    DB::table('purchase_order_items')->whereIn('product_id', $productIds)->delete();
-                    DB::table('store_purchase_order_items')->whereIn('product_id', $productIds)->delete();
+                    app(ProductReferenceCleaner::class)->deleteFor($productIds);
 
                     // Delete the products themselves (triggers automatic DB-level cascades)
                     Product::whereIn('id', $productIds)->delete();
@@ -270,9 +265,7 @@ class ProductController extends Controller
 
     public function destroyBulk(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin() && !auth()->user()->hasPermission('delete_products') && !auth()->user()->hasPermission('manage_products')) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorizeDelete();
 
         $request->validate([
             'ids'   => 'required|array|min:1',
@@ -291,13 +284,7 @@ class ProductController extends Controller
                     return;
                 }
 
-                DB::table('pallet_items')->whereIn('product_id', $productIds)->delete();
-                DB::table('sale_return_items')->whereIn('product_id', $productIds)->delete();
-                DB::table('sale_items')->whereIn('product_id', $productIds)->delete();
-                DB::table('stock_transfers')->whereIn('product_id', $productIds)->delete();
-                DB::table('stock_audit_items')->whereIn('product_id', $productIds)->delete();
-                DB::table('purchase_order_items')->whereIn('product_id', $productIds)->delete();
-                DB::table('store_purchase_order_items')->whereIn('product_id', $productIds)->delete();
+                app(ProductReferenceCleaner::class)->deleteFor($productIds);
 
                 Product::whereIn('id', $productIds)->delete();
             });

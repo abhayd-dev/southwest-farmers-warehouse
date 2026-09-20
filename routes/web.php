@@ -33,19 +33,19 @@ Route::get('/verify-contact-email/{type}/{id}', [\App\Http\Controllers\ContactEm
 // auth-protected `warehouse` group, so it silently redirected every such
 // click to the login page; same URI/name preserved so already-sent emails
 // with this signed link keep working.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleApproval'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'approval'])
     ->name('warehouse.purchase-orders.approve')
     ->middleware('signed:reason');
 
 // Vendor acknowledge/deny response to a sent Purchase Order — same reasoning:
 // the vendor has no warehouse login, so this must sit outside the auth group.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleVendorResponse'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'vendorResponse'])
     ->name('warehouse.purchase-orders.vendor-response')
     ->middleware('signed:reason');
 
 // Lets the external approver cancel a PO they already approved — same "no
 // login" reasoning as the two routes above.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\PurchaseOrderController::class, 'handleApproverCancel'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'approverCancel'])
     ->name('warehouse.purchase-orders.approver-cancel')
     ->middleware('signed');
 
