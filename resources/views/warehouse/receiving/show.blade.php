@@ -145,7 +145,7 @@
                 </div>
 
                 {{-- RECEIVE SECTION --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('receive_po'))
+                @if (auth()->user()->can('receive_po'))
                     <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
                         <div
                             class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">

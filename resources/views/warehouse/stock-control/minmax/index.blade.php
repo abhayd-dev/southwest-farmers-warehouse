@@ -12,7 +12,7 @@
             </div>
 
             {{-- ADD BUTTON (Protected) --}}
-            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_min_max'))
+            @if (auth()->user()->can('manage_min_max'))
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#minMaxModal" id="addNewBtn">
                     <i class="mdi mdi-plus-circle me-1"></i> Add New Level
                 </button>
@@ -43,7 +43,7 @@
         </div>
 
         {{-- MODAL (Protected Content) --}}
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_min_max'))
+        @if (auth()->user()->can('manage_min_max'))
             <div class="modal fade" id="minMaxModal" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow-lg">
@@ -109,7 +109,7 @@
             $(function() {
                 // Permission Flag for JS
                 const canManage =
-                    {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_min_max') ? 'true' : 'false' }};
+                    {{ auth()->user()->can('manage_min_max') ? 'true' : 'false' }};
 
                 let table = $('#minMaxTable').DataTable({
                     processing: true,

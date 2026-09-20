@@ -79,7 +79,7 @@
                     </div>
                 </div>
 
-                @if($enquiry->isEscalatedToWarehouse() && (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_enquiries')))
+                @if($enquiry->isEscalatedToWarehouse() && (auth()->user()->can('manage_enquiries')))
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <p class="text-muted small mb-3">Needs the Super Admin's attention specifically? Escalate it further.</p>

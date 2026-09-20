@@ -72,7 +72,7 @@
                                 class="btn btn-outline-dark shadow-sm" target="_blank">
                                 <i class="mdi mdi-printer me-1"></i> Print PO
                             </a>
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
+                            @if (auth()->user()->can('approve_po') || auth()->user()->can('create_po'))
                                 <form
                                     action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline">
@@ -101,7 +101,7 @@
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po'))
+                                @if (auth()->user()->can('approve_po'))
                                     <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']) }}"
                                         class="btn btn-success shadow-sm">
                                         <i class="mdi mdi-check me-1"></i> Approve
@@ -125,7 +125,7 @@
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
+                                @if (auth()->user()->can('approve_po') || auth()->user()->can('create_po'))
                                     <form
                                         action="{{ route('warehouse.purchase-orders.send-to-vendor', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline">
@@ -150,7 +150,7 @@
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po') || auth()->user()->hasPermission('create_po'))
+                                @if (auth()->user()->can('approve_po') || auth()->user()->can('create_po'))
                                     <form
                                         action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline">

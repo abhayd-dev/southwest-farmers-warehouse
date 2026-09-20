@@ -159,7 +159,7 @@
                         </div>
 
                         <div class="card-footer bg-white py-3 border-top">
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_settings'))
+                            @if (auth()->user()->can('manage_settings'))
                                 <div class="card border-0 shadow-sm mt-4">
                                     <div class="card-body text-end">
                                         <button type="submit" class="btn btn-success px-5 btn-lg">

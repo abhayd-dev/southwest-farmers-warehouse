@@ -25,5 +25,12 @@ abstract class TestCase extends BaseTestCase
         }
 
         parent::setUp();
+
+        // "Permission would be denied" lines are expected while exercising the
+        // middleware; keep them out of the test output.
+        config(['logging.channels.permissions' => [
+            'driver' => 'monolog',
+            'handler' => \Monolog\Handler\NullHandler::class,
+        ]]);
     }
 }

@@ -11,7 +11,7 @@
         ])
 
         {{-- START BUTTON (Protected) --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits'))
+        @if(auth()->user()->can('manage_audits'))
         <div class="d-flex justify-content-end mb-3">
             <a href="{{ route('warehouse.stock-control.audit.create') }}" class="btn btn-primary shadow-sm">
                 <i class="mdi mdi-plus-circle me-1"></i> Start New Audit

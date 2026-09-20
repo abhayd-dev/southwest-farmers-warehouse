@@ -13,7 +13,7 @@
                 </div>
                 
                 {{-- ACTIONS --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_recalls'))
+                @if(auth()->user()->can('manage_recalls'))
                 <div class="d-flex w-100 w-md-auto gap-2 justify-content-end">
                     <a href="{{ route('warehouse.stock-control.recall.create') }}" class="btn btn-primary shadow-sm flex-fill flex-md-grow-0 text-nowrap">
                         <i class="mdi mdi-plus-circle me-1"></i> Initiate Recall

@@ -96,7 +96,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'route_permission'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [WarehouseController::class, 'dashboard'])->name('dashboard');
 
@@ -208,10 +208,14 @@ Route::middleware('auth')->group(function () {
             ->except(['show']);
 
         Route::post('staff/status', [StaffController::class, 'changeStatus'])->name('warehouse.staff.status')->middleware('permission:manage_staff');
+        // The list is visible to view_staff OR manage_staff (see config/route_permissions.php);
+        // every write action stays manage_staff. It used to be manage_staff only, so
+        // roles holding view_staff saw the sidebar link and got a 403.
+        Route::get('staff', [StaffController::class, 'index'])->name('warehouse.staff.index');
         Route::resource('staff', StaffController::class)
             ->names('warehouse.staff')
             ->middleware('permission:manage_staff')
-            ->except(['show']);
+            ->except(['show', 'index']);
 
         Route::post('stores/update-status', [StoreController::class, 'updateStatus'])->name('warehouse.stores.update-status');
         Route::get('stores/{id}/analytics', [StoreController::class, 'analytics'])->name('warehouse.stores.analytics');
@@ -480,7 +484,7 @@ Route::middleware('auth')->group(function () {
         // Activity Logs
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])
             ->name('warehouse.activity-logs.index')
-            ->middleware('permission:view_activity_logs');
+            ->middleware('permission:view_audit_logs');
 
         // Notifications
         Route::controller(NotificationController::class)->group(function () {

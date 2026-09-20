@@ -13,7 +13,7 @@
                     </div>
                     
                     {{-- ACTION BUTTONS (Protected) --}}
-                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_vendors'))
+                    @if(auth()->user()->can('manage_vendors'))
                     <div class=" d-flex align-items-end gap-2 ">
                         <button type="button" class="btn btn-outline-success shadow-sm"
                             data-bs-toggle="modal" data-bs-target="#importVendorModal">

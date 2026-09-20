@@ -39,7 +39,7 @@
                 </form>
 
                 {{-- ADD BUTTON (Protected) --}}
-                @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
+                @if(auth()->user()->can('manage_staff'))
                 <a href="{{ route('warehouse.staff.create') }}" class="btn btn-success text-nowrap">
                     <i class="mdi mdi-account-plus me-1"></i> Add Staff
                 </a>
@@ -94,11 +94,11 @@
                                             data-id="{{ $user->id }}"
                                             {{ $user->is_active ? 'checked' : '' }}
                                             {{-- Disable if self or no permission --}}
-                                            {{ ($user->id === auth()->id() || !(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))) ? 'disabled' : '' }}>
+                                            {{ ($user->id === auth()->id() || !(auth()->user()->can('manage_staff'))) ? 'disabled' : '' }}>
                                     </div>
                                 </td>
                                 <td class="text-end px-4">
-                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_staff'))
+                                    @if(auth()->user()->can('manage_staff'))
                                         <x-action-buttons 
                                             :editUrl="route('warehouse.staff.edit', $user->id)"
                                             :deleteUrl="$user->id !== auth()->id() ? route('warehouse.staff.destroy', $user->id) : null"

@@ -23,14 +23,14 @@ trait MakesWarehouseUsers
         ], $attributes));
 
         foreach ($roles as $roleName) {
-            $role = WareRole::firstOrCreate(['name' => $roleName, 'guard_name' => 'warehouse']);
+            $role = WareRole::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
             $user->roles()->attach($role->id);
         }
 
         if ($permissions) {
-            $role = WareRole::create(['name' => "Test Role {$n}", 'guard_name' => 'warehouse']);
+            $role = WareRole::create(['name' => "Test Role {$n}", 'guard_name' => 'web']);
             foreach ($permissions as $permissionName) {
-                $permission = WarePermission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'warehouse']);
+                $permission = WarePermission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
                 $role->permissions()->attach($permission->id);
             }
             $user->roles()->attach($role->id);

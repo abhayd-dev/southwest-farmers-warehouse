@@ -105,6 +105,22 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        // "Permission would be denied" lines while PERMISSION_ENFORCEMENT=log.
+        // stderr so they show up in Railway's deploy logs; file for local review.
+        'permissions' => [
+            'driver' => 'stack',
+            'channels' => ['stderr', 'permissions_file'],
+            'ignore_exceptions' => false,
+        ],
+
+        'permissions_file' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/permissions.log'),
+            'level' => 'warning',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

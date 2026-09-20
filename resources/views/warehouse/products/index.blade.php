@@ -20,9 +20,8 @@
                     </div>
                     <div class="flex-shrink-0">
                         {{-- Only Show Header Actions if user has permission --}}
-                        @if (auth()->user()->isSuperAdmin() ||
-                                auth()->user()->hasPermission('create_products') ||
-                                auth()->user()->hasPermission('manage_products'))
+                        @if (auth()->user()->can('create_products') ||
+                                auth()->user()->can('manage_products'))
                             @include('warehouse.products.partials.list-header-products')
                         @endif
                     </div>
@@ -172,7 +171,7 @@
                         <thead class="bg-light">
                             <tr>
                                 {{-- MULTI-DELETE: commented out temporarily
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
+                                @if (auth()->user()->can('delete_products') || auth()->user()->can('manage_products'))
                                     <th class="px-3 py-3 text-center" style="width:44px;">
                                         <input type="checkbox" id="selectAllCheckbox" class="form-check-input"
                                             title="Select all on this page">
@@ -196,7 +195,7 @@
                             @forelse($products as $product)
                                 <tr class="border-bottom">
                                     {{-- MULTI-DELETE: commented out temporarily
-                                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
+                                    @if (auth()->user()->can('delete_products') || auth()->user()->can('manage_products'))
                                         <td class="px-3 py-3 text-center">
                                             <input type="checkbox" class="form-check-input product-checkbox"
                                                 value="{{ $product->id }}">
@@ -267,21 +266,18 @@
                                             <input class="form-check-input status-toggle" type="checkbox"
                                                 role="switch" data-id="{{ $product->id }}"
                                                 {{ $product->is_active ? 'checked' : '' }}
-                                                {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products') ? '' : 'disabled' }}>
+                                                {{ auth()->user()->can('manage_products') ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons :editUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('edit_products')
+                                        <x-action-buttons :editUrl="auth()->user()->can('edit_products')
                                             ? route('warehouse.products.edit', $product)
-                                            : null" :deleteUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('delete_products') ||
-                                        auth()->user()->hasPermission('manage_products')
+                                            : null" :deleteUrl="auth()->user()->can('delete_products') ||
+                                        auth()->user()->can('manage_products')
                                             ? route('warehouse.products.destroy', $product)
                                             : null">
-                                            @if (auth()->user()->isSuperAdmin() ||
-                                                    auth()->user()->hasPermission('print_labels') ||
-                                                    auth()->user()->hasPermission('view_products'))
+                                            @if (auth()->user()->can('print_labels') ||
+                                                    auth()->user()->can('view_products'))
                                                 <a href="{{ route('warehouse.print.pallet', ['product_id' => $product->id, 'qty' => 1]) }}"
                                                     target="_blank" class="btn btn-sm btn-outline-dark"
                                                     data-bs-toggle="tooltip" title="Print Label">
@@ -297,7 +293,7 @@
                                         <div class="py-5">
                                             <i class="mdi mdi-cube-outline text-muted" style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No products found.</p>
-                                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+                                            @if (auth()->user()->can('create_products'))
                                                 <a href="{{ route('warehouse.products.create') }}"
                                                     class="btn btn-sm btn-primary mt-3">
                                                     <i class="mdi mdi-plus"></i> Add First Product
@@ -330,12 +326,12 @@
     </div>
 
     {{-- MODALS --}}
-    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+    @if (auth()->user()->can('create_products'))
         @include('warehouse.products._import-modal')
     @endif
 
     {{-- PRICING MODAL --}}
-    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
+    @if (auth()->user()->can('manage_products'))
         <div class="modal fade" id="pricingModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">

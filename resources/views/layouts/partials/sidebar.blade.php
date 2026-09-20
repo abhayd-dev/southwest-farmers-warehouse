@@ -27,7 +27,7 @@
                 {{-- ================= OVERVIEW ================= --}}
                 <li class="menu-title">Overview</li>
 
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_dashboard'))
+                @if (auth()->user()->can('view_dashboard'))
                     <li>
                         <a href="{{ route('dashboard') }}"
                             class="tp-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -38,7 +38,7 @@
                 @endif
 
                 {{-- ================= INVENTORY & OPERATIONS ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                @if (auth()->user()->can('view_inventory'))
                     <li class="menu-title mt-2">Inventory & Operations</li>
                     <li>
                         <a href="#sidebarWarehouse" data-bs-toggle="collapse"
@@ -138,7 +138,7 @@
                 </li>
 
                 {{-- ================= PRODUCT CATALOG ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_products'))
+                @if (auth()->user()->can('view_products'))
                     <li class="menu-title mt-2">Product Catalog</li>
                     <li>
                         <a href="#sidebarProducts" data-bs-toggle="collapse"
@@ -157,7 +157,7 @@
                                     </a>
                                 </li>
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+                                @if (auth()->user()->can('create_products'))
                                     <li>
                                         <a href="{{ route('warehouse.products.create') }}"
                                             class="{{ request()->routeIs('warehouse.products.create') ? 'active' : '' }}">
@@ -166,7 +166,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_promotions'))
+                                @if (auth()->user()->can('manage_promotions'))
                                     <li>
                                         <a href="{{ route('warehouse.promotions.index') }}"
                                             class="{{ request()->routeIs('warehouse.promotions.*') ? 'active' : '' }}">
@@ -175,7 +175,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                @if (auth()->user()->can('manage_categories'))
                                     <li>
                                         <a href="{{ route('warehouse.categories.index') }}"
                                             class="{{ request()->routeIs('warehouse.categories.*') ? 'active' : '' }}">
@@ -219,7 +219,7 @@
                 @endif
 
                 {{-- ================= STORES ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores'))
+                @if (auth()->user()->can('view_stores'))
                     <li class="menu-title mt-2">Stores</li>
                     <li>
                         <a href="#sidebarStores" data-bs-toggle="collapse"
@@ -237,7 +237,7 @@
                                         <i class="mdi mdi-store-outline me-2"></i> All Stores List
                                     </a>
                                 </li>
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_stores'))
+                                @if (auth()->user()->can('create_stores'))
                                     <li>
                                         <a href="{{ route('warehouse.stores.create') }}"
                                             class="{{ request()->routeIs('warehouse.stores.create') ? 'active' : '' }}">
@@ -251,12 +251,11 @@
                 @endif
 
                 {{-- ================= PROCUREMENT ================= --}}
-                @if (auth()->user()->isSuperAdmin() ||
-                        auth()->user()->hasPermission('view_po') ||
-                        auth()->user()->hasPermission('view_vendors'))
+                @if (auth()->user()->can('view_po') ||
+                        auth()->user()->can('view_vendors'))
                     <li class="menu-title mt-2">Procurement</li>
 
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_vendors'))
+                    @if (auth()->user()->can('view_vendors'))
                         <li>
                             <a href="{{ route('warehouse.vendors.index') }}"
                                 class="tp-link {{ request()->routeIs('warehouse.vendors.*') ? 'active' : '' }}">
@@ -266,7 +265,7 @@
                         </li>
                     @endif
 
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po'))
+                    @if (auth()->user()->can('view_po'))
                         <li>
                             <a href="{{ route('warehouse.purchase-orders.index') }}"
                                 class="tp-link {{ request()->routeIs('warehouse.purchase-orders.*') ? 'active' : '' }}">
@@ -292,7 +291,7 @@
                 @endif
 
                 {{-- ================= FULFILLMENT & DISPATCH ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_requests'))
+                @if (auth()->user()->can('view_stock_requests'))
                     <li class="menu-title mt-2">Fulfillment & Dispatch</li>
                     <li>
                         {{-- Parent Menu Link --}}
@@ -344,7 +343,7 @@
                 @endif
 
                 {{-- ================= INVENTORY CONTROL ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_control'))
+                @if (auth()->user()->can('view_stock_control'))
                     <li class="menu-title mt-2">Inventory Control</li>
                     <li>
                         <a href="#sidebarStockControl" data-bs-toggle="collapse"
@@ -357,7 +356,7 @@
                             id="sidebarStockControl">
                             <ul class="nav-second-level">
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_overview'))
+                                @if (auth()->user()->can('view_stock_overview'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.overview') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.overview') ? 'active' : '' }}">
@@ -372,7 +371,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_transfers'))
+                                @if (auth()->user()->can('view_transfers'))
                                     <li>
                                         <a href="{{ route('warehouse.transfers.monitor') }}"
                                             class="{{ request()->routeIs('warehouse.transfers.*') ? 'active' : '' }}">
@@ -381,7 +380,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_recalls'))
+                                @if (auth()->user()->can('manage_recalls'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.recall') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.recall') ? 'active' : '' }}">
@@ -394,7 +393,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stock_valuation'))
+                                @if (auth()->user()->can('view_stock_valuation'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.valuation') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.valuation') ? 'active' : '' }}">
@@ -403,7 +402,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_min_max'))
+                                @if (auth()->user()->can('manage_min_max'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.minmax.index') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.minmax.*') ? 'active' : '' }}">
@@ -412,7 +411,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audits'))
+                                @if (auth()->user()->can('view_audits'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.audit.index') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.audit.*') ? 'active' : '' }}">
@@ -422,7 +421,7 @@
                                 @endif
 
                                 {{-- Free Weight System --}}
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                @if (auth()->user()->can('view_inventory'))
                                     <li>
                                         <a href="{{ route('warehouse.free-weight.index') }}"
                                             class="{{ request()->routeIs('warehouse.free-weight.*') ? 'active' : '' }}">
@@ -432,7 +431,7 @@
                                 @endif
 
                                 {{-- Pallet Builder --}}
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                @if (auth()->user()->can('view_inventory'))
                                     <li>
                                         <a href="{{ route('warehouse.pallets.index') }}"
                                             class="{{ request()->routeIs('warehouse.pallets.*') ? 'active' : '' }}">
@@ -441,7 +440,7 @@
                                     </li>
                                 @endif
                                 {{-- Inventory Planning --}}
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory'))
+                                @if (auth()->user()->can('view_inventory'))
                                     <li>
                                         <a href="{{ route('warehouse.stock-control.restock-planning') }}"
                                             class="{{ request()->routeIs('warehouse.stock-control.restock-planning*') ? 'active' : '' }}">
@@ -455,13 +454,12 @@
                 @endif
 
                 {{-- ================= FINANCE & REPORTS ================= --}}
-                @if (auth()->user()->isSuperAdmin() ||
-                        auth()->user()->hasPermission('view_financial_reports') ||
-                        auth()->user()->hasPermission('view_expiry_report'))
+                @if (auth()->user()->can('view_financial_reports') ||
+                        auth()->user()->can('view_expiry_report'))
                     <li class="menu-title mt-2">Finance & Reports</li>
 
                     {{-- Finance Group --}}
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports'))
+                    @if (auth()->user()->can('view_financial_reports'))
                         <li>
                             <a href="#sidebarFinance" data-bs-toggle="collapse"
                                 class="{{ request()->routeIs('warehouse.finance.*') ? 'active' : '' }}">
@@ -496,7 +494,7 @@
                     @endif
 
                     {{-- Reports Group --}}
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_expiry_report'))
+                    @if (auth()->user()->can('view_expiry_report'))
                         <li>
                             <a href="#sidebarReports" data-bs-toggle="collapse"
                                 class="{{ request()->routeIs('warehouse.reports.*') ? 'active' : '' }}">
@@ -550,9 +548,8 @@
                 @endif
 
                 {{-- ================= ADMINISTRATION ================= --}}
-                @if (auth()->user()->isSuperAdmin() ||
-                        auth()->user()->hasPermission('view_staff') ||
-                        auth()->user()->hasPermission('manage_roles'))
+                @if (auth()->user()->can('view_staff') ||
+                        auth()->user()->can('manage_roles'))
                     <li class="menu-title mt-2">Administration</li>
                     <li>
                         <a href="#sidebarStaff" data-bs-toggle="collapse"
@@ -564,7 +561,7 @@
                         <div class="collapse {{ request()->routeIs('warehouse.staff.*') || request()->routeIs('warehouse.roles.*') ? 'show' : '' }}"
                             id="sidebarStaff">
                             <ul class="nav-second-level">
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_staff'))
+                                @if (auth()->user()->can('view_staff'))
                                     <li>
                                         <a href="{{ route('warehouse.staff.index') }}"
                                             class="{{ request()->routeIs('warehouse.staff.*') ? 'active' : '' }}">
@@ -573,7 +570,7 @@
                                     </li>
                                 @endif
 
-                                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_roles'))
+                                @if (auth()->user()->can('manage_roles'))
                                     <li>
                                         <a href="{{ route('warehouse.roles.index') }}"
                                             class="{{ request()->routeIs('warehouse.roles.*') ? 'active' : '' }}">
@@ -586,7 +583,7 @@
                     </li>
                 @endif
 
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_audit_logs'))
+                @if (auth()->user()->can('view_audit_logs'))
                     <li>
                         <a href="{{ route('warehouse.activity-logs.index') }}"
                             class="{{ request()->routeIs('warehouse.activity-logs.*') ? 'active' : '' }}">
@@ -597,7 +594,7 @@
                 @endif
 
                 {{-- ================= SETTINGS ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_settings'))
+                @if (auth()->user()->can('manage_settings'))
                     <li>
                         <a href="#sidebarSettings" data-bs-toggle="collapse"
                             class="{{ request()->routeIs('warehouse.settings.*') ? 'active' : '' }}">
@@ -620,7 +617,7 @@
                 @endif
 
                 {{-- ================= HELPDESK ================= --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_all_tickets'))
+                @if (auth()->user()->can('view_all_tickets'))
                     <li class="menu-title mt-2">Helpdesk</li>
                     <li>
                         <a href="{{ route('warehouse.support.index') }}"
@@ -633,7 +630,7 @@
                         </a>
                     </li>
 
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_enquiries'))
+                    @if (auth()->user()->can('manage_enquiries'))
                     <li>
                         <a href="{{ route('warehouse.enquiries.index') }}"
                             class="tp-link {{ request()->routeIs('warehouse.enquiries.*') ? 'active' : '' }}">

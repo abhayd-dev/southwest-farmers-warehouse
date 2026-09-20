@@ -12,7 +12,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 text-dark fw-bold">Department List</h5>
                             
-                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                            @if(auth()->user()->can('manage_categories'))
                             <a href="{{ route('warehouse.departments.create') }}" class="btn btn-primary btn-sm">
                                 <i class="mdi mdi-plus me-1"></i>Add New
                             </a>
@@ -45,11 +45,11 @@
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input status-toggle" type="checkbox" 
                                                     data-id="{{ $dept->id }}" {{ $dept->is_active ? 'checked' : '' }}
-                                                    {{ (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories')) ? '' : 'disabled' }}>
+                                                    {{ (auth()->user()->can('manage_categories')) ? '' : 'disabled' }}>
                                             </div>
                                         </td>
                                         <td class="text-end">
-                                            @if(auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                                            @if(auth()->user()->can('manage_categories'))
                                                 <x-action-buttons 
                                                     :editUrl="route('warehouse.departments.edit', $dept->id)"
                                                     :deleteUrl="route('warehouse.departments.destroy', $dept->id)"

@@ -173,12 +173,11 @@
                                             <input class="form-check-input status-toggle" type="checkbox" role="switch"
                                                 data-id="{{ $option->id }}"
                                                 {{ $option->is_active ? 'checked' : '' }}
-                                                {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options') ? '' : 'disabled' }}>
+                                                {{ auth()->user()->can('manage_product_options') ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons :editUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('manage_product_options')
+                                        <x-action-buttons :editUrl="auth()->user()->can('manage_product_options')
                                             ? route('warehouse.product-options.edit', $option)
                                             : null" :deleteUrl="null" />
                                     </td>
@@ -191,7 +190,7 @@
                                                 style="font-size: 4rem;"></i>
                                             <p class="text-muted mt-3 mb-0">No product options found.</p>
 
-                                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+                                            @if (auth()->user()->can('manage_product_options'))
                                                 <a href="{{ route('warehouse.product-options.create') }}"
                                                     class="btn btn-sm btn-primary mt-3">
                                                     <i class="mdi mdi-plus"></i> Add First Option
@@ -223,7 +222,7 @@
 
     </div>
 
-    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_product_options'))
+    @if (auth()->user()->can('manage_product_options'))
         @includeIf('warehouse.product-options._import-modal')
     @endif
 

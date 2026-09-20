@@ -41,7 +41,7 @@
         <div class="row g-3 mb-4">
 
             {{-- 1. Valuation --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports')) && isset($data['inventory_value']))
+            @if((auth()->user()->can('view_financial_reports')) && isset($data['inventory_value']))
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-body p-3">
@@ -66,7 +66,7 @@
             @endif
 
             {{-- 2. Procurement Spend --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_financial_reports')) && isset($data['po_spend']))
+            @if((auth()->user()->can('view_financial_reports')) && isset($data['po_spend']))
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-body p-3">
@@ -97,7 +97,7 @@
             @endif
 
             {{-- 3. Low Stock --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_dashboard')) && isset($data['low_stock']))
+            @if((auth()->user()->can('view_dashboard')) && isset($data['low_stock']))
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-body p-3">
@@ -110,18 +110,20 @@
                                 <i class="mdi mdi-alert-outline text-danger fs-4"></i>
                             </div>
                         </div>
+                        @can('view_inventory')
                         <div class="pt-2 border-top mt-2">
                             <a href="{{ route('warehouse.stocks.index') }}" class="btn btn-danger btn-sm w-100 shadow-sm">
                                 <i class="mdi mdi-eye-outline me-1"></i>View & Restock
                             </a>
                         </div>
+                        @endcan
                     </div>
                 </div>
             </div>
             @endif
 
             {{-- 4. Pending Orders --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores') || auth()->user()->hasPermission('approve_store_requests')) && isset($data['pending_requests']))
+            @if((auth()->user()->can('view_stores') || auth()->user()->can('approve_store_requests')) && isset($data['pending_requests']))
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-body p-3">
@@ -150,7 +152,7 @@
         <div class="row g-3 mb-4">
             
             {{-- Stock Movement Chart (Full Width) --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory')) && isset($data['chart_in']))
+            @if((auth()->user()->can('view_inventory')) && isset($data['chart_in']))
             <div class="col-12">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-header bg-white border-0 py-3 px-3">
@@ -174,7 +176,7 @@
             {{-- 4. WIDGETS ROW (Below Chart, Col-6 each on Desktop, Col-12 on Mobile) --}}
             
             {{-- Top Moving Products Pie Chart --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory')) && isset($data['top_products']) && count($data['top_products']) > 0)
+            @if((auth()->user()->can('view_inventory')) && isset($data['top_products']) && count($data['top_products']) > 0)
             <div class="col-12 col-md-6">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-header bg-white border-0 py-3 px-3">
@@ -194,7 +196,7 @@
             @endif
 
                         {{-- Store Sales Inventory Source Pie Chart --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_reports')) && isset($data['sales_source']))
+            @if((auth()->user()->can('view_reports')) && isset($data['sales_source']))
             <div class="col-12 col-md-6">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-header bg-white border-0 py-3 px-3">
@@ -214,7 +216,7 @@
             @endif
 
             {{-- Recent POs --}}
-            @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_po')) && isset($data['recent_pos']))
+            @if((auth()->user()->can('view_po')) && isset($data['recent_pos']))
             <div class="col-12 col-md-6">
                 <div class="card border-0 shadow-sm rounded-3 h-100">
                     <div class="card-header bg-white border-0 py-3 px-3">
@@ -263,7 +265,7 @@
         </div>
 
         {{-- 5. RECENT STORE REQUESTS TABLE --}}
-        @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_stores') || auth()->user()->hasPermission('approve_store_requests')) && isset($data['recent_requests']))
+        @if((auth()->user()->can('view_stores') || auth()->user()->can('approve_store_requests')) && isset($data['recent_requests']))
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm rounded-3">
@@ -351,7 +353,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         // 1. Stock Movement Area Chart
-        @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory')) && isset($data['chart_in']))
+        @if((auth()->user()->can('view_inventory')) && isset($data['chart_in']))
         var movementOptions = {
             series: [{
                 name: 'Stock In (Purchase/Returns)',
@@ -420,7 +422,7 @@
         @endif
 
         // 2. Top Products Pie Chart
-        @if((auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('view_inventory')) && isset($data['top_products']) && count($data['top_products']) > 0)
+        @if((auth()->user()->can('view_inventory')) && isset($data['top_products']) && count($data['top_products']) > 0)
         var pieOptions = {
             series: @json($data['top_products']->pluck('qty')),
             labels: @json($data['top_products']->pluck('product_name')),

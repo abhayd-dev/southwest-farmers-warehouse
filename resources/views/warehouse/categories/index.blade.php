@@ -40,7 +40,7 @@
                             </form>
 
                             {{-- ACTIONS (Protected) --}}
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                            @if (auth()->user()->can('manage_categories'))
                                 <div class="d-flex align-items-center gap-2">
                                     <a href="{{ route('warehouse.categories.export') }}"
                                         class="btn btn-outline-primary d-flex align-items-center gap-1">
@@ -103,16 +103,14 @@
                                             <input class="form-check-input status-toggle" type="checkbox"
                                                 data-id="{{ $category->id }}"
                                                 {{ $category->is_active ? 'checked' : '' }} {{-- Disable if no permission --}}
-                                                {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? '' : 'disabled' }}>
+                                                {{ auth()->user()->can('manage_categories') ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons :viewUrl="null" :data="$category" :editUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('manage_categories')
+                                        <x-action-buttons :viewUrl="null" :data="$category" :editUrl="auth()->user()->can('manage_categories')
                                             ? route('warehouse.categories.edit', $category)
                                             : null"
-                                            :deleteUrl="auth()->user()->isSuperAdmin() ||
-                                            auth()->user()->hasPermission('manage_categories')
+                                            :deleteUrl="auth()->user()->can('manage_categories')
                                                 ? route('warehouse.categories.destroy', $category)
                                                 : null" />
                                     </td>

@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Models\WareSetting;
+use App\Models\WarePermission;
+use App\Models\WareUser;
+use App\Support\PermissionCatalog;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +45,27 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands($this->app->isProduction() || str_contains($defaultHost, 'rlwy.net'));
 
         View::composer('layouts.partials.sidebar', SidebarComposer::class);
+
+        // A newly seeded permission must be usable immediately, not after the
+        // catalog cache expires.
+        WarePermission::saved(fn () => PermissionCatalog::flush());
+        WarePermission::deleted(fn () => PermissionCatalog::flush());
+
+        // Lets views and controllers use @can('view_products') / $user->can(...)
+        // for the app's permission names. Super Admin passes everything (same as
+        // hasPermission()); names that aren't real permissions fall through
+        // untouched so this can't interfere with any future policy.
+        Gate::before(function ($user, string $ability) {
+            if (!$user instanceof WareUser) {
+                return null;
+            }
+
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+
+            return PermissionCatalog::has($ability) ? $user->hasPermission($ability) : null;
+        });
 
         // Default critical settings to prevent view crashes
         $defaults = [

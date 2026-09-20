@@ -42,7 +42,7 @@
                             </form>
 
                             {{-- ACTIONS (Protected) --}}
-                            @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories'))
+                            @if (auth()->user()->can('manage_categories'))
                                 <div class="d-flex align-items-center gap-2">
                                     <a href="{{ route('warehouse.subcategories.export') }}"
                                         class="btn btn-outline-primary d-flex align-items-center gap-1">
@@ -104,16 +104,14 @@
                                         <div class="form-check form-switch d-inline-block">
                                             <input class="form-check-input status-toggle" type="checkbox"
                                                 data-id="{{ $sub->id }}" {{ $sub->is_active ? 'checked' : '' }}
-                                                {{ auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_categories') ? '' : 'disabled' }}>
+                                                {{ auth()->user()->can('manage_categories') ? '' : 'disabled' }}>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <x-action-buttons :viewUrl="null" :data="$sub" :editUrl="auth()->user()->isSuperAdmin() ||
-                                        auth()->user()->hasPermission('manage_categories')
+                                        <x-action-buttons :viewUrl="null" :data="$sub" :editUrl="auth()->user()->can('manage_categories')
                                             ? route('warehouse.subcategories.edit', $sub)
                                             : null"
-                                            :deleteUrl="auth()->user()->isSuperAdmin() ||
-                                            auth()->user()->hasPermission('manage_categories')
+                                            :deleteUrl="auth()->user()->can('manage_categories')
                                                 ? route('warehouse.subcategories.destroy', $sub)
                                                 : null" />
                                     </td>

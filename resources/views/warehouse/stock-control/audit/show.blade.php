@@ -22,7 +22,7 @@
                     class="btn btn-outline-success shadow-sm">
                     <i class="mdi mdi-file-excel me-1"></i> Export (Excel)
                 </a>
-                    @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_audits'))
+                    @if (auth()->user()->can('manage_audits'))
                         {{-- Save Draft Button --}}
                         <button type="submit" form="auditForm" class="btn btn-primary shadow-sm">
                             <i class="mdi mdi-content-save me-1"></i> Save Progress
@@ -77,8 +77,7 @@
                                                     : 'mdi-arrow-up');
                                         // Check permission for input
                                         $canEdit =
-                                            (auth()->user()->isSuperAdmin() ||
-                                                auth()->user()->hasPermission('manage_audits')) &&
+                                            (auth()->user()->can('manage_audits')) &&
                                             $audit->status != 'completed';
                                     @endphp
                                     <tr>

@@ -137,7 +137,7 @@
 
                     {{-- Reply Form (Protected) --}}
                     @if ($ticket->status !== 'closed')
-                        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
+                        @if (auth()->user()->can('manage_support'))
                             <div class="card-footer bg-white p-3">
                                 <form action="{{ route('warehouse.support.reply', $ticket->id) }}" method="POST"
                                     enctype="multipart/form-data">
@@ -195,7 +195,7 @@
             <div class="col-lg-4">
 
                 {{-- Action Card (Protected) --}}
-                @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_support'))
+                @if (auth()->user()->can('manage_support'))
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white py-3 border-bottom">
                             <h6 class="fw-bold mb-0">Ticket Actions</h6>

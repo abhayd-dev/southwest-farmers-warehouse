@@ -4,7 +4,7 @@
     <div class="d-flex align-items-center gap-2">
 
 
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('manage_products'))
+        @if (auth()->user()->can('manage_products'))
             <button type="button" class="btn btn-warning text-dark d-flex align-items-center gap-1"
                 data-bs-toggle="modal" data-bs-target="#pricingModal">
                 <i class="mdi mdi-currency-usd text-white"></i>
@@ -13,9 +13,8 @@
         @endif
 
         {{-- EXPORT --}}
-        @if (auth()->user()->isSuperAdmin() ||
-                auth()->user()->hasPermission('manage_products') ||
-                auth()->user()->hasPermission('export_reports'))
+        @if (auth()->user()->can('manage_products') ||
+                auth()->user()->can('export_reports'))
             <a href="{{ route('warehouse.products.export', request()->all()) }}"
                 class="btn btn-outline-primary d-flex align-items-center gap-1">
                 <i class="mdi mdi-download"></i>
@@ -24,7 +23,7 @@
         @endif
 
         {{-- IMPORT BUTTON --}}
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+        @if (auth()->user()->can('create_products'))
             <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1"
                 data-bs-toggle="modal" data-bs-target="#importModal">
                 <i class="mdi mdi-upload"></i>
@@ -33,7 +32,7 @@
         @endif
 
         @php /* DELETE ALL / BULK DELETE: commented out temporarily
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('delete_products') || auth()->user()->hasPermission('manage_products'))
+        @if (auth()->user()->can('delete_products') || auth()->user()->can('manage_products'))
             <button type="button" id="deleteAllBtn" class="btn btn-outline-danger d-flex align-items-center gap-1"
                 title="Delete All / Selected Products">
                 <i class="mdi mdi-delete-sweep"></i>
@@ -52,7 +51,7 @@
         */ @endphp
 
         {{-- ADD --}}
-        @if (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('create_products'))
+        @if (auth()->user()->can('create_products'))
             <a href="{{ route('warehouse.products.create') }}" class="btn btn-success d-flex align-items-center gap-1">
                 <i class="mdi mdi-plus-circle"></i>
                 <span class="d-none d-lg-inline">Add Product</span>
