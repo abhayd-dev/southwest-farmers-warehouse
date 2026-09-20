@@ -320,8 +320,7 @@
                                     <a href="{{ route('warehouse.store-orders.index') }}"
                                         class="{{ request()->routeIs('warehouse.store-orders.*') ? 'active' : '' }}">
                                         <i class="mdi mdi-clipboard-list-outline me-2"></i> Store Orders (PO)
-                                        @php $pendingStorePOs = \App\Models\StorePurchaseOrder::where('status', 'pending')->count(); @endphp
-                                        @if ($pendingStorePOs > 0)
+                                                                                @if ($pendingStorePOs > 0)
                                             <span
                                                 class="badge bg-warning text-dark rounded-pill ms-2">{{ $pendingStorePOs }}</span>
                                         @endif
@@ -628,9 +627,6 @@
                             class="tp-link {{ request()->routeIs('warehouse.support.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:lifebuoy"></iconify-icon>
                             <span class="sidebar-text">Support Tickets</span>
-                            @php
-                                $openTickets = \App\Models\SupportTicket::where('status', 'open')->count();
-                            @endphp
                             @if ($openTickets > 0)
                                 <span class="badge bg-danger rounded-pill ms-auto">{{ $openTickets }}</span>
                             @endif
@@ -643,9 +639,6 @@
                             class="tp-link {{ request()->routeIs('warehouse.enquiries.*') ? 'active' : '' }}">
                             <iconify-icon icon="tabler:help-circle"></iconify-icon>
                             <span class="sidebar-text">Enquiries</span>
-                            @php
-                                $escalatedEnquiries = \App\Models\Enquiry::whereIn('status', ['escalated_warehouse', 'escalated_admin'])->count();
-                            @endphp
                             @if ($escalatedEnquiries > 0)
                                 <span class="badge bg-warning rounded-pill ms-auto">{{ $escalatedEnquiries }}</span>
                             @endif
