@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use App\Models\WareSetting;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +32,13 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        // Local .env files here point at the shared Railway database, so
+        // migrate:fresh / db:wipe / rollback must be refused for it even when
+        // APP_ENV=local. Keyed off the *default connection's* host, so the
+        // sqlite test database is unaffected.
+        $defaultHost = (string) config('database.connections.' . config('database.default') . '.host');
+        DB::prohibitDestructiveCommands($this->app->isProduction() || str_contains($defaultHost, 'rlwy.net'));
 
         View::composer('layouts.partials.sidebar', SidebarComposer::class);
 

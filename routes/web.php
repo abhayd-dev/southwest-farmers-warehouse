@@ -3,19 +3,23 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
-Route::get('/debug-logs', function () {
-    $logFile = storage_path('logs/laravel.log');
-    if (!file_exists($logFile)) return 'No log file found.';
-    $lines = array_slice(file($logFile), -1000);
-    return response('<pre>' . implode('', $lines) . '</pre>');
-});
+// Operational utilities. These used to be public: anyone could read the last
+// 1,000 log lines (approval links, emails, SQL) and wipe caches.
+Route::middleware(['auth', 'super_admin'])->group(function () {
+    Route::get('/debug-logs', function () {
+        $logFile = storage_path('logs/laravel.log');
+        if (!file_exists($logFile)) return 'No log file found.';
+        $lines = array_slice(file($logFile), -1000);
+        return response('<pre>' . e(implode('', $lines)) . '</pre>');
+    });
 
-Route::get('/clear-cache', function() {
-    Artisan::call('cache:clear');
-    Artisan::call('view:clear');
-    Artisan::call('route:clear');
-    Artisan::call('config:clear');
-    return 'Cache cleared successfully!';
+    Route::get('/clear-cache', function () {
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        Artisan::call('route:clear');
+        Artisan::call('config:clear');
+        return 'Cache cleared successfully!';
+    });
 });
 
 // Public, signed link clicked from a "confirm your email" message — no login required.
@@ -101,16 +105,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         // Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
-        // Notification & Activity Logs
-        Route::get('/notifications', function () {
-            return view('notifications.index');
-        })->name('notifications.index');
-        Route::post('/notifications/mark-all-read', function () {
-            return back();
-        })->name('notifications.markAllRead');
-        Route::get('/activity-logs', function () {
-            return view('activity-logs.index');
-        })->name('activity-logs.index');
     });
 
     // require __DIR__.'/auth.php';
@@ -259,15 +253,6 @@ Route::middleware('auth')->group(function () {
 
         // ===== STOCK CONTROL MODULE ROUTES (COMPLETE) =====
         Route::prefix('stock-control')->name('warehouse.stock-control.')->group(function () {
-
-            // KDS Screen
-            Route::get('kds', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'index'])->name('kds.index');
-            Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateStatus'])->name('kds.update-status');
-            Route::post('kds/{sale}/notes', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateNotes'])->name('kds.update-notes');
-
-            // Kitchen Menu Management
-            Route::get('menu-categories', [App\Http\Controllers\Warehouse\MenuCategoryController::class, 'index'])->name('menu-categories.index');
-            Route::get('menu-items', [App\Http\Controllers\Warehouse\MenuItemController::class, 'index'])->name('menu-items.index');
 
             // Stock Overview
             Route::get('overview', [StockControlController::class, 'overview'])->name('overview');
