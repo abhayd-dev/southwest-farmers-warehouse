@@ -406,7 +406,12 @@ class ReportController extends Controller
         } elseif ($report === 'vendor-performance') {
             $headings = ['Vendor', 'Total Completed POs', 'Total Spend'];
             $vendors = Vendor::withCount(['purchaseOrders as po_count' => function ($q) { $q->where('status', 'completed'); }])->get();
-            foreach ($vendors as $v) { $spend = PurchaseOrder::where('vendor_id', $v->id)->where('status', 'completed')->sum('total_amount'); $data[] = [$v->name, $v->po_count, '$' . number_format($spend, 2)]; }
+            // One grouped query for every vendor's spend instead of one query per vendor.
+            $spendByVendor = PurchaseOrder::where('status', 'completed')
+                ->groupBy('vendor_id')
+                ->selectRaw('vendor_id, SUM(total_amount) as spend')
+                ->pluck('spend', 'vendor_id');
+            foreach ($vendors as $v) { $data[] = [$v->name, $v->po_count, '$' . number_format($spendByVendor[$v->id] ?? 0, 2)]; }
         } elseif ($report === 'receiving-history') {
             $headings = ['Date', 'Staff', 'Vendor', 'PO Number', 'Product', 'Qty Received', 'Unit Cost', 'Batch No'];
             $query = StockTransaction::with(['product', 'user', 'batch', 'purchaseOrder.vendor'])->whereIn('type', ['purchase_in', 'receive']);

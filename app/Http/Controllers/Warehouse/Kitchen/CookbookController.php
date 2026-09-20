@@ -20,8 +20,7 @@ class CookbookController extends Controller
     public function create()
     {
         $menuItems = MenuItem::all();
-        $products = Product::all();
-        return view('warehouse.kitchen.cookbook.create', compact('menuItems', 'products'));
+        return view('warehouse.kitchen.cookbook.create', compact('menuItems'));
     }
 
     public function store(Request $request)
