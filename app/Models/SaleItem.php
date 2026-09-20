@@ -12,12 +12,9 @@ class SaleItem extends Model
     protected $fillable = [
         'sale_id',
         'product_id',
-        'product_option_id',
         'quantity',
         'price',
         'total',
-        'tax_amount',
-        'discount_amount'
     ];
 
     public function sale()

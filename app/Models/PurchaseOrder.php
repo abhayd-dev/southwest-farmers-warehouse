@@ -33,7 +33,6 @@ class PurchaseOrder extends Model
         'payment_status',
         'notes',
         'created_by',
-        'approved_by',
         'approval_email',
         'approver_phone',
         'approval_status',

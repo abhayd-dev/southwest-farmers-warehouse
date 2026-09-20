@@ -22,9 +22,7 @@ class StoreUser extends Authenticatable
         'email',
         'password',
         'phone',
-        'designation',
         'parent_id',
-        'profile_image',
         'is_active',
     ];
 
