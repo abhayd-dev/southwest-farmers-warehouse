@@ -33,57 +33,57 @@ Route::get('/verify-contact-email/{type}/{id}', [\App\Http\Controllers\ContactEm
 // auth-protected `warehouse` group, so it silently redirected every such
 // click to the login page; same URI/name preserved so already-sent emails
 // with this signed link keep working.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'approval'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approve', [\App\Http\Controllers\Warehouse\Procurement\PurchaseOrderExternalController::class, 'approval'])
     ->name('warehouse.purchase-orders.approve')
     ->middleware('signed:reason');
 
 // Vendor acknowledge/deny response to a sent Purchase Order — same reasoning:
 // the vendor has no warehouse login, so this must sit outside the auth group.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'vendorResponse'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\Http\Controllers\Warehouse\Procurement\PurchaseOrderExternalController::class, 'vendorResponse'])
     ->name('warehouse.purchase-orders.vendor-response')
     ->middleware('signed:reason');
 
 // Lets the external approver cancel a PO they already approved — same "no
 // login" reasoning as the two routes above.
-Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\PurchaseOrderExternalController::class, 'approverCancel'])
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\Procurement\PurchaseOrderExternalController::class, 'approverCancel'])
     ->name('warehouse.purchase-orders.approver-cancel')
     ->middleware('signed');
 
 use App\Http\Controllers\Warehouse\Auth\LoginController;
 use App\Http\Controllers\Warehouse\Auth\ForgotPasswordController;
 use App\Http\Controllers\Warehouse\Auth\ResetPasswordController;
-use App\Http\Controllers\Warehouse\ActivityLogController;
+use App\Http\Controllers\Warehouse\Administration\ActivityLogController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Warehouse\DepartmentController;
-use App\Http\Controllers\Warehouse\DiscrepancyController;
-use App\Http\Controllers\Warehouse\Reports\ExpiryReportController;
-use App\Http\Controllers\Warehouse\FinanceReportController;
-use App\Http\Controllers\Warehouse\LabelController;
-use App\Http\Controllers\Warehouse\MinMaxController;
-use App\Http\Controllers\Warehouse\NotificationController;
-use App\Http\Controllers\Warehouse\ProductController;
-use App\Http\Controllers\Warehouse\ProductOptionController;
-use App\Http\Controllers\Warehouse\ProductCategoryController;
-use App\Http\Controllers\Warehouse\ProductStockController;
-use App\Http\Controllers\Warehouse\ProductSubcategoryController;
-use App\Http\Controllers\Warehouse\PurchaseOrderController;
-use App\Http\Controllers\Warehouse\ReceivingController;
-use App\Http\Controllers\Warehouse\RecallController;
-use App\Http\Controllers\Warehouse\RepackagingController;
-use App\Http\Controllers\Warehouse\RoleController;
-use App\Http\Controllers\Warehouse\StaffController;
-use App\Http\Controllers\Warehouse\StockAuditController;
-use App\Http\Controllers\Warehouse\StockControlController;
-use App\Http\Controllers\Warehouse\StockRequestController;
-use App\Http\Controllers\Warehouse\StorePurchaseOrderController;
-use App\Http\Controllers\Warehouse\StoreController;
-use App\Http\Controllers\Warehouse\SupportTicketController;
-use App\Http\Controllers\Warehouse\TransferMonitorController;
-use App\Http\Controllers\Warehouse\VendorController;
-use App\Http\Controllers\Warehouse\WareSettingController;
-use App\Http\Controllers\Warehouse\FreeWeightController;
-use App\Http\Controllers\Warehouse\ImportProgressController;
-use App\Http\Controllers\Warehouse\PalletController;
+use App\Http\Controllers\Warehouse\Catalog\DepartmentController;
+use App\Http\Controllers\Warehouse\Fulfillment\DiscrepancyController;
+use App\Http\Controllers\Warehouse\Finance\Reports\ExpiryReportController;
+use App\Http\Controllers\Warehouse\Finance\FinanceReportController;
+use App\Http\Controllers\Warehouse\Inventory\LabelController;
+use App\Http\Controllers\Warehouse\Inventory\MinMaxController;
+use App\Http\Controllers\Warehouse\Administration\NotificationController;
+use App\Http\Controllers\Warehouse\Catalog\ProductController;
+use App\Http\Controllers\Warehouse\Catalog\ProductOptionController;
+use App\Http\Controllers\Warehouse\Catalog\ProductCategoryController;
+use App\Http\Controllers\Warehouse\Inventory\ProductStockController;
+use App\Http\Controllers\Warehouse\Catalog\ProductSubcategoryController;
+use App\Http\Controllers\Warehouse\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Warehouse\Procurement\ReceivingController;
+use App\Http\Controllers\Warehouse\Inventory\RecallController;
+use App\Http\Controllers\Warehouse\Inventory\RepackagingController;
+use App\Http\Controllers\Warehouse\Administration\RoleController;
+use App\Http\Controllers\Warehouse\Administration\StaffController;
+use App\Http\Controllers\Warehouse\Inventory\StockAuditController;
+use App\Http\Controllers\Warehouse\Inventory\StockControlController;
+use App\Http\Controllers\Warehouse\Fulfillment\StockRequestController;
+use App\Http\Controllers\Warehouse\Fulfillment\StorePurchaseOrderController;
+use App\Http\Controllers\Warehouse\Stores\StoreController;
+use App\Http\Controllers\Warehouse\Helpdesk\SupportTicketController;
+use App\Http\Controllers\Warehouse\Inventory\TransferMonitorController;
+use App\Http\Controllers\Warehouse\Procurement\VendorController;
+use App\Http\Controllers\Warehouse\Administration\WareSettingController;
+use App\Http\Controllers\Warehouse\Inventory\FreeWeightController;
+use App\Http\Controllers\Warehouse\Catalog\ImportProgressController;
+use App\Http\Controllers\Warehouse\Inventory\PalletController;
 use App\Http\Controllers\WarehouseController;
 
 Route::middleware('guest')->group(function () {
@@ -111,36 +111,36 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
 
     // Kitchen & Catering Routes
     Route::prefix('kitchen')->name('kitchen.')->group(function () {
-        Route::get('kds', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'index'])->name('kds.index');
-        Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\KitchenOrderController::class, 'updateStatus'])->name('kds.status');
+        Route::get('kds', [App\Http\Controllers\Warehouse\Kitchen\KitchenOrderController::class, 'index'])->name('kds.index');
+        Route::post('kds/{sale}/status', [App\Http\Controllers\Warehouse\Kitchen\KitchenOrderController::class, 'updateStatus'])->name('kds.status');
         
-        Route::get('menu-categories', [App\Http\Controllers\Warehouse\MenuCategoryController::class, 'index'])->name('menu-categories.index');
-        Route::get('menu-items', [App\Http\Controllers\Warehouse\MenuItemController::class, 'index'])->name('menu-items.index');
+        Route::get('menu-categories', [App\Http\Controllers\Warehouse\Kitchen\MenuCategoryController::class, 'index'])->name('menu-categories.index');
+        Route::get('menu-items', [App\Http\Controllers\Warehouse\Kitchen\MenuItemController::class, 'index'])->name('menu-items.index');
 
         // Cookbook / Recipes
-        Route::resource('cookbook', App\Http\Controllers\Warehouse\CookbookController::class);
+        Route::resource('cookbook', App\Http\Controllers\Warehouse\Kitchen\CookbookController::class);
 
         // Production Logging
-        Route::get('production', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'index'])->name('production.index');
-        Route::get('production/create', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'create'])->name('production.create');
-        Route::post('production', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'store'])->name('production.store');
-        Route::get('production/leftovers', [App\Http\Controllers\Warehouse\KitchenProductionController::class, 'leftovers'])->name('production.leftovers');
+        Route::get('production', [App\Http\Controllers\Warehouse\Kitchen\KitchenProductionController::class, 'index'])->name('production.index');
+        Route::get('production/create', [App\Http\Controllers\Warehouse\Kitchen\KitchenProductionController::class, 'create'])->name('production.create');
+        Route::post('production', [App\Http\Controllers\Warehouse\Kitchen\KitchenProductionController::class, 'store'])->name('production.store');
+        Route::get('production/leftovers', [App\Http\Controllers\Warehouse\Kitchen\KitchenProductionController::class, 'leftovers'])->name('production.leftovers');
 
         // Advanced Kitchen Reporting
-        Route::get('reports/sales-ranking', [App\Http\Controllers\Warehouse\KitchenReportController::class, 'salesRanking'])->name('reports.sales-ranking');
+        Route::get('reports/sales-ranking', [App\Http\Controllers\Warehouse\Kitchen\KitchenReportController::class, 'salesRanking'])->name('reports.sales-ranking');
 
         // Daily Availability & Catering Parameters
-        Route::get('availability', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'index'])->name('availability.index');
-        Route::put('availability/{menuItem}', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'update'])->name('availability.update');
-        Route::post('availability/{menuItem}/toggle-today', [App\Http\Controllers\Warehouse\KitchenAvailabilityController::class, 'toggleToday'])->name('availability.toggle-today');
+        Route::get('availability', [App\Http\Controllers\Warehouse\Kitchen\KitchenAvailabilityController::class, 'index'])->name('availability.index');
+        Route::put('availability/{menuItem}', [App\Http\Controllers\Warehouse\Kitchen\KitchenAvailabilityController::class, 'update'])->name('availability.update');
+        Route::post('availability/{menuItem}/toggle-today', [App\Http\Controllers\Warehouse\Kitchen\KitchenAvailabilityController::class, 'toggleToday'])->name('availability.toggle-today');
 
         // Staff Scheduling & Time Clock
-        Route::get('staff-timesheets', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'index'])->name('staff.index');
-        Route::post('staff-timesheets/shift', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');
-        Route::put('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'updateShift'])->name('staff.shift.update');
-        Route::delete('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'destroyShift'])->name('staff.shift.destroy');
-        Route::post('staff-timesheets/clock-in', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'clockIn'])->name('staff.clock-in');
-        Route::post('staff-timesheets/clock-out/{timeLog}', [App\Http\Controllers\Warehouse\KitchenStaffScheduleController::class, 'clockOut'])->name('staff.clock-out');
+        Route::get('staff-timesheets', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'index'])->name('staff.index');
+        Route::post('staff-timesheets/shift', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'storeShift'])->name('staff.shift.store');
+        Route::put('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'updateShift'])->name('staff.shift.update');
+        Route::delete('staff-timesheets/shift/{shift}', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'destroyShift'])->name('staff.shift.destroy');
+        Route::post('staff-timesheets/clock-in', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'clockIn'])->name('staff.clock-in');
+        Route::post('staff-timesheets/clock-out/{timeLog}', [App\Http\Controllers\Warehouse\Kitchen\KitchenStaffScheduleController::class, 'clockOut'])->name('staff.clock-out');
     });
 
     // API Endpoints for POS Synchronization
@@ -278,13 +278,11 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             Route::get('recall/{recall}', [RecallController::class, 'show'])->name('recall.show');
             Route::post('recall/{recall}/approve', [RecallController::class, 'approve'])->name('recall.approve');
             Route::post('recall/{recall}/reject', [RecallController::class, 'reject'])->name('recall.reject');
-            Route::post('recall/{recall}/dispatch', [RecallController::class, 'dispatch'])->name('recall.dispatch');
             Route::post('recall/{recall}/receive', [RecallController::class, 'receive'])->name('recall.receive');
 
             // Stock Valuation - NEW FULL IMPLEMENTATION
             Route::get('valuation', [StockControlController::class, 'valuation'])->name('valuation');
             Route::get('valuation/data', [StockControlController::class, 'valuationData'])->name('valuation.data');
-            Route::get('valuation/stores', [StockControlController::class, 'storeValuation'])->name('valuation.stores');
             Route::get('valuation/store/{store}', [StockControlController::class, 'storeAnalytics'])->name('valuation.store-analytics');
 
             Route::get('valuation/product/{product}', [StockControlController::class, 'productAnalytics'])->name('valuation.product');
@@ -299,7 +297,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             Route::get('rules', [StockControlController::class, 'rules'])->name('rules');
 
             // Restock Planning (Phase 7 Final Missing Element)
-            Route::get('restock-planning', [App\Http\Controllers\Warehouse\RestockPlanningController::class, 'index'])->name('restock-planning');
+            Route::get('restock-planning', [App\Http\Controllers\Warehouse\Inventory\RestockPlanningController::class, 'index'])->name('restock-planning');
 
             Route::controller(StockAuditController::class)->prefix('audit')->name('audit.')->group(function () {
                 Route::get('/', 'index')->name('index');
@@ -312,9 +310,9 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             });
         });
 
-        Route::get('promotions', [\App\Http\Controllers\Warehouse\PromotionController::class, 'index'])->name('warehouse.promotions.index');
+        Route::get('promotions', [\App\Http\Controllers\Warehouse\Catalog\PromotionController::class, 'index'])->name('warehouse.promotions.index');
 
-        Route::controller(\App\Http\Controllers\Warehouse\EnquiryController::class)
+        Route::controller(\App\Http\Controllers\Warehouse\Helpdesk\EnquiryController::class)
             ->prefix('enquiries')
             ->name('warehouse.enquiries.')
             ->group(function () {
@@ -330,7 +328,8 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             ->names('warehouse.vendors')
             ->except(['show']);
         Route::post('vendors/status', [VendorController::class, 'changeStatus'])->name('warehouse.vendors.status');
-        Route::resource('purchase-orders', PurchaseOrderController::class)->names('warehouse.purchase-orders');
+        // No destroy(): POs are cancelled, never deleted. The resource route used to exist and 500'd.
+        Route::resource('purchase-orders', PurchaseOrderController::class)->except(['destroy'])->names('warehouse.purchase-orders');
         Route::post('purchase-orders/bulk-store-draft', [PurchaseOrderController::class, 'bulkStoreDraft'])->name('warehouse.purchase-orders.bulk-store-draft');
         Route::post('purchase-orders/{purchase_order}/mark-ordered', [PurchaseOrderController::class, 'markOrdered'])->name('warehouse.purchase-orders.mark-ordered');
         Route::post('purchase-orders/{purchase_order}/mark-completed', [PurchaseOrderController::class, 'markCompleted'])->name('warehouse.purchase-orders.mark-completed');
@@ -358,7 +357,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
         });
 
-        Route::controller(\App\Http\Controllers\Warehouse\CompletedOrderController::class)->prefix('completed-orders')->name('warehouse.completed-orders.')->group(function () {
+        Route::controller(\App\Http\Controllers\Warehouse\Procurement\CompletedOrderController::class)->prefix('completed-orders')->name('warehouse.completed-orders.')->group(function () {
             Route::get('/', 'index')->name('index');
         });
 
@@ -401,15 +400,15 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             ->name('warehouse.departments.status');
 
         // Markets
-        Route::get('markets', [App\Http\Controllers\Warehouse\MarketController::class, 'index'])->name('warehouse.markets.index');
-        Route::post('markets', [App\Http\Controllers\Warehouse\MarketController::class, 'store'])->name('warehouse.markets.store');
-        Route::put('markets/{market}', [App\Http\Controllers\Warehouse\MarketController::class, 'update'])->name('warehouse.markets.update');
-        Route::post('markets/status', [App\Http\Controllers\Warehouse\MarketController::class, 'changeStatus'])->name('warehouse.markets.status');
+        Route::get('markets', [App\Http\Controllers\Warehouse\Catalog\MarketController::class, 'index'])->name('warehouse.markets.index');
+        Route::post('markets', [App\Http\Controllers\Warehouse\Catalog\MarketController::class, 'store'])->name('warehouse.markets.store');
+        Route::put('markets/{market}', [App\Http\Controllers\Warehouse\Catalog\MarketController::class, 'update'])->name('warehouse.markets.update');
+        Route::post('markets/status', [App\Http\Controllers\Warehouse\Catalog\MarketController::class, 'changeStatus'])->name('warehouse.markets.status');
 
         // Market Prices
-        Route::get('market-prices', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'index'])->name('warehouse.market-prices.index');
-        Route::post('market-prices/update', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'update'])->name('warehouse.market-prices.update');
-        Route::post('market-prices/promo', [App\Http\Controllers\Warehouse\MarketPriceController::class, 'updatePromo'])->name('warehouse.market-prices.promo');
+        Route::get('market-prices', [App\Http\Controllers\Warehouse\Catalog\MarketPriceController::class, 'index'])->name('warehouse.market-prices.index');
+        Route::post('market-prices/update', [App\Http\Controllers\Warehouse\Catalog\MarketPriceController::class, 'update'])->name('warehouse.market-prices.update');
+        Route::post('market-prices/promo', [App\Http\Controllers\Warehouse\Catalog\MarketPriceController::class, 'updatePromo'])->name('warehouse.market-prices.promo');
 
         Route::get('/print-label/pallet', [LabelController::class, 'printPallet'])
             ->name('warehouse.print.pallet');
@@ -419,7 +418,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             ->name('warehouse.reports.expiry');
 
         // General Reports
-        Route::controller(\App\Http\Controllers\Warehouse\ReportController::class)
+        Route::controller(\App\Http\Controllers\Warehouse\Finance\ReportController::class)
             ->prefix('reports')
             ->name('warehouse.reports.')
             ->group(function () {

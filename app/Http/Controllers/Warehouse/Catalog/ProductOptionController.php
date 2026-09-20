@@ -1,0 +1,294 @@
+<?php
+
+namespace App\Http\Controllers\Warehouse\Catalog;
+
+use App\Http\Controllers\Controller;
+use App\Models\ProductOption;
+use App\Models\ProductCategory;
+use App\Models\ProductSubcategory;
+use App\Imports\ProductOptionImport;
+use App\Exports\ProductOptionExport;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Models\ImportTask;
+
+class ProductOptionController extends Controller
+{
+    /**
+     * LIST
+     */
+    public function index(Request $request)
+    {
+        try {
+            $options = ProductOption::with(['category', 'subcategory'])
+                ->when($request->search, function ($q) use ($request) {
+                    $search = $request->search;
+
+                    $q->where('option_name', 'ilike', "%{$search}%")
+                        ->orWhere('sku', 'ilike', "%{$search}%")
+                        ->orWhereHas(
+                            'category',
+                            fn($c) =>
+                            $c->where('name', 'ilike', "%{$search}%")
+                        )
+                        ->orWhereHas(
+                            'subcategory',
+                            fn($s) =>
+                            $s->where('name', 'ilike', "%{$search}%")
+                        );
+                })
+                ->when($request->status !== null, function ($q) use ($request) {
+                    $q->where('is_active', $request->status);
+                })
+                ->latest()
+                ->paginate(10);
+
+            $categories = ProductCategory::where('is_active', true)->get();
+
+            return view('warehouse.product-options.index', compact('options', 'categories'));
+        } catch (\Exception $e) {
+            Log::error('ProductOption Index Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * CREATE
+     */
+    public function create()
+    {
+        try {
+            $categories = ProductCategory::where('is_active', true)->get();
+
+            return view('warehouse.product-options.create', compact('categories'));
+        } catch (\Exception $e) {
+            Log::error('ProductOption Create Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * STORE
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'option_name'   => 'required|string|max:255',
+                'sku'           => 'nullable|string|max:100|unique:product_options,sku',
+                'category_id'   => 'required|exists:product_categories,id',
+                'subcategory_id' => 'required|exists:product_subcategories,id',
+                'unit'          => 'required',
+                'icon'          => 'nullable|image|max:2048',
+            ]);
+
+            $data = $request->except('icon');
+
+            if ($request->hasFile('icon')) {
+                $data['icon'] = $request->file('icon')->store('product-options', 'r2');
+            }
+
+            $data['is_active'] = 1;
+
+            ProductOption::create($data);
+
+            return redirect()
+                ->route('warehouse.product-options.index')
+                ->with('success', 'Product option created successfully');
+        } catch (\Exception $e) {
+            Log::error('ProductOption Store Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+
+
+    /**
+     * EDIT
+     */
+    public function edit(ProductOption $productOption)
+    {
+        try {
+            $categories = ProductCategory::where('is_active', true)->get();
+            $subcategories = ProductSubcategory::where('category_id', $productOption->category_id)
+                ->where('is_active', true)
+                ->get();
+
+            return view(
+                'warehouse.product-options.edit',
+                compact('productOption', 'categories', 'subcategories')
+            );
+        } catch (\Exception $e) {
+            Log::error('ProductOption Edit Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * UPDATE
+     */
+    public function update(Request $request, ProductOption $productOption)
+    {
+        try {
+            $request->validate([
+                'option_name'   => 'required|string|max:255',
+                'sku'           => 'nullable|string|max:100|unique:product_options,sku,' . $productOption->id,
+                'category_id'   => 'required|exists:product_categories,id',
+                'subcategory_id' => 'required|exists:product_subcategories,id',
+                'unit'          => 'required',
+                'icon'          => 'nullable|image|max:2048',
+            ]);
+
+            $data = $request->except('icon');
+
+            if ($request->hasFile('icon')) {
+
+                // delete old icon
+                if ($productOption->icon && Storage::disk('r2')->exists($productOption->icon)) {
+                    Storage::disk('r2')->delete($productOption->icon);
+                }
+
+                $data['icon'] = $request->file('icon')->store('product-options', 'r2');
+            }
+
+            $productOption->update($data);
+
+            return back()->with('success', 'Product option updated successfully');
+        } catch (\Exception $e) {
+            Log::error('ProductOption Update Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+
+
+    /**
+     * DELETE
+     */
+    public function destroy(ProductOption $productOption)
+    {
+        return back()->with('error', 'Product options cannot be deleted from the system. Please deactivate them instead.');
+    }
+
+
+    /**
+     * STATUS TOGGLE (AJAX)
+     */
+    public function changeStatus(Request $request)
+    {
+        try {
+            $option = ProductOption::findOrFail($request->id);
+
+            $option->update([
+                'is_active' => $request->status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('ProductOption Status Error: ' . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong. Please try again later.'
+            ], 500);
+        }
+    }
+
+    /**
+     * IMPORT
+     */
+    public function import(Request $request)
+    {
+        try {
+            $request->validate([
+                'category_id'    => 'required|exists:product_categories,id',
+                'subcategory_id' => 'nullable|exists:product_subcategories,id',
+                'file'           => 'required|mimes:xlsx,csv',
+            ]);
+
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'type' => 'ProductOption',
+                'status' => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            Excel::import(
+                new ProductOptionImport(
+                    $request->category_id,
+                    $request->subcategory_id,
+                    \Illuminate\Support\Facades\Auth::id(),
+                    $task->id
+                ),
+                $request->file
+            );
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            Log::error('ProductOption Import Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * EXPORT
+     */
+    public function export()
+    {
+        try {
+            return Excel::download(
+                new ProductOptionExport,
+                'product-options.xlsx'
+            );
+        } catch (\Exception $e) {
+            Log::error('ProductOption Export Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * SAMPLE FILE
+     */
+    public function sample()
+    {
+        try {
+            return response()->download(
+                storage_path('app/samples/product-options-sample.xlsx')
+            );
+        } catch (\Exception $e) {
+            Log::error('ProductOption Sample Error: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * FETCH SUBCATEGORIES (AJAX)
+     */
+    public function fetchSubcategories(ProductCategory $category)
+    {
+        try {
+            $subcategories = ProductSubcategory::where('category_id', $category->id)
+                ->where('is_active', true)
+                ->get();
+
+            return response()->json($subcategories);
+        } catch (\Exception $e) {
+            Log::error('Fetch Subcategory Error: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
+        }
+    }
+}

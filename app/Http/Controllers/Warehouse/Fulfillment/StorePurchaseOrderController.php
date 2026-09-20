@@ -1,0 +1,439 @@
+<?php
+
+namespace App\Http\Controllers\Warehouse\Fulfillment;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductMinMaxLevel;
+use App\Models\ProductStock;
+use App\Models\StoreDetail;
+use App\Models\StoreStock;
+use App\Models\StorePurchaseOrder;
+use App\Models\StorePurchaseOrderItem;
+use App\Services\AutoPOGenerationService;
+use App\Services\NotificationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class StorePurchaseOrderController extends Controller
+{
+    /**
+     * List all store purchase orders (PO-based)
+     */
+    public function index(Request $request)
+    {
+        $status = $request->get('status', 'pending');
+
+        $query = StorePurchaseOrder::with(['store', 'items', 'approver'])
+            ->latest();
+
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('po_number', 'like', "%{$search}%")
+                    ->orWhereHas('store', fn($s) => $s->where('store_name', 'like', "%{$search}%"));
+            });
+        }
+
+        $orders = $query->paginate(20)->withQueryString();
+
+        // Stats
+        $pendingCount    = StorePurchaseOrder::where('status', 'pending')->count();
+        $approvedCount   = StorePurchaseOrder::where('status', 'approved')->count();
+        $dispatchedCount = StorePurchaseOrder::where('status', 'dispatched')->count();
+        $completedCount  = StorePurchaseOrder::where('status', 'completed')->count();
+        $rejectedCount   = StorePurchaseOrder::where('status', 'rejected')->count();
+
+        return view('warehouse.store-orders.index', compact(
+            'orders',
+            'status',
+            'pendingCount',
+            'approvedCount',
+            'dispatchedCount',
+            'completedCount',
+            'rejectedCount'
+        ));
+    }
+
+    /**
+     * Show a single store PO with items
+     */
+    public function show(StorePurchaseOrder $storeOrder)
+    {
+        $storeOrder->load(['store', 'items.product.stock', 'creator', 'approver']);
+
+        $productIds = $storeOrder->items->pluck('product_id')->toArray();
+
+        // Pre-fetch warehouse stock
+        $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+            ->where('warehouse_id', 1)
+            ->select('product_id', DB::raw('SUM(quantity) as total_qty'))
+            ->groupBy('product_id')
+            ->pluck('total_qty', 'product_id');
+
+        // Pre-fetch in-transit
+        $inTransitQs = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
+            $q->where('store_id', $storeOrder->store_id)
+                ->whereIn('status', ['approved', 'dispatched']);
+        })
+            ->whereIn('product_id', $productIds)
+            ->where('id', '!=', $storeOrder->items->pluck('id'))
+            ->select('product_id', DB::raw('SUM(pending_qty) as total_transit'))
+            ->groupBy('product_id')
+            ->pluck('total_transit', 'product_id');
+
+        // Pre-fetch min-max
+        $minMaxLevels = ProductMinMaxLevel::whereIn('product_id', $productIds)->get()->keyBy('product_id');
+
+        // For each item, get warehouse stock & in-transit qty
+        foreach ($storeOrder->items as $item) {
+            $item->warehouse_qty  = $warehouseStocks->get($item->product_id, 0);
+            $item->in_transit_qty = $inTransitQs->get($item->product_id, 0);
+            $minMax = $minMaxLevels->get($item->product_id);
+            $item->min_level      = $minMax?->min_level ?? 0;
+            $item->max_level      = $minMax?->max_level ?? 0;
+        }
+
+        return view('warehouse.store-orders.show', compact('storeOrder'));
+    }
+
+    /**
+     * Approve entire PO
+     */
+    public function approve(Request $request, StorePurchaseOrder $storeOrder)
+    {
+        if ($storeOrder->status !== 'pending') {
+            return back()->with('error', 'Only pending orders can be approved.');
+        }
+
+        DB::transaction(function () use ($storeOrder, $request) {
+            $productIds = $storeOrder->items->pluck('product_id')->toArray();
+
+            // Pre-fetch duplicate open PO items
+            $duplicateProductIds = StorePurchaseOrderItem::whereHas('storePurchaseOrder', function ($q) use ($storeOrder) {
+                $q->where('store_id', $storeOrder->store_id)
+                    ->whereIn('status', [StorePurchaseOrder::STATUS_PENDING, StorePurchaseOrder::STATUS_APPROVED, StorePurchaseOrder::STATUS_DISPATCHED])
+                    ->where('id', '!=', $storeOrder->id);
+            })
+                ->whereIn('product_id', $productIds)
+                ->whereIn('status', [StorePurchaseOrderItem::STATUS_PENDING, StorePurchaseOrderItem::STATUS_APPROVED, StorePurchaseOrderItem::STATUS_DISPATCHED])
+                ->pluck('product_id')->toArray();
+
+            $duplicateProductIds = array_flip($duplicateProductIds); // For fast isset lookup
+
+            // Pre-fetch warehouse stock
+            $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+                ->where('warehouse_id', 1)
+                ->select('product_id', DB::raw('SUM(quantity) as total_qty'))
+                ->groupBy('product_id')
+                ->pluck('total_qty', 'product_id');
+
+            // Pre-fetch min-max
+            $minMaxLevels = ProductMinMaxLevel::whereIn('product_id', $productIds)->get()->keyBy('product_id');
+
+            // Apply rationing logic per item
+            // Also check for duplicate open POs per item
+            foreach ($storeOrder->items as $item) {
+                // ── Duplicate blocking: skip if another open PO has this product for this store ──
+                $hasDuplicate = isset($duplicateProductIds[$item->product_id])
+                    && $item->status === StorePurchaseOrderItem::STATUS_PENDING;
+
+                if ($hasDuplicate) {
+                    $item->update([
+                        'status'           => StorePurchaseOrderItem::STATUS_REJECTED,
+                        'rejection_reason' => 'Duplicate: another open PO already covers this product.',
+                        'pending_qty'      => 0,
+                    ]);
+                    continue;
+                }
+
+                // We no longer strictly ration based on min limits
+                $item->update([
+                    'status'      => StorePurchaseOrderItem::STATUS_APPROVED,
+                    'pending_qty' => $item->requested_qty,
+                ]);
+            }
+
+            $storeOrder->approve(Auth::id());
+
+            if ($request->filled('admin_note')) {
+                $storeOrder->update(['admin_note' => $request->admin_note]);
+            }
+        });
+
+        NotificationService::sendToAdmins(
+            'Store PO Approved',
+            "Store PO #{$storeOrder->po_number} approved by " . Auth::user()->name,
+            'success',
+            route('warehouse.store-orders.show', $storeOrder->id)
+        );
+
+        return back()->with('success', "PO #{$storeOrder->po_number} approved successfully.");
+    }
+
+    /**
+     * Reject entire PO
+     */
+    public function reject(Request $request, StorePurchaseOrder $storeOrder)
+    {
+        $request->validate(['reason' => 'required|string|max:500']);
+
+        if (!in_array($storeOrder->status, ['pending', 'approved'])) {
+            return back()->with('error', 'This PO cannot be rejected.');
+        }
+
+        $storeOrder->reject(Auth::id(), $request->reason);
+
+        return back()->with('success', "PO #{$storeOrder->po_number} rejected.");
+    }
+
+    /**
+     * Approve a single item (partial approval)
+     */
+    public function approveItem(Request $request, StorePurchaseOrderItem $item)
+    {
+        $request->validate([
+            'dispatch_qty' => 'required|integer|min:1',
+        ]);
+
+        if ($item->status !== StorePurchaseOrderItem::STATUS_PENDING) {
+            return response()->json(['success' => false, 'message' => 'Item already processed.'], 422);
+        }
+
+        // Stock constraint check
+        $warehouseQty = ProductStock::where('product_id', $item->product_id)
+            ->where('warehouse_id', 1)
+            ->sum('quantity');
+
+        if ($warehouseQty < $request->dispatch_qty) {
+            return response()->json([
+                'success' => false,
+                'message' => "Insufficient warehouse stock. Available: {$warehouseQty}"
+            ], 422);
+        }
+
+        $item->update([
+            'status'      => StorePurchaseOrderItem::STATUS_APPROVED,
+            'pending_qty' => $request->dispatch_qty,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Item approved.']);
+    }
+
+    /**
+     * Reject a single item
+     */
+    public function rejectItem(Request $request, StorePurchaseOrderItem $item)
+    {
+        $request->validate(['reason' => 'required|string|max:500']);
+
+        $item->update([
+            'status'           => StorePurchaseOrderItem::STATUS_REJECTED,
+            'rejection_reason' => $request->reason,
+            'pending_qty'      => 0,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Item rejected.']);
+    }
+
+    /**
+     * Dispatch approved items (deduct from warehouse stock)
+     */
+    public function dispatch(Request $request, StorePurchaseOrder $storeOrder)
+    {
+        if ($storeOrder->status !== 'approved') {
+            return back()->with('error', 'Only approved POs can be dispatched.');
+        }
+
+        $approvedItems = $storeOrder->items->where('status', StorePurchaseOrderItem::STATUS_APPROVED);
+
+        if ($approvedItems->isEmpty()) {
+            return back()->with('error', 'No approved items to dispatch.');
+        }
+
+        DB::transaction(function () use ($storeOrder, $approvedItems) {
+            $productIds = $approvedItems->pluck('product_id')->toArray();
+
+            // Pre-fetch warehouse stock
+            $warehouseStocks = ProductStock::whereIn('product_id', $productIds)
+                ->where('warehouse_id', 1)
+                ->get()
+                ->keyBy('product_id');
+
+            foreach ($approvedItems as $item) {
+                $qtyToDispatch = $item->pending_qty;
+                if ($qtyToDispatch <= 0) continue;
+
+                // Deduct from warehouse stock
+                $warehouseStock = $warehouseStocks->get($item->product_id);
+
+                if (!$warehouseStock || $warehouseStock->quantity < $qtyToDispatch) {
+                    throw new \Exception("Insufficient stock for product ID {$item->product_id}. Available: " . ($warehouseStock?->quantity ?? 0));
+                }
+
+                $warehouseStock->decrement('quantity', $qtyToDispatch);
+                $warehouseStock->quantity -= $qtyToDispatch; // Update runtime object state if needed in subsequent iterations
+
+                // Update item
+                $item->update([
+                    'dispatched_qty' => $item->dispatched_qty + $qtyToDispatch,
+                    'pending_qty'    => 0,
+                    'status'         => StorePurchaseOrderItem::STATUS_DISPATCHED,
+                ]);
+            }
+
+            // Check if all items dispatched → mark PO as dispatched
+            $storeOrder->refresh();
+            $allDispatched = $storeOrder->items->every(
+                fn($i) =>
+                in_array($i->status, [
+                    StorePurchaseOrderItem::STATUS_DISPATCHED,
+                    StorePurchaseOrderItem::STATUS_REJECTED,
+                ])
+            );
+
+            $storeOrder->update([
+                'status' => $allDispatched
+                    ? StorePurchaseOrder::STATUS_DISPATCHED
+                    : StorePurchaseOrder::STATUS_APPROVED
+            ]);
+        });
+
+        NotificationService::sendToAdmins(
+            'Store PO Dispatched',
+            "Store PO #{$storeOrder->po_number} dispatched to {$storeOrder->store->store_name}",
+            'info',
+            route('warehouse.store-orders.show', $storeOrder->id)
+        );
+
+        return back()->with('success', "Items dispatched for PO #{$storeOrder->po_number}.");
+    }
+
+    /**
+     * Mark PO as completed (store confirmed receipt)
+     */
+    public function complete(StorePurchaseOrder $storeOrder)
+    {
+        if ($storeOrder->status !== 'dispatched') {
+            return back()->with('error', 'Only dispatched POs can be marked complete.');
+        }
+
+        $storeOrder->update(['status' => StorePurchaseOrder::STATUS_COMPLETED]);
+
+        return back()->with('success', "PO #{$storeOrder->po_number} marked as completed.");
+    }
+
+    /**
+     * Update admin note on a store PO
+     */
+    public function updateNote(Request $request, StorePurchaseOrder $storeOrder)
+    {
+        $request->validate(['admin_note' => 'nullable|string|max:1000']);
+        $storeOrder->update(['admin_note' => $request->admin_note]);
+        return back()->with('success', 'Admin note saved.');
+    }
+
+    /**
+     * Manually trigger auto-PO generation for a specific store
+     */
+    public function generateForStore(StoreDetail $store)
+    {
+        try {
+            $po = AutoPOGenerationService::generateForStore($store);
+
+            if ($po) {
+                return redirect()
+                    ->route('warehouse.store-orders.show', $po->id)
+                    ->with('success', "Auto-generated PO #{$po->po_number} for {$store->store_name} with {$po->items->count()} items.");
+            }
+
+            return redirect()
+                ->route('warehouse.store-orders.index')
+                ->with('info', "No PO needed for {$store->store_name} — stock levels are sufficient or duplicates exist.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Auto-PO generation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()
+                ->route('warehouse.store-orders.index')
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /**
+     * Auto Arrange Pallets for an Approved PO
+     */
+    public function autoArrangePallets(Request $request, StorePurchaseOrder $storeOrder, \App\Services\PalletizationService $palletizationService)
+    {
+        if ($storeOrder->status !== 'approved') {
+            return back()->with('error', 'Only approved POs can be auto-arranged onto pallets.');
+        }
+
+        $approvedItems = $storeOrder->items->where('status', StorePurchaseOrderItem::STATUS_APPROVED);
+
+        if ($approvedItems->isEmpty()) {
+            return back()->with('error', 'No approved items to arrange.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Delete any existing pallets for this PO to start fresh
+            \App\Models\Pallet::where('store_po_id', $storeOrder->id)->delete();
+
+            // 2. Mock items into the format needed by PalletizationService
+            // The service expects objects with a 'product' relation and 'quantity'. 
+            // We use pending_qty because that is the amount approved to be packed/dispatched.
+            $itemsToPack = [];
+            foreach ($approvedItems as $item) {
+                if ($item->pending_qty > 0) {
+                    $itemMock = new \stdClass();
+                    $itemMock->product = $item->product;
+                    $itemMock->quantity = $item->pending_qty;
+                    $itemsToPack[] = $itemMock;
+                }
+            }
+
+            // 3. Utilize Algorithm
+            $arrangedData = $palletizationService->calculateOptimalArrangement($itemsToPack);
+
+            // 4. Save to Database
+            foreach ($arrangedData as $index => $palletData) {
+                // Determine dominating department based on heaviest weight or item count (simplification: take from first item)
+                $firstProduct = \App\Models\Product::find($palletData['items'][0]['product_id'] ?? null);
+
+                $pallet = \App\Models\Pallet::create([
+                    'store_po_id'   => $storeOrder->id,
+                    'pallet_number' => \App\Models\Pallet::generatePalletNumber(),
+                    'department_id' => $firstProduct ? $firstProduct->department_id : null,
+                    'total_weight'  => $palletData['total_weight'],
+                    'max_weight'    => $palletData['max_weight'],
+                    'status'        => \App\Models\Pallet::STATUS_PREPARING,
+                    'notes'         => 'Auto-Generated Plt ' . ($index + 1) . ' of ' . count($arrangedData)
+                ]);
+
+                foreach ($palletData['items'] as $itemDetails) {
+                    // Item weight in arrangement data is total weight of that cartoned item stack.
+                    // The addItem method expects weight_per_unit as (Total Carton Stack Weight / Total Units).
+                    $pallet->addItem(
+                        $itemDetails['product_id'],
+                        $itemDetails['total_quantity'],
+                        $itemDetails['weight_per_unit']
+                    );
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('warehouse.pallets.index')
+                ->with('success', "Auto-arranged PO #{$storeOrder->po_number} into " . count($arrangedData) . " pallets successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to auto-arrange pallets: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+}

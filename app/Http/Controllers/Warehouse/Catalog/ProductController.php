@@ -1,0 +1,469 @@
+<?php
+
+namespace App\Http\Controllers\Warehouse\Catalog;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Services\ProductReferenceCleaner;
+use App\Models\ProductOption;
+use App\Models\ProductCategory;
+use App\Models\ProductSubcategory;
+use App\Models\ProductStock;
+use App\Models\Department;
+use App\Imports\ProductImport;
+use App\Exports\ProductExport;
+use App\Exports\Samples\ProductSampleExport;
+use App\Services\NotificationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use App\Models\ImportTask;
+
+class ProductController extends Controller
+{
+    public function index(Request $request)
+    {
+        try {
+            // FILTER: Only show Warehouse Products (store_id IS NULL)
+            $products = Product::whereNull('store_id')
+                ->with(['category', 'subcategory', 'option', 'department'])
+                ->when($request->search, function ($q) use ($request) {
+                    $s = $request->search;
+                    $q->where(function ($query) use ($s) {
+                        $query->where('product_name', 'ilike', "%$s%")
+                            ->orWhere('sku', 'ilike', "%$s%")
+                            ->orWhere('barcode', 'ilike', "%$s%")
+                            ->orWhereHas('category', fn($c) => $c->where('name', 'ilike', "%$s%"))
+                            ->orWhereHas('subcategory', fn($s2) => $s2->where('name', 'ilike', "%$s%"));
+                    });
+                })
+                ->when($request->status !== null, fn($q) => $q->where('is_active', $request->status))
+                ->latest()
+                ->paginate(10);
+
+            // Filter Categories for the search dropdown
+            $categories = ProductCategory::whereNull('store_id')->where('is_active', true)->get();
+
+            return view('warehouse.products.index', compact('products', 'categories'));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return back()->with('error', 'Failed to load products');
+        }
+    }
+
+    public function create()
+    {
+        try {
+            return view('warehouse.products.create', [
+                'options' => ProductOption::where('is_active', 1)->get(),
+                'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
+                'departments' => Department::where('is_active', true)->get(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Unable to open create page: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'department_id' => 'required|exists:departments,id',
+                'category_id' => 'required',
+                'subcategory_id' => 'required',
+                'product_name' => 'required',
+                'unit' => 'required',
+                'price' => 'required|numeric',
+                'warehouse_markup_percentage' => 'required|numeric|min:0',
+                'store_markup_percentage' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'store_retail_price' => 'required|numeric|min:0',
+                'manual_override_price' => 'nullable|numeric|min:0',
+                'upc' => 'required|string|max:255',
+                'plu_code' => 'nullable|string|max:50',
+                'barcode' => 'required|string|unique:products,barcode|max:255',
+                'sku' => 'nullable|string|max:100|unique:products,sku',
+                'units_per_carton' => 'required|integer|min:1',
+                'icon' => 'nullable|image|max:2048',
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $data = $request->except('icon');
+
+                // Explicitly set store_id to NULL for Warehouse Products
+                $data['store_id'] = null;
+
+                if ($request->hasFile('icon')) {
+                    $data['icon'] = $request->file('icon')->store('products', 'r2');
+                }
+
+                // If creating a new option on the fly
+                if (!$request->product_option_id) {
+                    $option = ProductOption::create([
+                        'ware_user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'store_id' => null, // Warehouse Option
+                        'option_name' => $request->product_name,
+                        'sku' => $request->sku,
+                        'category_id' => $request->category_id,
+                        'subcategory_id' => $request->subcategory_id,
+                        'unit' => $request->unit,
+                        'upc' => $request->upc,
+                        'plu_code' => $request->plu_code,
+                        'barcode' => $request->barcode,
+                        'warehouse_markup_percentage' => 0,
+                        'cost_price' => $request->price,
+                        'base_price' => $request->price,
+                        'mrp' => $request->price,
+                    ]);
+                    $data['product_option_id'] = $option->id;
+                }
+
+                $product = Product::create($data);
+
+                // Initialize Warehouse Stock
+                ProductStock::create([
+                    'product_id' => $product->id,
+                    'warehouse_id' => 1,
+                    'quantity' => 0
+                ]);
+
+                // Generate Barcode Images
+                if (isset($option)) $option->generateBarcodeImage();
+                $product->generateBarcodeImage();
+
+                return redirect()->route('warehouse.products.index')
+                    ->with('success', 'Product created successfully');
+            });
+        } catch (\Exception $e) {
+            Log::error('Product creation failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function edit(Product $product)
+    {
+        // Security Check: Ensure product belongs to Warehouse
+        if ($product->store_id !== null) {
+            abort(403, 'Unauthorized access to store product');
+        }
+
+        return view('warehouse.products.edit', [
+            'product' => $product,
+            'options' => ProductOption::where('is_active', 1)->get(),
+            'categories' => ProductCategory::whereNull('store_id')->where('is_active', 1)->get(),
+            'subcategories' => ProductSubcategory::whereNull('store_id')->where('category_id', $product->category_id)->get(),
+            'departments' => Department::where('is_active', true)->get(),
+        ]);
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        if ($product->store_id !== null) abort(403);
+
+        try {
+            $request->validate([
+                'department_id' => 'required|exists:departments,id',
+                'category_id' => 'required',
+                'subcategory_id' => 'required',
+                'product_name' => 'required',
+                'unit' => 'required',
+                'price' => 'required|numeric',
+                'warehouse_markup_percentage' => 'required|numeric|min:0',
+                'store_markup_percentage' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'store_retail_price' => 'required|numeric|min:0',
+                'manual_override_price' => 'nullable|numeric|min:0',
+                'upc' => 'required|string|max:255',
+                'plu_code' => 'nullable|string|max:50',
+                'barcode' => 'required|string|max:255|unique:products,barcode,' . $product->id,
+                'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id,
+                'units_per_carton' => 'required|integer|min:1',
+                'icon' => 'nullable|image|max:2048',
+            ]);
+
+            $data = $request->except('icon');
+
+            if ($request->hasFile('icon')) {
+                if ($product->icon && Storage::disk('r2')->exists($product->icon)) {
+                    Storage::disk('r2')->delete($product->icon);
+                }
+                $data['icon'] = $request->file('icon')->store('products', 'r2');
+            }
+
+            $product->update($data);
+            $product->generateBarcodeImage();
+
+            return back()->with('success', 'Product updated successfully');
+        } catch (\Exception $e) {
+            Log::error('Product update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    /** Deleting products needs delete_products or manage_products (Super Admin always passes). */
+    private function authorizeDelete(): void
+    {
+        abort_unless(
+            auth()->user()->can('delete_products') || auth()->user()->can('manage_products'),
+            403,
+            'Unauthorized action.'
+        );
+    }
+
+    public function destroy(Product $product)
+    {
+        $this->authorizeDelete();
+
+        if ($product->store_id !== null) {
+            abort(403, 'Unauthorized access to store product');
+        }
+
+        try {
+            DB::transaction(function () use ($product) {
+                // Delete from referencing tables without automatic database cascade
+                app(ProductReferenceCleaner::class)->deleteFor([$product->id]);
+
+                // Delete the product itself (which triggers automatic DB-level cascades)
+                $product->delete();
+            });
+
+            return back()->with('success', 'Product and all its referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Product deletion failed: ' . $e->getMessage(), ['product_id' => $product->id, 'exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function destroyAll()
+    {
+        $this->authorizeDelete();
+
+        try {
+            DB::transaction(function () {
+                // Find all warehouse product IDs (store_id IS NULL)
+                $productIds = Product::whereNull('store_id')->pluck('id')->toArray();
+
+                if (!empty($productIds)) {
+                    // Delete from referencing tables without automatic database cascade for these products
+                    app(ProductReferenceCleaner::class)->deleteFor($productIds);
+
+                    // Delete the products themselves (triggers automatic DB-level cascades)
+                    Product::whereIn('id', $productIds)->delete();
+                }
+            });
+
+            return back()->with('success', 'All warehouse products and their referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('All products deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $this->authorizeDelete();
+
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:products,id',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+                // Ensure all IDs belong to warehouse products (store_id IS NULL) — security guard
+                $productIds = Product::whereNull('store_id')
+                    ->whereIn('id', $request->ids)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (empty($productIds)) {
+                    return;
+                }
+
+                app(ProductReferenceCleaner::class)->deleteFor($productIds);
+
+                Product::whereIn('id', $productIds)->delete();
+            });
+
+            return back()->with('success', 'Selected products and their referenced records have been deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Bulk product deletion failed: ' . $e->getMessage(), ['ids' => $request->ids, 'exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function changeStatus(Request $request)
+    {
+        try {
+            $product = Product::whereNull('store_id')->findOrFail($request->id);
+            $product->update(['is_active' => $request->status]);
+            return response()->json(['message' => 'Status updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating status'], 500);
+        }
+    }
+
+    public function fetchOption(ProductOption $option)
+    {
+        // Ensure option is warehouse level
+        if ($option->store_id !== null) abort(403);
+        return response()->json($option);
+    }
+
+    public function fetchSubcategories($categoryId)
+    {
+        // Filter Subcategories: store_id IS NULL
+        $subcategories = ProductSubcategory::whereNull('store_id')
+            ->where('category_id', $categoryId)
+            ->where('is_active', 1)
+            ->get();
+        return response()->json($subcategories);
+    }
+
+    public function import(Request $request)
+    {
+        try {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'file' => 'required|mimes:xlsx,csv',
+                'department_id' => 'required|exists:departments,id',
+                'category_id' => 'required',
+                'subcategory_id' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+                return back()->withErrors($validator)->withInput();
+            }
+
+            // Create Import Task
+            $task = ImportTask::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'type' => 'Product',
+                'status' => ImportTask::STATUS_PENDING,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+            ]);
+
+            // Pass Auth::id() and ImportTask ID to ensure background job knows who started it and which task to update
+            Excel::import(
+                new ProductImport(
+                    $request->category_id,
+                    $request->subcategory_id,
+                    $request->department_id,
+                    \Illuminate\Support\Facades\Auth::id(),
+                    $task->id
+                ),
+                $request->file
+            );
+
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Import started!',
+                    'task_id' => $task->id
+                ]);
+            }
+
+            return back()->with('success', 'Import started! You will be notified once processing is complete.');
+        } catch (\Exception $e) {
+            Log::error('Import failed: ' . $e->getMessage(), ['exception' => $e]);
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Something went wrong. Please try again later.'
+                ], 500);
+            }
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(new ProductExport($request->all()), 'products.xlsx');
+    }
+
+    public function sample()
+    {
+        return Excel::download(new ProductSampleExport, 'products-sample.xlsx');
+    }
+
+    public function generateBarcode()
+    {
+        // Generate a random 13 digit number or unique string
+        // Checking for uniqueness
+        do {
+            $barcode = mt_rand(1000000000000, 9999999999999);
+        } while (Product::where('barcode', $barcode)->exists());
+
+        return response()->json(['barcode' => $barcode]);
+    }
+
+    public function generateUpc()
+    {
+        // Generate a random 12 digit number
+        do {
+            $upc = mt_rand(100000000000, 999999999999);
+        } while (Product::where('upc', $upc)->exists());
+
+        return response()->json(['upc' => $upc]);
+    }
+
+    public function bulkPriceUpdate(Request $request)
+    {
+        set_time_limit(300);
+        $request->validate([
+            'category_id' => 'required|exists:product_categories,id',
+            'subcategory_id' => 'nullable|exists:product_subcategories,id',
+            'percentage' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $query = Product::whereNull('store_id')
+                ->where('category_id', $request->category_id);
+
+            if ($request->subcategory_id) {
+                $query->where('subcategory_id', $request->subcategory_id);
+            }
+
+            $count = $query->count();
+            if ($count === 0) {
+                return back()->with('error', 'No products found matching the selection.');
+            }
+
+            // Calculate Factor (e.g., 10% -> 1.10)
+            $factor = 1 + ($request->percentage / 100);
+
+            // PostgreSQL Raw Update
+            $query->update(['price' => DB::raw("price * $factor")]);
+
+            // Optional: Notification
+            $catName = ProductCategory::find($request->category_id)->name;
+            $msg = "Bulk Price Update: Increased by {$request->percentage}% for Category: $catName";
+            if ($request->subcategory_id) {
+                $subName = ProductSubcategory::find($request->subcategory_id)->name;
+                $msg .= ", Subcategory: $subName";
+            }
+
+            NotificationService::sendToAdmins('Price Update', $msg, 'info');
+
+            DB::commit();
+
+            return back()->with('success', "Updated prices for $count products successfully.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update prices: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Something went wrong. Please try again later.');
+        }
+    }
+}
