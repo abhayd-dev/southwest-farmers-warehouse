@@ -266,6 +266,20 @@
 
             window.restoreRowFilters = function(idx) {
                 const $row = $(`#row-${idx}`);
+
+                // A row with no product chosen yet has never had rememberRowFilters()
+                // called for it, so its data-dept/cat/subcat attributes are simply
+                // absent (not merely empty). Restoring "nothing remembered" as
+                // "no department/category/subcategory" was wiping out whatever
+                // filters the user had just picked the moment they opened this
+                // row's product dropdown — client feedback 9/21, items 3-4: filters
+                // resetting to default and the product list showing everything the
+                // instant the product dropdown was opened. Leave the active filters
+                // alone here; there's nothing to restore.
+                if (typeof $row.attr('data-dept') === 'undefined') {
+                    return;
+                }
+
                 const dept = $row.attr('data-dept') || '';
                 const cat = $row.attr('data-cat') || '';
                 const subcat = $row.attr('data-subcat') || '';
