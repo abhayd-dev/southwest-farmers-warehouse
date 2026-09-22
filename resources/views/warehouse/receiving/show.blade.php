@@ -234,7 +234,7 @@
                                             <tr>
                                                 <th class="px-3">UPC</th>
                                                 <th class="px-3">Product</th>
-                                                <th class="text-center">Ordered Qty</th>
+                                                <th class="text-center" style="min-width: 110px;">Ordered Qty</th>
                                                 <th class="text-center">PO Price ($)</th>
                                                 <th style="min-width: 130px;">Receive Qty</th>
                                                 <th style="min-width: 130px;">Receiving Price ($)</th>
@@ -265,8 +265,13 @@
                                                                 @endif
                                                             </small>
                                                         </td>
-                                                        <td class="text-center fw-medium">
-                                                            {{ $item->requested_quantity }}
+                                                        <td class="text-center">
+                                                            <input type="number"
+                                                                name="items[{{ $item->id }}][ordered_qty]"
+                                                                class="form-control form-control-sm text-center fw-medium ordered-qty-input"
+                                                                min="0" value="{{ $item->requested_quantity }}">
+                                                            <small class="text-muted d-block">Edit if the shipment
+                                                                differs from what was ordered</small>
                                                         </td>
                                                         <td class="text-center fw-medium">$
                                                             {{ number_format($item->unit_cost, 2) }}</td>
@@ -274,10 +279,11 @@
                                                             <input type="number"
                                                                 name="items[{{ $item->id }}][receive_qty]"
                                                                 class="form-control form-control-sm text-center fw-bold text-primary receive-qty-input"
-                                                                max="{{ $item->pending_quantity }}" min="0"
+                                                                min="0"
                                                                 value="0">
                                                             <small class="text-muted">Pending:
-                                                                <span class="pending-qty" data-pending="{{ $item->pending_quantity }}">{{ $item->pending_quantity }}</span></small>
+                                                                <span class="pending-qty" data-pending="{{ $item->pending_quantity }}">{{ $item->pending_quantity }}</span>
+                                                                <br>Can receive more or less than ordered.</small>
                                                         </td>
                                                         <td>
                                                             <input type="number"

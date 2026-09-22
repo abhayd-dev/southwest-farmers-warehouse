@@ -21,6 +21,10 @@ class ReceivePurchaseOrderRequest extends FormRequest
             'transportation_cost' => 'nullable|numeric|min:0',
             'demurrage' => 'nullable|numeric|min:0',
             'items' => 'required|array',
+            // No upper bound: a shipment can arrive over or under the
+            // originally ordered quantity (client feedback 9/21, items 1-2).
+            'items.*.receive_qty' => 'nullable|integer|min:0',
+            'items.*.ordered_qty' => 'nullable|integer|min:0',
         ];
     }
 }

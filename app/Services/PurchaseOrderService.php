@@ -158,10 +158,22 @@ class PurchaseOrderService
 
             foreach ($receivedItems as $itemId => $data) {
                 $qtyToReceive = intval($data['receive_qty'] ?? 0);
-
-                if ($qtyToReceive <= 0) continue;
-
                 $poItem = $data['poItemModel'];
+
+                if ($qtyToReceive <= 0) {
+                    // Nothing arrived on this line in this shipment -- still
+                    // counts toward whether the PO as a whole is complete
+                    // (previously this line was skipped entirely here, so a
+                    // PO with one item fully received and another left at 0
+                    // could be wrongly marked "completed"), but it's not a
+                    // "shortage" worth emailing the Purchase Manager about:
+                    // it just hasn't arrived yet, unlike a line that arrived
+                    // this round short of what was ordered.
+                    if ($poItem->received_quantity < $poItem->requested_quantity) {
+                        $allCompleted = false;
+                    }
+                    continue;
+                }
 
                 // Generate batch number if not provided
                 $batchNumber = $data['batch_number'] ?? null;
@@ -240,6 +252,21 @@ class PurchaseOrderService
 
                 $poItem->received_quantity += $qtyToReceive;
                 $poItem->receiving_unit_cost = $poPrice;
+
+                // Client feedback 9/21, items 1-2: a shipment can arrive over
+                // or under what was ordered (e.g. 125 against an order of
+                // 100, or 75 with nothing further coming). The warehouse
+                // isn't sending the excess back or waiting on the shortfall,
+                // so the Ordered Qty itself gets corrected to match what
+                // actually came in -- this is also what the invoice total
+                // below is based on, and it's what lets a short shipment
+                // complete the order below instead of sitting "partial"
+                // forever waiting on a remainder that was never coming.
+                $orderedQtyOverride = $data['ordered_qty'] ?? null;
+                if ($orderedQtyOverride !== null && $orderedQtyOverride !== '') {
+                    $poItem->requested_quantity = max(0, intval($orderedQtyOverride));
+                }
+
                 $poItem->save();
 
                 if ($poItem->received_quantity < $poItem->requested_quantity) {
@@ -248,6 +275,11 @@ class PurchaseOrderService
                     $shortageItemIds[] = $poItem->id;
                 }
             }
+
+            // Invoice total now reflects the (possibly corrected) ordered
+            // quantities above, not what was originally keyed in when the PO
+            // was created.
+            $po->total_amount = $po->items()->get()->sum(fn ($i) => $i->requested_quantity * $i->unit_cost);
 
             $po->status = $allCompleted ? PurchaseOrder::STATUS_COMPLETED : PurchaseOrder::STATUS_PARTIAL;
             // Reset approval flag for future partial receipts
