@@ -10,6 +10,16 @@
                     <i class="mdi mdi-truck-check text-primary me-2"></i> Receive Order: {{ $purchaseOrder->po_number }}
                 </h4>
                 <div class="d-flex gap-2">
+                    @if ($purchaseOrder->invoice_document)
+                        <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank"
+                            class="btn btn-outline-info shadow-sm">
+                            <i class="mdi mdi-receipt me-1"></i> View Invoice Picture
+                        </a>
+                    @else
+                        <button type="button" class="btn btn-outline-info shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadInvoiceModal">
+                            <i class="mdi mdi-camera me-1"></i> Attach Invoice Picture
+                        </button>
+                    @endif
                     @if ($purchaseOrder->status == 'completed')
                         <a href="{{ route('warehouse.receiving.receipt', $purchaseOrder->id) }}" target="_blank"
                             class="btn btn-outline-primary shadow-sm">
@@ -85,6 +95,32 @@
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted"><i class="mdi mdi-account me-1"></i> Requested By:</span>
                                         <span class="fw-medium">{{ $purchaseOrder->creator->name ?? 'System' }}</span>
+                                    </div>
+                                    @if ($purchaseOrder->vendor_invoice_number)
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="mdi mdi-receipt me-1"></i> Vendor Invoice:</span>
+                                            <span class="fw-semibold">{{ $purchaseOrder->vendor_invoice_number }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <span class="text-muted"><i class="mdi mdi-paperclip me-1"></i> Invoice Picture:</span>
+                                        <div>
+                                            @if ($purchaseOrder->invoice_document)
+                                                <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank"
+                                                    class="badge bg-primary text-decoration-none px-2 py-1">
+                                                    <i class="mdi mdi-eye me-1"></i>View Picture
+                                                </a>
+                                                <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-muted"
+                                                    data-bs-toggle="modal" data-bs-target="#uploadInvoiceModal" title="Upload or Replace invoice picture">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2"
+                                                    style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#uploadInvoiceModal">
+                                                    <i class="mdi mdi-camera me-1"></i>Attach Picture
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +205,7 @@
                             </div>
 
                             <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}"
-                                method="POST">
+                                method="POST" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="row mb-4">
@@ -224,6 +260,40 @@
                                             <span class="input-group-text bg-light"><i class="mdi mdi-clock-alert"></i></span>
                                             <input type="number" name="demurrage" class="form-control cost-input" step="0.01"
                                                 min="0" value="{{ $purchaseOrder->demurrage ?? 0 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            Vendor Invoice Picture / Attachment
+                                            @if ($purchaseOrder->invoice_document)
+                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">
+                                                    <i class="mdi mdi-check-circle"></i> Attached
+                                                </span>
+                                            @endif
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="mdi mdi-camera"></i></span>
+                                            <input type="file" name="invoice_document" id="invoiceDocumentInput" class="form-control"
+                                                accept="image/*,application/pdf" onchange="previewInvoiceFile(this)">
+                                            @if ($purchaseOrder->invoice_document)
+                                                <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank"
+                                                    class="btn btn-outline-info" title="View Current Attached Invoice">
+                                                    <i class="mdi mdi-eye"></i> View Current
+                                                </a>
+                                            @endif
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Upload a photo or scanned copy of the vendor invoice (JPG, PNG, WebP, or PDF, max 10MB).</small>
+
+                                        {{-- Image Preview Container --}}
+                                        <div id="invoiceImagePreviewContainer" class="mt-2 d-none">
+                                            <div class="position-relative d-inline-block border rounded p-1 bg-light shadow-sm">
+                                                <img id="invoiceImagePreview" src="" alt="Invoice Preview"
+                                                    style="max-height: 120px; max-width: 260px; object-fit: contain;" class="rounded">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0 rounded-circle"
+                                                    style="width: 22px; height: 22px; line-height: 20px;" onclick="clearInvoicePreview()" title="Remove file">
+                                                    &times;
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -414,6 +484,64 @@
             </div>
         </div>
     </div>
+
+    {{-- UPLOAD / REPLACE INVOICE MODAL --}}
+    <div class="modal fade" id="uploadInvoiceModal" tabindex="-1" aria-labelledby="uploadInvoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form action="{{ route('warehouse.receiving.upload-invoice', $purchaseOrder->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold" id="uploadInvoiceModalLabel">
+                            <i class="mdi mdi-receipt text-primary me-2"></i>
+                            {{ $purchaseOrder->invoice_document ? 'Update Vendor Invoice Picture' : 'Attach Vendor Invoice Picture' }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        @if ($purchaseOrder->invoice_document)
+                            <div class="alert alert-light border mb-3 d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <i class="mdi mdi-file-check text-success fs-3 me-2"></i>
+                                    <div>
+                                        <div class="fw-semibold small">Current Invoice Document Attached</div>
+                                        <small class="text-muted">Uploading a new picture will replace the current file.</small>
+                                    </div>
+                                </div>
+                                <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="mdi mdi-eye me-1"></i> View
+                                </a>
+                            </div>
+                        @endif
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Vendor Invoice Number</label>
+                            <input type="text" name="invoice_number" class="form-control"
+                                placeholder="e.g. INV-9988" value="{{ $purchaseOrder->vendor_invoice_number ?? '' }}">
+                            <small class="text-muted">Update the invoice reference number if needed.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Choose Invoice Picture / Document <span class="text-danger">*</span></label>
+                            <input type="file" name="invoice_document" class="form-control" required
+                                accept="image/*,application/pdf" onchange="previewModalInvoice(this)">
+                            <small class="text-muted">Supports photos (JPG, PNG, WebP) or PDF documents up to 10MB.</small>
+                        </div>
+
+                        <div id="modalInvoicePreviewContainer" class="text-center d-none mt-3 p-2 bg-light rounded border">
+                            <img id="modalInvoicePreview" src="" alt="Preview" style="max-height: 180px; max-width: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="mdi mdi-upload me-1"></i> Save Invoice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -520,5 +648,54 @@
                 });
             }
         });
+
+        window.previewInvoiceFile = function(input) {
+            const container = document.getElementById('invoiceImagePreviewContainer');
+            const img = document.getElementById('invoiceImagePreview');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        container.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    container.classList.add('d-none');
+                }
+            } else {
+                container.classList.add('d-none');
+            }
+        };
+
+        window.clearInvoicePreview = function() {
+            const input = document.getElementById('invoiceDocumentInput');
+            const container = document.getElementById('invoiceImagePreviewContainer');
+            const img = document.getElementById('invoiceImagePreview');
+            if (input) input.value = '';
+            if (img) img.src = '';
+            if (container) container.classList.add('d-none');
+        };
+
+        window.previewModalInvoice = function(input) {
+            const container = document.getElementById('modalInvoicePreviewContainer');
+            const img = document.getElementById('modalInvoicePreview');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        container.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    container.classList.add('d-none');
+                }
+            } else {
+                container.classList.add('d-none');
+            }
+        };
     </script>
 @endpush

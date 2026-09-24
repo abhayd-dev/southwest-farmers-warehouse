@@ -9,6 +9,7 @@ use App\Models\Vendor;
 use App\Models\PurchaseOrderItem;
 use App\Models\WareUser;
 use App\Traits\LogsActivity;
+use Illuminate\Support\Facades\Storage;
 
 class PurchaseOrder extends Model
 {
@@ -23,6 +24,8 @@ class PurchaseOrder extends Model
         'total_amount',
         'tax_amount',
         'other_costs',
+        'vendor_invoice_number',
+        'invoice_document',
         'duties',
         'shipping_cost',
         'taxes',
@@ -177,5 +180,30 @@ class PurchaseOrder extends Model
     public function isVendorDenied()
     {
         return $this->vendor_response_status === 'denied';
+    }
+
+    public function getInvoiceDocumentUrlAttribute(): ?string
+    {
+        if (!$this->invoice_document) {
+            return null;
+        }
+
+        if (str_starts_with($this->invoice_document, 'http://') || str_starts_with($this->invoice_document, 'https://')) {
+            return $this->invoice_document;
+        }
+
+        // Use r2 disk if configured, fallback to public disk
+        $disk = config('filesystems.disks.r2') ? 'r2' : 'public';
+        return Storage::disk($disk)->url($this->invoice_document);
+    }
+
+    public function getIsInvoiceDocumentImageAttribute(): bool
+    {
+        if (!$this->invoice_document) {
+            return false;
+        }
+
+        $extension = strtolower(pathinfo($this->invoice_document, PATHINFO_EXTENSION));
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg']);
     }
 }

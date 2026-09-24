@@ -355,6 +355,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{purchaseOrder}', 'show')->name('show');
             Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
+            Route::post('/{purchaseOrder}/upload-invoice', 'uploadInvoice')->name('upload-invoice');
         });
 
         Route::controller(\App\Http\Controllers\Warehouse\Procurement\CompletedOrderController::class)->prefix('completed-orders')->name('warehouse.completed-orders.')->group(function () {

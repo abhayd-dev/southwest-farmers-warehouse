@@ -260,6 +260,14 @@
                             <span class="fw-semibold">{{ $purchaseOrder->vendor_invoice_number }}</span>
                         </div>
                         @endif
+                        @if ($purchaseOrder->invoice_document)
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Invoice Picture:</span>
+                            <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank" class="badge bg-primary text-decoration-none px-2 py-1">
+                                <i class="mdi mdi-eye me-1"></i>View File
+                            </a>
+                        </div>
+                        @endif
                         @if ($purchaseOrder->duties > 0)
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Duties:</span>

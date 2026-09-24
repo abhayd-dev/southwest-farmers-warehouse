@@ -115,22 +115,28 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null)
     {
         $shortageItemIds = [];
 
-        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, &$shortageItemIds) {
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, &$shortageItemIds) {
             $po = PurchaseOrder::findOrFail($poId);
 
-            // Update additional costs and invoice number
-            $po->update([
+            $updateData = [
                 'vendor_invoice_number' => $invoiceNumber ?? $po->vendor_invoice_number,
                 'duties' => $duties,
                 'shipping_cost' => $shippingCost,
                 'taxes' => $taxes,
                 'transportation_cost' => $transportationCost,
                 'demurrage' => $demurrage,
-            ]);
+            ];
+
+            if ($invoiceDocument) {
+                $updateData['invoice_document'] = $invoiceDocument;
+            }
+
+            // Update additional costs, invoice number, and attached invoice document
+            $po->update($updateData);
 
             $allCompleted = true;
             $productIds = [];

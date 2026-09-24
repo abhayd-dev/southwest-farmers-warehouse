@@ -43,7 +43,13 @@ class ReceivingController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('po_number', fn($row) => $row->po_number)
+                ->addColumn('po_number', function ($row) {
+                    $html = '<span>' . e($row->po_number) . '</span>';
+                    if ($row->invoice_document) {
+                        $html .= ' <a href="' . e($row->invoice_document_url) . '" target="_blank" class="badge bg-light text-primary border ms-1 text-decoration-none" title="View Attached Invoice"><i class="mdi mdi-paperclip"></i> Invoice</a>';
+                    }
+                    return $html;
+                })
                 ->addColumn('vendor_name', fn($row) => optional($row->vendor)->name ?? 'N/A')
                 ->editColumn('order_date', function ($row) {
                     return $row->order_date ? Carbon::parse($row->order_date)->format('d M Y') : '-';
@@ -88,7 +94,7 @@ class ReceivingController extends Controller
                                 </a>
                             </div>';
                 })
-                ->rawColumns(['progress', 'status_badge', 'action'])
+                ->rawColumns(['po_number', 'progress', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -121,5 +127,32 @@ class ReceivingController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('Receipt-PO-' . $purchaseOrder->po_number . '.pdf');
+    }
+
+    public function uploadInvoice(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        $request->validate([
+            'invoice_document' => 'required|file|mimes:jpeg,jpg,png,webp,pdf|max:10240',
+            'invoice_number' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $disk = config('filesystems.disks.r2') ? 'r2' : 'public';
+            $file = $request->file('invoice_document');
+            $filename = 'invoice_' . $purchaseOrder->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('invoices', $filename, $disk);
+
+            $updateData = ['invoice_document' => $path];
+            if ($request->filled('invoice_number')) {
+                $updateData['vendor_invoice_number'] = $request->invoice_number;
+            }
+
+            $purchaseOrder->update($updateData);
+
+            return back()->with('success', 'Invoice document uploaded successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Invoice upload failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with('error', 'Failed to upload invoice document. Please try again.');
+        }
     }
 }

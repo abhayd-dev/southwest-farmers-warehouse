@@ -262,6 +262,14 @@ class PurchaseOrderController extends Controller
         set_time_limit(300);
 
         try {
+            $invoiceDocumentPath = null;
+            if ($request->hasFile('invoice_document')) {
+                $disk = config('filesystems.disks.r2') ? 'r2' : 'public';
+                $file = $request->file('invoice_document');
+                $filename = 'invoice_' . $purchaseOrder->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $invoiceDocumentPath = $file->storeAs('invoices', $filename, $disk);
+            }
+
             $this->poService->receiveItems(
                 $purchaseOrder->id,
                 $request->items,
@@ -270,7 +278,8 @@ class PurchaseOrderController extends Controller
                 $request->input('shipping_cost', 0),
                 $request->input('taxes', 0),
                 $request->input('transportation_cost', 0),
-                $request->input('demurrage', 0)
+                $request->input('demurrage', 0),
+                $invoiceDocumentPath
             );
 
             NotificationService::sendToAdmins(

@@ -15,6 +15,7 @@ class ReceivePurchaseOrderRequest extends FormRequest
     {
         return [
             'invoice_number' => 'required|string',
+            'invoice_document' => 'nullable|file|mimes:jpeg,jpg,png,webp,pdf|max:10240',
             'duties' => 'nullable|numeric|min:0',
             'shipping_cost' => 'nullable|numeric|min:0',
             'taxes' => 'nullable|numeric|min:0',
