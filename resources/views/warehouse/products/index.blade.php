@@ -355,7 +355,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
-                                <select name="category_id" id="priceCategorySelect" class="form-select" required>
+                                <select name="category_id" id="priceCategorySelect" class="form-select" autocomplete="off" required>
                                     <option value="">Select Category</option>
                                     @foreach ($categories as $cat)
                                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -366,7 +366,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Subcategory (Optional)</label>
                                 <select name="subcategory_id" id="priceSubcategorySelect" class="form-select"
-                                    disabled>
+                                    autocomplete="off" disabled>
                                     <option value="">Select Subcategory</option>
                                 </select>
                                 <small class="text-muted">Leave empty to apply to entire Category.</small>
@@ -494,36 +494,64 @@
                 }
             });
 
-            // Handle Pricing Modal Subcategory Logic
+            // Set Pricing modal: load the chosen category's subcategories.
+            // Reported: category showed CATERING but Subcategory never loaded --
+            // the dropdown can show a value without a change event ever firing
+            // (browser form restore, re-selecting the same value), and a failed
+            // request left it stuck. So: listen to change *and* input, re-sync
+            // whenever the modal opens, and always leave the select usable.
             const catSelect = document.getElementById('priceCategorySelect');
             const subSelect = document.getElementById('priceSubcategorySelect');
+            let loadedFor = null;
 
-            if (catSelect) {
-                catSelect.addEventListener('change', function() {
-                    const id = this.value;
-                    subSelect.innerHTML = '<option value="">Loading...</option>';
+            function loadPricingSubcategories() {
+                const id = catSelect.value;
+                if (id === loadedFor) return;
+                loadedFor = id;
+
+                if (!id) {
+                    subSelect.innerHTML = '<option value="">Select Category First</option>';
                     subSelect.disabled = true;
+                    return;
+                }
 
-                    if (id) {
-                        const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', id);
-                        fetch(url)
-                            .then(res => res.json())
-                            .then(data => {
-                                subSelect.innerHTML =
-                                    '<option value="">Select Subcategory (Optional)</option>';
-                                data.forEach(sub => {
-                                    subSelect.innerHTML +=
-                                        `<option value="${sub.id}">${sub.name}</option>`;
-                                });
-                                subSelect.disabled = false;
-                                if (window.jQuery && $(subSelect).data('select2')) {
-                                    $(subSelect).trigger('change');
-                                }
-                            });
-                    } else {
-                        subSelect.innerHTML = '<option value="">Select Category First</option>';
-                    }
-                });
+                subSelect.innerHTML = '<option value="">Loading...</option>';
+                subSelect.disabled = true;
+
+                const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', id);
+                fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(typeof jsonOrThrow === 'function' ? jsonOrThrow : (res => res.json()))
+                    .then(data => {
+                        if (catSelect.value !== id) return; // user picked another category meanwhile
+                        const list = Array.isArray(data) ? data : (data.subcategories || data.data || []);
+                        subSelect.innerHTML = '<option value="">' + (list.length ? 'Select Subcategory (Optional)' : 'No subcategories - applies to whole category') + '</option>';
+                        list.forEach(sub => {
+                            const opt = document.createElement('option');
+                            opt.value = sub.id;
+                            opt.textContent = sub.name;
+                            subSelect.appendChild(opt);
+                        });
+                        subSelect.disabled = false;
+                        if (window.jQuery && $(subSelect).data('select2')) {
+                            $(subSelect).trigger('change');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Could not load subcategories', err);
+                        loadedFor = null; // allow a retry
+                        subSelect.innerHTML = '<option value="">Could not load subcategories - reselect the category</option>';
+                        subSelect.disabled = false;
+                    });
+            }
+
+            if (catSelect && subSelect) {
+                catSelect.addEventListener('change', loadPricingSubcategories);
+                catSelect.addEventListener('input', loadPricingSubcategories);
+                const pricingModal = document.getElementById('pricingModal');
+                if (pricingModal) {
+                    pricingModal.addEventListener('shown.bs.modal', loadPricingSubcategories);
+                }
+                loadPricingSubcategories(); // a value restored by the browser
             }
         });
     </script>
