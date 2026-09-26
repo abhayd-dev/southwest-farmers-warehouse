@@ -80,6 +80,10 @@ return [
 
     'display_timezone' => env('DISPLAY_TIMEZONE', 'America/Chicago'),
 
+    // Shown on every PO sent to a vendor (email and SMS) -- client 9/11 list,
+    // item 6. Set VENDOR_DELIVERY_NOTE to change it, or to '' to hide it.
+    'vendor_delivery_note' => env('VENDOR_DELIVERY_NOTE', 'Loading dock will be closing at 4pm CST.'),
+
     /*
     |--------------------------------------------------------------------------
     | Loading Dock Notice

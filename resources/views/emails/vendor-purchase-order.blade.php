@@ -186,6 +186,12 @@
             </table>
         </div>
 
+        @if (config('app.vendor_delivery_note'))
+            <div class="notes-section" style="font-size: 15px;">
+                <strong>&#9888; Delivery note:</strong> {{ config('app.vendor_delivery_note') }}
+            </div>
+        @endif
+
         <h3 style="color: #206bc4;">Order Items</h3>
         <table class="items-table">
             <thead>

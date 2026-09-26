@@ -65,7 +65,8 @@ class VendorCommunicationService
             throw new \Exception('Twilio is not configured. Please add TWILIO_SID and TWILIO_TOKEN to .env');
         }
 
-        $defaultMessage = $message ?? "New Purchase Order #{$po->po_number} has been sent to you. Total: $" . number_format($po->total_amount, 2) . ". Please check your email for details.";
+        $defaultMessage = $message ?? "New Purchase Order #{$po->po_number} has been sent to you. Total: $" . number_format($po->total_amount, 2) . ". Please check your email for details."
+            . (config('app.vendor_delivery_note') ? ' ' . config('app.vendor_delivery_note') : '');
 
         try {
             $twilio = new \Twilio\Rest\Client(

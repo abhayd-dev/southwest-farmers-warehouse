@@ -20,6 +20,13 @@ class LoginController extends Controller
             'password' => ['required', 'string', 'max:255'],
         ]);
 
+        // Login ID is not case-sensitive (client 9/11 list, item 7): codes are
+        // stored like "NKABANI" but people type "nkabani". Resolve the stored
+        // spelling first, then authenticate normally (password check unchanged).
+        $typed = trim($credentials['emp_code']);
+        $matches = \App\Models\WareUser::whereRaw('LOWER(emp_code) = ?', [mb_strtolower($typed)])->pluck('emp_code');
+        $credentials['emp_code'] = $matches->count() === 1 ? $matches->first() : $typed;
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
