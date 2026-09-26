@@ -16,6 +16,10 @@
         .po-box td { padding: 6px 0; font-size: 14px; }
         .po-box td:first-child { color: #666; width: 45%; }
         .po-box td:last-child { font-weight: bold; }
+        .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .items-table th { background: #f1f3f5; text-align: left; padding: 8px 6px; border-bottom: 2px solid #dee2e6; }
+        .items-table td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+        .items-table .grand-total td { font-weight: bold; border-top: 2px solid #dee2e6; border-bottom: none; }
         .reason-box { background: #fff5f5; border-left: 4px solid #dc3545; padding: 12px 16px; margin: 15px 0; border-radius: 0 4px 4px 0; }
         .reason-box .label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #dc3545; margin-bottom: 4px; }
         .reason-box .text { color: #555; font-style: italic; }
@@ -43,6 +47,14 @@
                         <td>{{ $po->vendor->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
+                        <td>Order Date:</td>
+                        <td>{{ $po->order_date ? \Carbon\Carbon::parse($po->order_date)->format('M d, Y') : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Expected Delivery:</td>
+                        <td>{{ $po->expected_delivery_date ? \Carbon\Carbon::parse($po->expected_delivery_date)->format('M d, Y') : 'Not set' }}</td>
+                    </tr>
+                    <tr>
                         <td>Total Amount:</td>
                         <td>${{ number_format($po->total_amount, 2) }}</td>
                     </tr>
@@ -52,6 +64,40 @@
                     </tr>
                 </table>
             </div>
+
+            <h3 style="font-size: 15px; margin: 20px 0 8px;">Order Items</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>UPC</th>
+                        <th>Product</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Unit Price</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($po->items as $index => $item)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $item->product->barcode ?? 'N/A' }}</td>
+                            <td>{{ $item->product->product_name ?? 'N/A' }}</td>
+                            <td style="text-align: center;">{{ $item->requested_quantity }}</td>
+                            <td style="text-align: right;">${{ number_format($item->unit_cost, 2) }}</td>
+                            <td style="text-align: right;">${{ number_format($item->requested_quantity * $item->unit_cost, 2) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr class="grand-total">
+                        <td colspan="5" style="text-align: right;">Grand Total:</td>
+                        <td style="text-align: right;">${{ number_format($po->total_amount, 2) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @if ($po->notes)
+                <p style="margin-top: 12px;"><strong>Notes:</strong> {{ $po->notes }}</p>
+            @endif
 
             <div class="reason-box">
                 <div class="label">Rejection Reason Provided:</div>

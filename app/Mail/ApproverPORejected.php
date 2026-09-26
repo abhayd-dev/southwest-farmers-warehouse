@@ -16,7 +16,7 @@ class ApproverPORejected extends Mailable
     public function __construct(
         public PurchaseOrder $po,
     ) {
-        $this->po->loadMissing('vendor');
+        $this->po->loadMissing(['vendor', 'items.product']);
     }
 
     public function envelope(): Envelope

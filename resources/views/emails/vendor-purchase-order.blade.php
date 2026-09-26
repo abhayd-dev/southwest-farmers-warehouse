@@ -205,8 +205,8 @@
                     <td>{{ $item->product->barcode ?? 'N/A' }}</td>
                     <td><strong>{{ $item->product->product_name }}</strong></td>
                     <td style="text-align: center;">{{ $item->requested_quantity }}</td>
-                    <td style="text-align: right;">${{ number_format($item->cost_price, 2) }}</td>
-                    <td style="text-align: right;">${{ number_format($item->requested_quantity * $item->cost_price, 2) }}</td>
+                    <td style="text-align: right;">${{ number_format($item->unit_cost, 2) }}</td>
+                    <td style="text-align: right;">${{ number_format($item->requested_quantity * $item->unit_cost, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>

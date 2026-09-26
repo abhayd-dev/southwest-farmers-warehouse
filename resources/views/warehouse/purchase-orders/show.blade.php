@@ -26,7 +26,7 @@
                                 $displayStatus = strtoupper($purchaseOrder->status);
                                 $color = 'secondary';
 
-                                if ($purchaseOrder->approval_status === 'rejected') {
+                                if ($purchaseOrder->approval_status === 'rejected' && $purchaseOrder->status === 'draft') {
                                     $displayStatus = 'REJECTED';
                                     $color = 'danger';
                                 } elseif ($purchaseOrder->status === 'draft') {

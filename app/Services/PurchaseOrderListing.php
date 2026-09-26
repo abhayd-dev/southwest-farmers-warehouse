@@ -78,7 +78,10 @@ class PurchaseOrderListing
         $displayStatus = strtoupper($row->status);
         $color = 'secondary';
 
-        if ($row->approval_status === PurchaseOrder::APPROVAL_REJECTED) {
+        // Rejected only while the PO is still sitting in draft -- a few older
+        // POs were rejected and later went on to be completed or cancelled,
+        // and those should show where they actually ended up.
+        if ($row->approval_status === PurchaseOrder::APPROVAL_REJECTED && $row->status === PurchaseOrder::STATUS_DRAFT) {
             $displayStatus = 'REJECTED';
             $color = 'danger';
         } elseif ($row->status === PurchaseOrder::STATUS_DRAFT) {
