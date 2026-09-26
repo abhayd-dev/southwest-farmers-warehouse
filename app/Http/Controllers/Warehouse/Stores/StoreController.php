@@ -90,7 +90,7 @@ class StoreController extends Controller
                 ->with('success', 'Store registered successfully with Manager account.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store creation failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -206,7 +206,7 @@ class StoreController extends Controller
                 ->with('success', 'Store details updated.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -217,7 +217,7 @@ class StoreController extends Controller
             return redirect()->route('warehouse.stores.index')->with('success', 'Store deleted successfully.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -239,7 +239,7 @@ class StoreController extends Controller
             return response()->json(['success' => true, 'message' => 'Status updated.']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store status update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 500);
+            return response()->json(['success' => false, 'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 500);
         }
     }
 
@@ -258,7 +258,7 @@ class StoreController extends Controller
             return back()->with('success', 'Staff added successfully.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store staff creation failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -269,7 +269,7 @@ class StoreController extends Controller
             return back()->with('success', 'Staff removed successfully.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store staff deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -285,7 +285,7 @@ class StoreController extends Controller
             return back()->with('success', 'Schedule updated successfully.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store schedule update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

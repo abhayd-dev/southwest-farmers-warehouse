@@ -202,7 +202,7 @@
                                         id,
                                         status
                                     })
-                                }).then(res => res.json()).then(data => {
+                                }).then(jsonOrThrow).then(data => {
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'Status updated',
@@ -212,9 +212,9 @@
                                         timer: 2000
                                     });
                                     checkbox.checked = status == 1;
-                                }).catch(() => {
+                                }).catch((err) => {
                                     checkbox.checked = original;
-                                    Swal.fire('Error', 'Update failed', 'error');
+                                    Swal.fire('Error', serverErrorMessage(err, 'Update failed'), 'error');
                                 });
                             } else {
                                 checkbox.checked = original;

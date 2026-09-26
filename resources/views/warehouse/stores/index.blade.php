@@ -269,14 +269,14 @@
                                     // Revert if server fail
                                     this.checked = !isChecked;
                                     updateStatusLabel(this, !isChecked);
-                                    Swal.fire('Error!', 'Something went wrong.', 'error');
+                                    Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
                                 }
                             })
                             .catch(error => {
                                 console.error('Error:', error);
                                 this.checked = !isChecked;
                                 updateStatusLabel(this, !isChecked);
-                                Swal.fire('Error!', 'Network error.', 'error');
+                                Swal.fire('Error!', serverErrorMessage(error, 'Network error.'), 'error');
                             });
                         }
                     });

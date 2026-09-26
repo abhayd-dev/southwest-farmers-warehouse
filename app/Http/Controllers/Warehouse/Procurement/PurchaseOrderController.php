@@ -111,7 +111,7 @@ class PurchaseOrderController extends Controller
                 ->with('success', 'Purchase Order saved as draft successfully!');
         } catch (\Exception $e) {
             Log::error('Error creating PO: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -131,7 +131,7 @@ class PurchaseOrderController extends Controller
                 ->with('prefilled_items', $request->items);
         } catch (\Exception $e) {
             Log::error('Failed to process restock items: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -189,7 +189,7 @@ class PurchaseOrderController extends Controller
                 ->with('success', 'Purchase Order updated successfully.');
         } catch (\Exception $e) {
             Log::error('Error updating PO: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -310,7 +310,7 @@ class PurchaseOrderController extends Controller
             }
             
             Log::error('Receive failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -438,7 +438,7 @@ class PurchaseOrderController extends Controller
             return back()->with('success', 'PO sent to vendor: ' . implode(', ', $messages));
         } catch (\Exception $e) {
             Log::error('Failed to send PO: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 

@@ -24,3 +24,6 @@ Homestead.yaml
 Thumbs.db
 WAREHOUSE ROUND UP REVIEW 7-30-26.docx
 POSIssues_Warehouse_20260922.docx
+
+# Temporary helper files written by the editor's Laravel extension
+/storage/framework/lsp-*.php

@@ -145,7 +145,7 @@ class FreeWeightController extends Controller
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Packaging event failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 

@@ -113,13 +113,13 @@
                         if (data.success) {
                             location.reload(); 
                         } else {
-                            alert('Failed to update status');
+                            alert(data.message || 'Failed to update status');
                             buttonElement.disabled = false;
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Error updating status');
+                        alert(serverErrorMessage(error, 'Error updating status'));
                         buttonElement.disabled = false;
                     });
                 });

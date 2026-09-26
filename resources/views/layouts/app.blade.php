@@ -18,6 +18,10 @@
         .page-breadcrumb-link { color: #0d6efd; text-decoration: none; }
         .page-breadcrumb-link:hover { color: #0d6efd; font-weight: 700; text-decoration: underline; }
     </style>
+    <style>
+        .swal2-popup.swal2-toast.error-toast-wide { width: min(560px, 92vw) !important; }
+        .error-toast-wide .swal2-title { font-size: 0.9rem !important; user-select: text; word-break: break-word; }
+    </style>
 </head>
 
 <body data-menu-color="light" data-sidebar="default">
@@ -88,15 +92,25 @@
                 });
             @endif
 
+            // Errors stay until closed (and can be selected/copied): with real
+            // errors on, the message is worth reading.
+            const ErrorToast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                showCloseButton: true,
+                customClass: { popup: 'error-toast-wide' },
+            });
+
             @if (session('error'))
-                Toast.fire({
+                ErrorToast.fire({
                     icon: 'error',
                     title: @json(session('error'))
                 });
             @endif
 
             @if ($errors->any())
-                Toast.fire({
+                ErrorToast.fire({
                     icon: 'error',
                     title: @json($errors->first())
                 });
@@ -129,17 +143,64 @@
         });
     </script>
     <script>
+        /**
+         * The real reason a request failed, from a jQuery xhr, a fetch()
+         * JSON body, or an Error -- the server sends the real error to
+         * warehouse staff while SHOW_REAL_ERRORS is on. Falls back to
+         * `fallback` when there is nothing better.
+         */
+        window.serverErrorMessage = function (source, fallback) {
+            fallback = fallback || 'Something went wrong. Please try again later.';
+            try {
+                if (!source) return fallback;
+                if (source.serverMessage) return source.serverMessage; // from jsonOrThrow()
+                const json = source.responseJSON || (source.message !== undefined && source.success !== undefined ? source : null);
+                if (json) {
+                    if (json.errors && typeof json.errors === 'object') {
+                        const first = Object.values(json.errors)[0];
+                        if (first) return Array.isArray(first) ? first[0] : String(first);
+                    }
+                    if (json.message) return json.message;
+                }
+                if (source.status === 0) return 'Could not reach the server (network error or timeout).';
+                if (source.status) return fallback + ' (HTTP ' + source.status + (source.statusText ? ' ' + source.statusText : '') + ')';
+                if (source instanceof Error && source.message) return fallback + ' (' + source.message + ')';
+            } catch (e) {}
+            return fallback;
+        };
+
+        /**
+         * For fetch(): .then(jsonOrThrow) -- a failed response (HTTP error or
+         * {success: false}) becomes a rejected promise whose error carries the
+         * server's message, instead of being treated as a success.
+         */
+        window.jsonOrThrow = function (res) {
+            return res.json().catch(() => ({})).then(data => {
+                if (!res.ok || (data && data.success === false)) {
+                    let msg = data && data.message;
+                    if (data && data.errors && typeof data.errors === 'object') {
+                        const first = Object.values(data.errors)[0];
+                        if (first) msg = Array.isArray(first) ? first[0] : String(first);
+                    }
+                    const err = new Error(msg || ('Request failed (HTTP ' + res.status + ')'));
+                    err.serverMessage = err.message;
+                    throw err;
+                }
+                return data;
+            });
+        };
+
         $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
             console.warn('DataTables Ajax Error:', message);
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Data Load Issue',
-                    text: 'Something went wrong.',
+                    text: serverErrorMessage(settings && settings.jqXHR, 'Something went wrong while loading this table.'),
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,
-                    timer: 4000
+                    timer: 8000
                 });
             }
         };

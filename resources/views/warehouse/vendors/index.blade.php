@@ -160,9 +160,9 @@
                             status: newStatus
                         }).done(function(res) {
                             Toast.fire({ icon: 'success', title: res.message });
-                        }).fail(function() {
+                        }).fail(function(xhr) {
                             checkbox.prop('checked', !isChecked); // Revert checkbox
-                            Toast.fire({ icon: 'error', title: 'Failed/Unauthorized' });
+                            Toast.fire({ icon: 'error', title: serverErrorMessage(xhr, 'Failed/Unauthorized') });
                         });
                     } else {
                         checkbox.prop('checked', !isChecked); // Revert checkbox on cancel

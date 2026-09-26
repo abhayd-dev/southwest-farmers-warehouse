@@ -43,7 +43,7 @@ class ProfileController extends Controller
             return back()->with('success', 'Profile updated successfully.');
         } catch (\Exception $e) {
             return back()->withErrors([
-                'general' => 'Something went wrong while updating profile.',
+                'general' => \App\Support\ErrorMessage::from($e, 'Something went wrong while updating profile.'),
             ]);
         }
     }

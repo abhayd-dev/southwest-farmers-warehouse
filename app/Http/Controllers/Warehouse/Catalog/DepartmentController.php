@@ -87,7 +87,7 @@ class DepartmentController extends Controller
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Department status change failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
+            return response()->json(['message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 500);
         }
     }
 }

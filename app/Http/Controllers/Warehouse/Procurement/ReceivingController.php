@@ -152,7 +152,7 @@ class ReceivingController extends Controller
             return back()->with('success', 'Invoice document uploaded successfully.');
         } catch (\Exception $e) {
             \Log::error('Invoice upload failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Failed to upload invoice document. Please try again.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Failed to upload invoice document. Please try again.'));
         }
     }
 }

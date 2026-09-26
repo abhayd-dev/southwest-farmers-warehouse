@@ -57,7 +57,7 @@ class StaffController extends Controller
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Staff status change failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
+            return response()->json(['message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 500);
         }
     }
     public function create()
@@ -109,7 +109,7 @@ class StaffController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Staff member creation failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -172,7 +172,7 @@ class StaffController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Staff member update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -187,7 +187,7 @@ class StaffController extends Controller
             return back()->with('success', 'Staff Member Deleted.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Staff member deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

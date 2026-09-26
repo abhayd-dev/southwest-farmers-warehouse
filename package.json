@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "test:js": "node tests/js/purchase-order-filters.test.cjs"
+        "test:js": "node tests/js/purchase-order-filters.test.cjs && node tests/js/error-helpers.test.cjs"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",

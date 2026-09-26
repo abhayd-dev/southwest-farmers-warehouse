@@ -55,7 +55,7 @@
                                 title: response.message ?? 'Status updated successfully'
                             });
                         },
-                        error: function() {
+                        error: function(xhr) {
 
                             const Toast = Swal.mixin({
                                 toast: true,
@@ -66,7 +66,7 @@
 
                             Toast.fire({
                                 icon: 'error',
-                                title: 'Something went wrong!'
+                                title: serverErrorMessage(xhr, 'Something went wrong!')
                             });
                         }
                     });

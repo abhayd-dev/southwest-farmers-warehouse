@@ -358,10 +358,10 @@
                             }, function(res) {
                                 Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 })
                                     .fire({ icon: 'success', title: res.message ?? 'Status updated' });
-                            }).fail(function() {
+                            }).fail(function(xhr) {
                                 checkbox.prop('checked', !checkbox.prop('checked'));
-                                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 })
-                                    .fire({ icon: 'error', title: 'Something went wrong!' });
+                                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 8000 })
+                                    .fire({ icon: 'error', title: serverErrorMessage(xhr, 'Something went wrong!') });
                             });
                         }
                     });

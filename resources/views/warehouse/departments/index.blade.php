@@ -109,12 +109,7 @@
                                     status: newStatus
                                 })
                             })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
+                            .then(jsonOrThrow)
                             .then(data => {
                                 Swal.fire({
                                     title: 'Updated!',
@@ -128,7 +123,7 @@
                                 console.error('Error:', error);
                                 // Revert switch if API fails
                                 this.checked = !isChecked;
-                                Swal.fire('Error!', 'Something went wrong.', 'error');
+                                Swal.fire('Error!', serverErrorMessage(error, 'Something went wrong.'), 'error');
                             });
                         }
                     });

@@ -446,7 +446,7 @@
                             Swal.fire('Error', data.message || 'Something went wrong.', 'error');
                         }
                     })
-                    .catch(() => Swal.fire('Error', 'Network error.', 'error'));
+                    .catch((err) => Swal.fire('Error', serverErrorMessage(err, 'Network error.'), 'error'));
             }
 
             function confirmApproveAll() {

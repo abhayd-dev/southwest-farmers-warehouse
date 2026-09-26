@@ -82,6 +82,11 @@ return [
 
     // Shown on every PO sent to a vendor (email and SMS) -- client 9/11 list,
     // item 6. Set VENDOR_DELIVERY_NOTE to change it, or to '' to hide it.
+    // Show warehouse staff the real error instead of "Something went wrong"
+    // (App\Support\ErrorMessage). On for now at the client's request; set
+    // SHOW_REAL_ERRORS=false to go back to generic messages.
+    'show_real_errors' => (bool) env('SHOW_REAL_ERRORS', true),
+
     'vendor_delivery_note' => env('VENDOR_DELIVERY_NOTE', 'Loading dock will be closing at 4pm CST.'),
 
     /*

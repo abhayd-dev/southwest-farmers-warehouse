@@ -53,7 +53,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong. Please try again later.'
+                    // Real error for logged-in warehouse staff while SHOW_REAL_ERRORS is on.
+                    'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'),
                 ], 500);
             }
 
@@ -65,6 +66,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // Render custom 500 error page
-            return response()->view('errors.500', [], 500);
+            return response()->view('errors.500', [
+                'errorDetail' => \App\Support\ErrorMessage::shouldShow() ? \App\Support\ErrorMessage::describe($e) : null,
+            ], 500);
         });
     })->create();

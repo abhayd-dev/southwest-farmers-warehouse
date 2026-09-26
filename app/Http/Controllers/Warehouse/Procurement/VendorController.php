@@ -141,7 +141,7 @@ class VendorController extends Controller
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Vendor status change failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['message' => 'Something went wrong. Please try again later.'], 500);
+            return response()->json(['message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 500);
         }
     }
 
@@ -208,10 +208,10 @@ class VendorController extends Controller
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong. Please try again later.',
+                    'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'),
                 ], 500);
             }
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 

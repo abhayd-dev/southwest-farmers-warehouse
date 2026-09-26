@@ -210,11 +210,7 @@
                                         status: newStatus
                                     })
                                 })
-                                .then(response => {
-                                    if (!response.ok) throw new Error(
-                                        'Network response was not ok');
-                                    return response.json();
-                                })
+                                .then(jsonOrThrow)
                                 .then(data => {
                                     Swal.mixin({
                                         toast: true,
@@ -230,7 +226,7 @@
                                 })
                                 .catch(error => {
                                     checkbox.checked = originalState;
-                                    Swal.fire('Error!', 'Failed to update status.',
+                                    Swal.fire('Error!', serverErrorMessage(error, 'Failed to update status.'),
                                         'error');
                                 });
                         }

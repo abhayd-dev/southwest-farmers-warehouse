@@ -390,6 +390,14 @@
             </p>
 
             {{-- Action Buttons --}}
+            @if (!empty($errorDetail))
+                {{-- Real error for warehouse staff while SHOW_REAL_ERRORS is on --}}
+                <div style="background: #fff5f5; border: 1px solid #f5c2c7; border-left: 4px solid #dc3545; border-radius: 8px; padding: 12px 14px; margin: 0 0 20px; text-align: left; font-size: 13px; color: #842029; word-break: break-word;">
+                    <strong style="display: block; margin-bottom: 4px;">Error details</strong>
+                    <code style="color: #842029; white-space: pre-wrap;">{{ $errorDetail }}</code>
+                </div>
+            @endif
+
             <div class="btn-group">
                 <a href="{{ route('dashboard') }}" class="btn-primary">
                     <i class="mdi mdi-home-outline"></i>

@@ -50,7 +50,7 @@ class ProductController extends Controller
             return view('warehouse.products.index', compact('products', 'categories'));
         } catch (\Exception $e) {
             Log::error($e);
-            return back()->with('error', 'Failed to load products');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Failed to load products'));
         }
     }
 
@@ -64,7 +64,7 @@ class ProductController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Unable to open create page: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -140,7 +140,7 @@ class ProductController extends Controller
             });
         } catch (\Exception $e) {
             Log::error('Product creation failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', 'Something went wrong. Please try again later.');
+            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -200,7 +200,7 @@ class ProductController extends Controller
             return back()->with('success', 'Product updated successfully');
         } catch (\Exception $e) {
             Log::error('Product update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -234,7 +234,7 @@ class ProductController extends Controller
             return back()->with('success', 'Product and all its referenced records have been deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Product deletion failed: ' . $e->getMessage(), ['product_id' => $product->id, 'exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -259,7 +259,7 @@ class ProductController extends Controller
             return back()->with('success', 'All warehouse products and their referenced records have been deleted successfully.');
         } catch (\Exception $e) {
             Log::error('All products deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -292,7 +292,7 @@ class ProductController extends Controller
             return back()->with('success', 'Selected products and their referenced records have been deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Bulk product deletion failed: ' . $e->getMessage(), ['ids' => $request->ids, 'exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -303,7 +303,7 @@ class ProductController extends Controller
             $product->update(['is_active' => $request->status]);
             return response()->json(['message' => 'Status updated successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error updating status'], 500);
+            return response()->json(['message' => \App\Support\ErrorMessage::from($e, 'Error updating status')], 500);
         }
     }
 
@@ -379,10 +379,10 @@ class ProductController extends Controller
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong. Please try again later.'
+                    'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')
                 ], 500);
             }
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -463,7 +463,7 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update prices: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Something went wrong. Please try again later.');
+            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

@@ -139,11 +139,11 @@
                                 method: 'POST',
                                 headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}", 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ id: id, status: newStatus })
-                            }).then(res => res.json()).then(data => {
+                            }).then(jsonOrThrow).then(data => {
                                 Swal.fire({ icon: 'success', title: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
                             }).catch(err => {
                                 toggle.checked = originalState;
-                                Swal.fire('Error', 'Failed to update status', 'error');
+                                Swal.fire('Error', serverErrorMessage(err, 'Failed to update status'), 'error');
                             });
                         } else { toggle.checked = originalState; }
                     });

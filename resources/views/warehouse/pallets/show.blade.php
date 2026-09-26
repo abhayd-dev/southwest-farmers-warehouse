@@ -226,8 +226,9 @@
                     alertDiv.innerHTML = `<div class="alert alert-danger py-2">${data.message}</div>`;
                 }
             })
-            .catch(() => {
-                alertDiv.innerHTML = '<div class="alert alert-danger py-2">An error occurred. Please try again.</div>';
+            .catch((err) => {
+                alertDiv.innerHTML = '<div class="alert alert-danger py-2"></div>';
+                alertDiv.firstChild.textContent = serverErrorMessage(err, 'An error occurred. Please try again.');
             });
         });
 

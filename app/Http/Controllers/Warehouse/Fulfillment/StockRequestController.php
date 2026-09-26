@@ -112,7 +112,7 @@ class StockRequestController extends Controller
             ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Stock status change failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 400);
+            return response()->json(['success' => false, 'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 400);
         }
     }
 
@@ -136,7 +136,7 @@ class StockRequestController extends Controller
             return response()->json(['success' => true, 'message' => 'Payment verified & Stock Completed']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Verify payment failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 400);
+            return response()->json(['success' => false, 'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 400);
         }
     }
 
@@ -198,7 +198,7 @@ class StockRequestController extends Controller
             return response()->json(['success' => true, 'message' => 'Batch created & stock added to warehouse']);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Purchase in failed: ' . $e->getMessage(), ['exception' => $e]);
-            return response()->json(['success' => false, 'message' => 'Something went wrong. Please try again later.'], 400);
+            return response()->json(['success' => false, 'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 400);
         }
     }
 
