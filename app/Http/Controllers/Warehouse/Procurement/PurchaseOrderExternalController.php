@@ -106,7 +106,7 @@ class PurchaseOrderExternalController extends Controller
             } else {
                 $reason = $request->input('reason');
                 if (!$reason) {
-                    throw new \Exception('A reason is required to deny this order.');
+                    throw new \App\Exceptions\BusinessRuleException('A reason is required to deny this order.');
                 }
                 $purchaseOrder->vendorDeny($reason);
                 $message = "PO #{$purchaseOrder->po_number} has been marked as denied.";

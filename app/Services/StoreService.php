@@ -104,7 +104,7 @@ class StoreService
     {
         $user = StoreUser::findOrFail($staffId);
         if ($user->isStoreAdmin()) {
-            throw new \Exception('Cannot delete the Main Store Manager.');
+            throw new \App\Exceptions\BusinessRuleException('Cannot delete the Main Store Manager.');
         }
         $user->delete();
     }

@@ -75,7 +75,7 @@ class WareSettingController extends Controller
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Settings update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 

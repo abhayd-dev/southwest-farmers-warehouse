@@ -109,7 +109,7 @@ class StaffController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Staff member creation failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -172,7 +172,7 @@ class StaffController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Staff member update failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -187,7 +187,7 @@ class StaffController extends Controller
             return back()->with('success', 'Staff Member Deleted.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Staff member deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

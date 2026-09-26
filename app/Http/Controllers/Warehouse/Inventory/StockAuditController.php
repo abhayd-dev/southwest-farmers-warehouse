@@ -117,7 +117,7 @@ class StockAuditController extends Controller
             $stocks = $stockQuery->orderBy('bin_location')->get();
 
             if ($stocks->isEmpty()) {
-                throw new \Exception("No products found for this audit criteria.");
+                throw new \App\Exceptions\BusinessRuleException("No products found for this audit criteria.");
             }
 
             // Was one StockAuditItem::create() call per stock row — for a
@@ -238,7 +238,7 @@ class StockAuditController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Audit finalization failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

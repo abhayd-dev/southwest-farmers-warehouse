@@ -107,7 +107,7 @@ class ProductCategoryController extends Controller
             return back()->with('success', 'Category deleted successfully');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Category deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -171,7 +171,7 @@ class ProductCategoryController extends Controller
                     'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')
                 ], 500);
             }
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 

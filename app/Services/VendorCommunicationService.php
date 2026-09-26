@@ -15,7 +15,7 @@ class VendorCommunicationService
     public function sendPOEmail(PurchaseOrder $po, ?string $bccEmail = null)
     {
         if (!$po->vendor->email) {
-            throw new \Exception('Vendor does not have an email address');
+            throw new \App\Exceptions\BusinessRuleException('Vendor does not have an email address');
         }
 
         $acknowledgeUrl = URL::temporarySignedRoute(
@@ -57,12 +57,12 @@ class VendorCommunicationService
     public function sendPOSMS(PurchaseOrder $po, $message = null)
     {
         if (!$po->vendor->phone) {
-            throw new \Exception('Vendor does not have a phone number');
+            throw new \App\Exceptions\BusinessRuleException('Vendor does not have a phone number');
         }
 
         // Check if Twilio is configured
         if (!config('services.twilio.sid') || !config('services.twilio.token')) {
-            throw new \Exception('Twilio is not configured. Please add TWILIO_SID and TWILIO_TOKEN to .env');
+            throw new \App\Exceptions\BusinessRuleException('Twilio is not configured. Please add TWILIO_SID and TWILIO_TOKEN to .env');
         }
 
         $defaultMessage = $message ?? "New Purchase Order #{$po->po_number} has been sent to you. Total: $" . number_format($po->total_amount, 2) . ". Please check your email for details."

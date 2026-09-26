@@ -138,7 +138,7 @@ class ProductStockController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Error adding stock: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -276,7 +276,8 @@ class ProductStockController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Stock adjustment failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            // Keep what was typed so a business-rule warning can be corrected in place.
+            return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 

@@ -232,7 +232,11 @@ class Product extends Model
                 ->first();
 
             if (!$stock || $stock->quantity < $qty) {
-                throw new \Exception("Insufficient Stock. Available: " . ($stock->quantity ?? 0));
+                // "676.00" -> "676", "12.50" -> "12.5"
+                $fmt = fn ($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+                throw new \App\Exceptions\BusinessRuleException(
+                    'Insufficient stock: only ' . $fmt($stock->quantity ?? 0) . ' available, cannot remove ' . $fmt($qty) . '.'
+                );
             }
 
             $remainingToDeduct = $qty;

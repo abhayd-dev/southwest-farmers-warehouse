@@ -102,6 +102,16 @@
                 customClass: { popup: 'error-toast-wide' },
             });
 
+            // Business rules ("Insufficient Stock. Available: 676.00") -- a warning,
+            // not an error; closes by itself like the success toast.
+            @if (session('warning'))
+                Toast.fire({
+                    icon: 'warning',
+                    title: @json(session('warning')),
+                    timer: 7000
+                });
+            @endif
+
             @if (session('error'))
                 ErrorToast.fire({
                     icon: 'error',

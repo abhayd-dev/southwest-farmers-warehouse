@@ -41,6 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            // A business rule nobody caught: show it as a warning where the user
+            // was, not as a 500 (e.g. "Insufficient Stock. Available: 676.00").
+            if ($e instanceof \App\Exceptions\BusinessRuleException) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'level' => 'warning', 'message' => $e->getMessage()], 422);
+                }
+
+                return back()->withInput()->with('warning', $e->getMessage());
+            }
+
             // Log all unhandled exceptions for debugging purposes
             \Illuminate\Support\Facades\Log::error('Unhandled Exception: ' . $e->getMessage(), [
                 'exception' => $e,

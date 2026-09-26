@@ -211,7 +211,7 @@ class VendorController extends Controller
                     'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'),
                 ], 500);
             }
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 

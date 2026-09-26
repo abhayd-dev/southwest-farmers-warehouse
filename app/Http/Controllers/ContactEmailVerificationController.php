@@ -38,7 +38,7 @@ class ContactEmailVerificationController extends Controller
             $config = EmailVerificationService::registry($request->type);
             $model = $config['model']::findOrFail($request->id);
         } catch (\Throwable $e) {
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Could not find the record to verify.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Could not find the record to verify.'));
         }
 
         $sent = $service->send($request->type, $model, $request->label);

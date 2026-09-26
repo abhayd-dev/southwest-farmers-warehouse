@@ -28,7 +28,7 @@ class PackagingService
 
             // 3. Check Bulk Availability
             if ($bulkProduct->bulk_weight < $requiredWeight) {
-                throw new \Exception("Insufficient Bulk Weight. Required: {$requiredWeight} {$bulkProduct->unit}, Available: {$bulkProduct->bulk_weight} {$bulkProduct->unit}");
+                throw new \App\Exceptions\BusinessRuleException("Insufficient Bulk Weight. Required: {$requiredWeight} {$bulkProduct->unit}, Available: {$bulkProduct->bulk_weight} {$bulkProduct->unit}");
             }
 
             // 4. Deduct Bulk Weight

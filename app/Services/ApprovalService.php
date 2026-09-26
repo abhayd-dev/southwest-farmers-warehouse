@@ -15,7 +15,7 @@ class ApprovalService
     public function sendApprovalEmail(PurchaseOrder $po, bool $isReminder = false)
     {
         if (!$po->approval_email) {
-            throw new \Exception('No approval email specified for this PO');
+            throw new \App\Exceptions\BusinessRuleException('No approval email specified for this PO');
         }
 
         // Generate signed URLs for approve/reject actions
@@ -102,7 +102,7 @@ class ApprovalService
             return 'Purchase Order approved successfully';
         } elseif ($action === 'reject') {
             if (!$reason) {
-                throw new \Exception('Rejection reason is required');
+                throw new \App\Exceptions\BusinessRuleException('Rejection reason is required');
             }
             $po->reject($approverEmail, $reason);
             $this->logApproval($po, $approverEmail, 'rejected', $reason);
@@ -124,7 +124,7 @@ class ApprovalService
             return 'Purchase Order rejected';
         }
 
-        throw new \Exception('Invalid action');
+        throw new \App\Exceptions\BusinessRuleException('Invalid action');
     }
 
     /**

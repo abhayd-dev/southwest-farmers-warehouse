@@ -39,7 +39,7 @@ class StockRequestService
 
             if ($data['status'] === StockRequest::STATUS_REJECTED) {
                 if ($currentFulfilled > 0 || $request->status === StockRequest::STATUS_DISPATCHED) {
-                    throw new \Exception('Cannot reject a request after stock has been dispatched.');
+                    throw new \App\Exceptions\BusinessRuleException('Cannot reject a request after stock has been dispatched.');
                 }
 
                 $request->update([
@@ -51,13 +51,13 @@ class StockRequestService
 
             if ($data['status'] === StockRequest::STATUS_DISPATCHED) {
                 if ($pendingQuantity <= 0) {
-                    throw new \Exception('No pending quantity left to dispatch.');
+                    throw new \App\Exceptions\BusinessRuleException('No pending quantity left to dispatch.');
                 }
 
                 $dispatchQty = $data['dispatch_quantity'];
 
                 if ($dispatchQty > $pendingQuantity) {
-                    throw new \Exception("Dispatch quantity cannot exceed pending quantity ({$pendingQuantity}).");
+                    throw new \App\Exceptions\BusinessRuleException("Dispatch quantity cannot exceed pending quantity ({$pendingQuantity}).");
                 }
 
                 $productId = $request->product_id;
@@ -90,7 +90,7 @@ class StockRequestService
         $totalAvailable = $batches->sum('quantity');
 
         if ($totalAvailable < $dispatchQty) {
-            throw new \Exception("Insufficient warehouse stock. Available: {$totalAvailable}, Requested: {$dispatchQty}");
+            throw new \App\Exceptions\BusinessRuleException("Insufficient warehouse stock. Available: {$totalAvailable}, Requested: {$dispatchQty}");
         }
 
         $remainingToDispatch = $dispatchQty;
@@ -148,7 +148,7 @@ class StockRequestService
             $request = StockRequest::findOrFail($requestData->request_id);
 
             if ($request->status !== StockRequest::STATUS_DISPATCHED) {
-                throw new \Exception("Invalid status for verification. Request must be Dispatched first.");
+                throw new \App\Exceptions\BusinessRuleException("Invalid status for verification. Request must be Dispatched first.");
             }
 
             $path = $requestData->file('warehouse_payment_proof')->store('payment_proofs', 'r2');

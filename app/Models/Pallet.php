@@ -68,7 +68,7 @@ class Pallet extends Model
         $totalWeight = $quantity * $weightPerUnit;
 
         if (($this->total_weight + $totalWeight) > $this->max_weight) {
-            throw new \Exception("Adding this item would exceed pallet weight limit of {$this->max_weight} lbs");
+            throw new \App\Exceptions\BusinessRuleException("Adding this item would exceed pallet weight limit of {$this->max_weight} lbs");
         }
 
         $item = $this->items()->create([

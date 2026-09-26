@@ -32,6 +32,11 @@ class ErrorMessage
      */
     public static function from(\Throwable $e, string $generic): string
     {
+        // Business rules are written for people: show them as they are, always.
+        if ($e instanceof \App\Exceptions\BusinessRuleException) {
+            return $e->getMessage();
+        }
+
         if (! static::shouldShow()) {
             return $generic;
         }
@@ -41,6 +46,16 @@ class ErrorMessage
         $context = preg_match('/something went wrong|please try again later/i', $generic) ? '' : rtrim($generic, ' .') . '. ';
 
         return $context . 'Error: ' . static::describe($e);
+    }
+
+    /**
+     * Flash data for back()->with(...): a business rule becomes a yellow
+     * 'warning' toast with just its message; anything else an 'error' toast
+     * (with the real error while SHOW_REAL_ERRORS is on).
+     */
+    public static function flash(\Throwable $e, string $generic): array
+    {
+        return [$e instanceof \App\Exceptions\BusinessRuleException ? 'warning' : 'error' => static::from($e, $generic)];
     }
 
     /** "<message> (<ExceptionClass> at app/Path/File.php:123)" */

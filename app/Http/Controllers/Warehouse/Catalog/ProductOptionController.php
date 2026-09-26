@@ -50,7 +50,7 @@ class ProductOptionController extends Controller
             return view('warehouse.product-options.index', compact('options', 'categories'));
         } catch (\Exception $e) {
             Log::error('ProductOption Index Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -65,7 +65,7 @@ class ProductOptionController extends Controller
             return view('warehouse.product-options.create', compact('categories'));
         } catch (\Exception $e) {
             Log::error('ProductOption Create Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -99,7 +99,7 @@ class ProductOptionController extends Controller
                 ->with('success', 'Product option created successfully');
         } catch (\Exception $e) {
             Log::error('ProductOption Store Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->withInput()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -122,7 +122,7 @@ class ProductOptionController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('ProductOption Edit Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -158,7 +158,7 @@ class ProductOptionController extends Controller
             return back()->with('success', 'Product option updated successfully');
         } catch (\Exception $e) {
             Log::error('ProductOption Update Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -240,7 +240,7 @@ class ProductOptionController extends Controller
             return back()->with('success', 'Import started! You will be notified once processing is complete.');
         } catch (\Exception $e) {
             Log::error('ProductOption Import Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -256,7 +256,7 @@ class ProductOptionController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('ProductOption Export Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -271,7 +271,7 @@ class ProductOptionController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('ProductOption Sample Error: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 

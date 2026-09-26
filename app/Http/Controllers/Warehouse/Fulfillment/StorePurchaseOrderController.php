@@ -273,7 +273,7 @@ class StorePurchaseOrderController extends Controller
                 $warehouseStock = $warehouseStocks->get($item->product_id);
 
                 if (!$warehouseStock || $warehouseStock->quantity < $qtyToDispatch) {
-                    throw new \Exception("Insufficient stock for product ID {$item->product_id}. Available: " . ($warehouseStock?->quantity ?? 0));
+                    throw new \App\Exceptions\BusinessRuleException("Insufficient stock for product ID {$item->product_id}. Available: " . ($warehouseStock?->quantity ?? 0));
                 }
 
                 $warehouseStock->decrement('quantity', $qtyToDispatch);
@@ -359,7 +359,7 @@ class StorePurchaseOrderController extends Controller
             \Illuminate\Support\Facades\Log::error('Auto-PO generation failed: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()
                 ->route('warehouse.store-orders.index')
-                ->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+                ->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 
@@ -433,7 +433,7 @@ class StorePurchaseOrderController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Failed to auto-arrange pallets: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
 }

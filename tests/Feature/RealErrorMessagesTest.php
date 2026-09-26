@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Support\ErrorMessage;
 use Illuminate\Support\Facades\Route;
+use Tests\Concerns\InsertsMinimalRows;
 use Tests\Concerns\MakesWarehouseUsers;
 use Tests\TestCase;
 
@@ -14,7 +15,7 @@ use Tests\TestCase;
  */
 class RealErrorMessagesTest extends TestCase
 {
-    use MakesWarehouseUsers;
+    use InsertsMinimalRows, MakesWarehouseUsers;
 
     protected function setUp(): void
     {
@@ -76,5 +77,47 @@ class RealErrorMessagesTest extends TestCase
         $error = (string) session('error');
         $this->assertStringStartsWith('Error: No query results for model [App\\Models\\WareUser] 999999', $error);
         $this->assertStringContainsString('(ModelNotFoundException at app/Http/Controllers/Warehouse/Administration/StaffController.php:', $error);
+    }
+
+    public function test_a_business_rule_is_a_plain_warning_not_a_technical_error(): void
+    {
+        // The stock-adjust screen: removing more than is in stock.
+        $this->withoutForeignKeys();
+        $productId = $this->insertRow('products', ['product_name' => 'Bell Pepper', 'store_id' => null, 'cost_price' => 10]);
+        $this->insertRow('product_stocks', ['product_id' => $productId, 'warehouse_id' => 1, 'quantity' => 676]);
+
+        $this->actingAs($this->superAdmin(), 'warehouse')
+            ->from(route('warehouse.stocks.adjust'))
+            ->post(route('warehouse.stocks.store-adjustment'), [
+                'product_id' => $productId, 'action' => 'subtract', 'reason' => 'damage', 'quantity' => 700,
+            ])
+            ->assertRedirect(route('warehouse.stocks.adjust'))
+            ->assertSessionHas('warning', 'Insufficient stock: only 676 available, cannot remove 700.')
+            ->assertSessionMissing('error')
+            ->assertSessionHasInput('quantity', 700);
+    }
+
+    public function test_business_rules_skip_the_technical_detail_even_with_real_errors_on(): void
+    {
+        $this->actingAs($this->superAdmin(), 'warehouse');
+        $e = new \App\Exceptions\BusinessRuleException('Cannot delete the Main Store Manager.');
+
+        $this->assertSame('Cannot delete the Main Store Manager.', ErrorMessage::from($e, 'Something went wrong.'));
+        $this->assertSame(['warning' => 'Cannot delete the Main Store Manager.'], ErrorMessage::flash($e, 'Something went wrong.'));
+        $this->assertSame('error', array_key_first(ErrorMessage::flash(new \RuntimeException('x'), 'Something went wrong.')));
+    }
+
+    public function test_an_uncaught_business_rule_returns_a_warning_not_a_500(): void
+    {
+        Route::middleware('web')->get('/__test/rule', fn () => throw new \App\Exceptions\BusinessRuleException('Dispatch quantity cannot exceed pending quantity (5).'));
+        $admin = $this->superAdmin();
+
+        $this->actingAs($admin, 'warehouse')->from('/warehouse/stores')->get('/__test/rule')
+            ->assertRedirect('/warehouse/stores')
+            ->assertSessionHas('warning', 'Dispatch quantity cannot exceed pending quantity (5).');
+
+        $this->actingAs($admin, 'warehouse')->getJson('/__test/rule')
+            ->assertStatus(422)
+            ->assertJson(['success' => false, 'level' => 'warning', 'message' => 'Dispatch quantity cannot exceed pending quantity (5).']);
     }
 }

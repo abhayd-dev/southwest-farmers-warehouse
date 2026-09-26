@@ -107,7 +107,7 @@ class ProductSubcategoryController extends Controller
             return back()->with('success', 'Subcategory deleted successfully');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Subcategory deletion failed: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.'));
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
         }
     }
     
