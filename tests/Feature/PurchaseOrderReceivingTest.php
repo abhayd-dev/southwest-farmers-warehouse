@@ -160,6 +160,7 @@ class PurchaseOrderReceivingTest extends TestCase
 
         $this->actingAs($admin)->post(route('warehouse.purchase-orders.receive', $po), [
             'invoice_number' => 'INV-1',
+            'shipment_type' => 'truck',
             'items' => [$item->id => ['receive_qty' => 999, 'ordered_qty' => 999]],
         ])->assertRedirect(route('warehouse.receiving.show', $po->id));
 

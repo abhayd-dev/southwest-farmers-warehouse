@@ -45,6 +45,7 @@ class ReceivingInvoiceUploadTest extends TestCase
     {
         $this->actingAs($this->superAdmin())->post(route('warehouse.purchase-orders.receive', $this->po), [
             'invoice_number' => 'INV-1026343',
+            'shipment_type' => 'truck',
             'invoice_document' => UploadedFile::fake()->image('invoice.jpg', 800, 1100),
             'items' => [$this->item->id => ['receive_qty' => 10]],
         ])->assertSessionHasNoErrors();

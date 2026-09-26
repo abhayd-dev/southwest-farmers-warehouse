@@ -162,4 +162,28 @@ class PurchaseOrderExternalController extends Controller
             'po' => $purchaseOrder,
         ]);
     }
+
+    /**
+     * Approve / reject an over-receipt from the signed email link (client PDF
+     * 9/24, item 1).
+     */
+    public function overReceiptDecision(PurchaseOrder $purchaseOrder, string $decision, \App\Services\OverReceiptService $service)
+    {
+        try {
+            $decided = $service->decide($purchaseOrder, $decision, $purchaseOrder->approval_email ?: 'approver (email link)');
+        } catch (\InvalidArgumentException $e) {
+            return view('warehouse.purchase-orders.approval-result', ['success' => false, 'message' => 'Invalid action']);
+        }
+
+        return view('warehouse.purchase-orders.approval-result', [
+            'success' => $decided,
+            'message' => $decided
+                ? ($decision === 'approve'
+                    ? 'Over-receipt approved. The invoice now reflects the quantity received.'
+                    : 'Over-receipt rejected. The invoice stays at the quantity ordered.')
+                : 'This over-receipt has already been decided.',
+            'po' => $purchaseOrder->fresh(),
+            'cancelUrl' => null,
+        ]);
+    }
 }

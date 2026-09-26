@@ -45,6 +45,12 @@ Route::get('/warehouse/purchase-orders/{purchaseOrder}/vendor-response', [\App\H
 
 // Lets the external approver cancel a PO they already approved — same "no
 // login" reasoning as the two routes above.
+// Over-receipt approve / reject from the approver's email (client PDF 9/24, item 1).
+Route::get('/warehouse/purchase-orders/{purchaseOrder}/over-receipt/{decision}', [\App\Http\Controllers\Warehouse\Procurement\PurchaseOrderExternalController::class, 'overReceiptDecision'])
+    ->name('warehouse.purchase-orders.over-receipt.decide')
+    ->where('decision', 'approve|reject')
+    ->middleware('signed');
+
 Route::get('/warehouse/purchase-orders/{purchaseOrder}/approver-cancel', [\App\Http\Controllers\Warehouse\Procurement\PurchaseOrderExternalController::class, 'approverCancel'])
     ->name('warehouse.purchase-orders.approver-cancel')
     ->middleware('signed');
@@ -350,6 +356,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
         Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('warehouse.purchase-orders.cancel');
         Route::post('purchase-orders/{purchase_order}/revert-draft', [PurchaseOrderController::class, 'revertToDraft'])->name('warehouse.purchase-orders.revert-draft');
         Route::post('purchase-orders/{purchase_order}/send-approval', [PurchaseOrderController::class, 'sendApproval'])->name('warehouse.purchase-orders.send-approval');
+        Route::post('purchase-orders/{purchaseOrder}/over-receipt', [PurchaseOrderController::class, 'overReceiptDecision'])->name('warehouse.purchase-orders.over-receipt');
 
         // (PO Approval Routes moved outside the auth group — see top of file:
         // an external approver clicking the email link is not logged in.)

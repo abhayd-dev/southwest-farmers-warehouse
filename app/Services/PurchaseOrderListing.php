@@ -72,7 +72,7 @@ class PurchaseOrderListing
     private function statusBadge(PurchaseOrder $row): string
     {
         if ($row->status === PurchaseOrder::STATUS_COMPLETED && $row->progress < 100) {
-            return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">PARTIAL COMPLETED</span>';
+            return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">' . ($row->shipment_type === PurchaseOrder::SHIPMENT_TRUCK ? 'CLOSED (SHORT)' : 'PARTIAL COMPLETED') . '</span>';
         }
 
         $displayStatus = strtoupper($row->status);
@@ -106,7 +106,14 @@ class PurchaseOrderListing
             $color = 'danger';
         }
 
-        return '<span class="badge bg-' . $color . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
+        $badge = '<span class="badge bg-' . $color . ' rounded-pill text-uppercase px-3 py-2" style="font-size: 0.8rem;">' . $displayStatus . '</span>';
+
+        // Client PDF 9/24, item 1: over-receipt waiting on the approver.
+        if ($row->over_receipt_status === PurchaseOrder::OVER_RECEIPT_PENDING) {
+            $badge .= '<br><span class="badge bg-warning text-dark mt-1" style="font-size: 0.7rem;">OVER-RECEIPT: NEEDS APPROVAL</span>';
+        }
+
+        return $badge;
     }
 
     private function actionButtons(PurchaseOrder $row): string

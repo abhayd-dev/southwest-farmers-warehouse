@@ -279,7 +279,8 @@ class PurchaseOrderController extends Controller
                 $request->input('taxes', 0),
                 $request->input('transportation_cost', 0),
                 $request->input('demurrage', 0),
-                $invoiceDocumentPath
+                $invoiceDocumentPath,
+                $request->input('shipment_type')
             );
 
             NotificationService::sendToAdmins(
@@ -288,8 +289,14 @@ class PurchaseOrderController extends Controller
                 'success'
             );
 
+            $purchaseOrder->refresh();
+            $message = 'Inventory updated successfully.';
+            if ($purchaseOrder->over_receipt_status === PurchaseOrder::OVER_RECEIPT_PENDING) {
+                $message .= ' More was received than ordered, so the order has been flagged and sent for approval.';
+            }
+
             return redirect()->route('warehouse.receiving.show', $purchaseOrder->id)
-                ->with('success', 'Inventory updated successfully.');
+                ->with('success', $message);
         } catch (\Exception $e) {
             if ($e->getMessage() === 'CostIncreaseException') {
                 $approvalUrl = route('warehouse.purchase-orders.cost-approval', $purchaseOrder->id);
@@ -433,5 +440,18 @@ class PurchaseOrderController extends Controller
             Log::error('Failed to send PO: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Something went wrong. Please try again later.');
         }
+    }
+
+    /** In-app Approve / Reject of an over-receipt (client PDF 9/24, item 1). */
+    public function overReceiptDecision(Request $request, PurchaseOrder $purchaseOrder, \App\Services\OverReceiptService $service)
+    {
+        $this->authorizeAnyOf('approve_po');
+        $request->validate(['decision' => 'required|in:approve,reject']);
+
+        $decided = $service->decide($purchaseOrder, $request->decision, auth()->user()->name ?? auth()->user()->email);
+
+        return back()->with($decided ? 'success' : 'error', $decided
+            ? ($request->decision === 'approve' ? 'Over-receipt approved. Invoice updated to the received quantity.' : 'Over-receipt rejected. Invoice kept at the ordered quantity.')
+            : 'This over-receipt has already been decided.');
     }
 }

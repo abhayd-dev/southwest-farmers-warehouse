@@ -115,11 +115,12 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null, ?string $shipmentType = null)
     {
         $shortageItemIds = [];
+        $newOverReceipt = false;
 
-        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, &$shortageItemIds) {
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, &$shortageItemIds, &$newOverReceipt) {
             $po = PurchaseOrder::findOrFail($poId);
 
             $updateData = [
@@ -134,11 +135,15 @@ class PurchaseOrderService
             if ($invoiceDocument) {
                 $updateData['invoice_document'] = $invoiceDocument;
             }
+            if ($shipmentType) {
+                $updateData['shipment_type'] = $shipmentType;
+            }
 
             // Update additional costs, invoice number, and attached invoice document
             $po->update($updateData);
 
             $allCompleted = true;
+            $overLines = [];
             $productIds = [];
             foreach ($receivedItems as $itemId => $data) {
                 $poItem = PurchaseOrderItem::findOrFail($itemId);
@@ -256,8 +261,23 @@ class PurchaseOrderService
                     'remarks' => "PO# {$po->po_number} / Inv# " . ($invoiceNumber ?? 'N/A')
                 ]);
 
+                $orderedBeforeThisReceipt = (int) $poItem->requested_quantity;
                 $poItem->received_quantity += $qtyToReceive;
                 $poItem->receiving_unit_cost = $poPrice;
+
+                // Client PDF 9/24, item 1: more arrived than was ordered. It's
+                // still received, but the order is flagged for approval
+                // (OverReceiptService) -- measured against the quantity as it
+                // was ordered, not any Ordered Qty edit made on this screen.
+                if ($poItem->received_quantity > $orderedBeforeThisReceipt) {
+                    $overLines[$poItem->id] = [
+                        'item_id' => $poItem->id,
+                        'product' => $poItem->product->product_name ?? ('Product #' . $poItem->product_id),
+                        'ordered' => $orderedBeforeThisReceipt,
+                        'received' => (int) $poItem->received_quantity,
+                        'unit_cost' => (float) $poItem->unit_cost,
+                    ];
+                }
 
                 // Client feedback 9/21, items 1-2: a shipment can arrive over
                 // or under what was ordered (e.g. 125 against an order of
@@ -287,7 +307,32 @@ class PurchaseOrderService
             // was created.
             $po->total_amount = $po->items()->get()->sum(fn ($i) => $i->requested_quantity * $i->unit_cost);
 
-            $po->status = $allCompleted ? PurchaseOrder::STATUS_COMPLETED : PurchaseOrder::STATUS_PARTIAL;
+            // Client PDF 9/24, items 2-3: a short receipt off a container
+            // leaves the order open (shown as "In Transit"); off a truck the
+            // rest isn't coming, so the order is closed.
+            if ($allCompleted || $shipmentType === PurchaseOrder::SHIPMENT_TRUCK) {
+                $po->status = PurchaseOrder::STATUS_COMPLETED;
+            } else {
+                $po->status = PurchaseOrder::STATUS_PARTIAL;
+            }
+
+            if ($overLines) {
+                // Keep lines from an earlier, still-undecided over-receipt.
+                $existing = $po->over_receipt_status === PurchaseOrder::OVER_RECEIPT_PENDING
+                    ? collect($po->over_receipt_lines ?? [])->keyBy('item_id')->all()
+                    : [];
+                foreach ($overLines as $id => $line) {
+                    if (isset($existing[$id])) {
+                        $line['ordered'] = $existing[$id]['ordered'];
+                    }
+                    $existing[$id] = $line;
+                }
+                $po->over_receipt_lines = array_values($existing);
+                $po->over_receipt_status = PurchaseOrder::OVER_RECEIPT_PENDING;
+                $po->over_receipt_decided_by = null;
+                $po->over_receipt_decided_at = null;
+                $newOverReceipt = true;
+            }
             // Reset approval flag for future partial receipts
             $po->cost_increase_approved = false;
             $po->save();
@@ -304,6 +349,10 @@ class PurchaseOrderService
         // after the transaction commits, so a mail hiccup can never roll back a receiving.
         if (!empty($shortageItemIds)) {
             app(\App\Services\PurchaseManagerNotificationService::class)->notifyShortage($po, $shortageItemIds);
+        }
+
+        if ($newOverReceipt) {
+            app(\App\Services\OverReceiptService::class)->requestApproval($po);
         }
 
         return $po;

@@ -55,7 +55,7 @@
                             @endphp
                             @if ($purchaseOrder->status === 'completed' && $purchaseOrder->progress < 100)
                                 <span class="badge rounded-pill text-uppercase px-3 py-2"
-                                    style="background-color: purple; color: white;">PARTIAL COMPLETED</span>
+                                    style="background-color: purple; color: white;">{{ $purchaseOrder->shipment_type === 'truck' ? 'CLOSED (SHORT)' : 'PARTIAL COMPLETED' }}</span>
                             @else
                                 <span class="badge bg-{{ $color }} fs-6 px-3 py-2 rounded-pill text-uppercase">
                                     {{ $displayStatus }}
@@ -383,6 +383,8 @@
                 </div>
             </div>
         @endif
+
+        @include('warehouse.purchase-orders.partials.over-receipt-panel')
 
         {{-- ITEMS LIST (READ ONLY) --}}
         <div class="card border-0 shadow-sm">

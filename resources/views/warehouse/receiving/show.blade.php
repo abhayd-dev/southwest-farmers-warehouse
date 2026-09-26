@@ -180,6 +180,8 @@
                     </div>
                 </div>
 
+                @include('warehouse.purchase-orders.partials.over-receipt-panel')
+
                 {{-- RECEIVE SECTION --}}
                 @if (auth()->user()->can('receive_po'))
                     <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
@@ -207,6 +209,29 @@
                             <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}"
                                 method="POST" enctype="multipart/form-data">
                                 @csrf
+
+                                {{-- Client PDF 9/24, items 2-3: what happens if less arrives than ordered --}}
+                                <div class="mb-4 p-3 border rounded bg-light">
+                                    <label class="form-label fw-semibold d-block">Shipment Type <span class="text-danger">*</span></label>
+                                    <div class="d-flex flex-wrap gap-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="shipment_type" id="shipTruck" value="truck" required
+                                                {{ old('shipment_type', $purchaseOrder->shipment_type) === 'truck' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="shipTruck"><i class="mdi mdi-truck"></i> <strong>Truck</strong>
+                                                <small class="text-muted d-block">If less arrives than ordered, the order is closed.</small></label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="shipment_type" id="shipContainer" value="container" required
+                                                {{ old('shipment_type', $purchaseOrder->shipment_type) === 'container' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="shipContainer"><i class="mdi mdi-ferry"></i> <strong>Container</strong>
+                                                <small class="text-muted d-block">If less arrives than ordered, the order stays open (In Transit).</small></label>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Receiving more than ordered is allowed; the order is then flagged and sent to the approver.</small>
+                                    @error('shipment_type')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
                                 <div class="row mb-4">
                                     <div class="col-md-3">

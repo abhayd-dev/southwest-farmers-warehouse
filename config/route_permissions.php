@@ -75,6 +75,7 @@ return [
 
         // Procurement
         'warehouse.vendors.*' => 'view_vendors',
+        'warehouse.purchase-orders.over-receipt' => 'approve_po',
         'warehouse.purchase-orders.*' => 'view_po',
         'warehouse.receiving.*' => 'view_po',
         'warehouse.completed-orders.*' => 'view_po',

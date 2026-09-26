@@ -73,7 +73,7 @@ class ReceivingController extends Controller
                 })
                 ->addColumn('status_badge', function ($row) {
                     if ($row->status === 'completed' && $row->progress < 100) {
-                        return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">PARTIAL COMPLETED</span>';
+                        return '<span class="badge rounded-pill text-uppercase px-3 py-2" style="background-color: purple; color: white; font-size: 0.8rem;">' . ($row->shipment_type === 'truck' ? 'CLOSED (SHORT)' : 'PARTIAL COMPLETED') . '</span>';
                     }
                     $badges = [
                         'ordered' => 'info',

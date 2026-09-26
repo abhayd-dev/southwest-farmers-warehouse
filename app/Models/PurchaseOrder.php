@@ -45,6 +45,11 @@ class PurchaseOrder extends Model
         'vendor_response_status',
         'vendor_response_at',
         'vendor_denial_reason',
+        'shipment_type',
+        'over_receipt_status',
+        'over_receipt_lines',
+        'over_receipt_decided_by',
+        'over_receipt_decided_at',
     ];
 
     protected $casts = [
@@ -53,7 +58,16 @@ class PurchaseOrder extends Model
         'approved_at' => 'datetime',
         'approval_email_verified_at' => 'datetime',
         'vendor_response_at' => 'datetime',
+        'over_receipt_lines' => 'array',
+        'over_receipt_decided_at' => 'datetime',
     ];
+
+    const SHIPMENT_TRUCK = 'truck';
+    const SHIPMENT_CONTAINER = 'container';
+
+    const OVER_RECEIPT_PENDING = 'pending';
+    const OVER_RECEIPT_APPROVED = 'approved';
+    const OVER_RECEIPT_REJECTED = 'rejected';
 
     // Status Constants
     const STATUS_DRAFT = 'draft';
