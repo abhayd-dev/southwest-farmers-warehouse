@@ -42,15 +42,15 @@ class WarehouseAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_login_id_is_currently_case_sensitive(): void
+    public function test_login_id_is_not_case_sensitive(): void
     {
-        // Documents the current behaviour the client asked about; flip this
-        // test if the client decides Login ID should be case-insensitive.
+        // Client 9/11 list, item 7: Login ID should not be case-sensitive
+        // (was pinned as case-sensitive here until the client decided).
         $this->superAdmin(['emp_code' => 'EMP-1003']);
 
         $this->post('/login', ['emp_code' => 'emp-1003', 'password' => 'password']);
 
-        $this->assertGuest();
+        $this->assertAuthenticated();
     }
 
     public function test_user_can_log_out(): void
