@@ -24,7 +24,7 @@
 
     <table style="width: 100%; margin-bottom: 15px; font-size: 11pt;">
         <tr>
-            <td><strong>DATE:</strong> {{ optional($stockRequest->created_at)->format('m/d/Y') }}</td>
+            <td><strong>DATE:</strong> {{ $stockRequest->created_at?->displayTime()->format('m/d/Y') }}</td>
             <td style="text-align: right;"><strong>STORE NAME:</strong> {{ strtoupper($stockRequest->store->store_name ?? 'N/A') }}</td>
         </tr>
         <tr>

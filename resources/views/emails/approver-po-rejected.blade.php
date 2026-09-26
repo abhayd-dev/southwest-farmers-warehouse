@@ -60,7 +60,7 @@
                     </tr>
                     <tr>
                         <td>Date Rejected:</td>
-                        <td>{{ $po->approved_at ? \Carbon\Carbon::parse($po->approved_at)->format('M d, Y h:i A') : now()->format('M d, Y h:i A') }}</td>
+                        <td>{{ $po->approved_at ? \Carbon\Carbon::parse($po->approved_at)->displayTime()->format('M d, Y h:i A') : now()->displayTime()->format('M d, Y h:i A') }}</td>
                     </tr>
                 </table>
             </div>

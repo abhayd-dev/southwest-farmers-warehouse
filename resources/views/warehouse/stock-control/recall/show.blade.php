@@ -64,7 +64,7 @@
                             </div>
                             <div class="col-6">
                                 <label class="small text-muted text-uppercase fw-bold">Created Date</label>
-                                <h6 class="fw-bold text-dark mt-1">{{ $recall->created_at->format('d M Y') }}</h6>
+                                <h6 class="fw-bold text-dark mt-1">{{ $recall->created_at->displayTime()->format('d M Y') }}</h6>
                             </div>
                         </div>
 

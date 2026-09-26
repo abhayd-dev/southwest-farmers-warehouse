@@ -90,7 +90,9 @@ class PurchaseOrder extends Model
     public function scopeForListTab($query, ?string $tab)
     {
         return match ($tab) {
-            null, '', 'all' => $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]),
+            // "Open" = anything not completed or cancelled (client PDF 9/24, item 4).
+            null, '', 'all', 'open' => $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]),
+            'in_transit' => $query->where('status', self::STATUS_PARTIAL),
             'pending_approval' => $query->where('status', self::STATUS_DRAFT)->where('approval_status', self::APPROVAL_PENDING),
             'approved' => $query->where('status', self::STATUS_DRAFT)->where('approval_status', self::APPROVAL_APPROVED),
             // approval_status is NOT NULL and new POs are saved as 'draft'; the old

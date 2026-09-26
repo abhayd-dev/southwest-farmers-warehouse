@@ -205,7 +205,7 @@
                 <div class="info-row"><span class="info-label">Order Date:</span>
                     {{ $po->order_date->format('F d, Y') }}</div>
                 <div class="info-row"><span class="info-label">RECEIVED DELIVERY:</span>
-                    {{ $po->updated_at->format('F d, Y') }}</div>
+                    {{ $po->updated_at->displayTime()->format('F d, Y') }}</div>
                 <div class="info-row"><span class="info-label">Payment Terms:</span>
                     {{ $po->vendor->payment_terms ?? 'Net 30' }}</div>
             </td>

@@ -37,7 +37,7 @@ class DiscrepancyController extends Controller
                     $diff = $row->requested_quantity - $row->fulfilled_quantity;
                     return '<span class="badge bg-danger">Short: ' . $diff . '</span>';
                 })
-                ->addColumn('date', fn($row) => $row->updated_at->format('d M Y'))
+                ->addColumn('date', fn($row) => $row->updated_at->displayTime()->format('d M Y'))
                 ->addColumn('action', function($row) {
                     return '<div class="action-btns">
                                 <a href="'.route('warehouse.stock-requests.show', $row->id).'" class="btn btn-sm btn-outline-info btn-view" title="View">

@@ -274,12 +274,12 @@
                                             </td>
                                             <td>
                                                 <i class="mdi mdi-clock-in text-success me-1"></i>
-                                                {{ \Carbon\Carbon::parse($log->clock_in_at)->format('h:i:s A') }}
+                                                {{ \Carbon\Carbon::parse($log->clock_in_at)->displayTime()->format('h:i:s A') }}
                                             </td>
                                             <td>
                                                 @if($log->clock_out_at)
                                                     <i class="mdi mdi-clock-out text-danger me-1"></i>
-                                                    {{ \Carbon\Carbon::parse($log->clock_out_at)->format('h:i:s A') }}
+                                                    {{ \Carbon\Carbon::parse($log->clock_out_at)->displayTime()->format('h:i:s A') }}
                                                 @else
                                                     <span class="badge bg-success-subtle text-success">In Progress</span>
                                                 @endif
@@ -317,7 +317,7 @@
                                                                     </div>
                                                                     <div class="modal-body">
                                                                         <p class="mb-3">
-                                                                            Clock-in time recorded: <strong>{{ \Carbon\Carbon::parse($log->clock_in_at)->format('h:i A') }}</strong>
+                                                                            Clock-in time recorded: <strong>{{ \Carbon\Carbon::parse($log->clock_in_at)->displayTime()->format('h:i A') }}</strong>
                                                                         </p>
                                                                         <div class="mb-3">
                                                                             <label class="form-label fw-semibold">Break Deducted (Minutes)</label>

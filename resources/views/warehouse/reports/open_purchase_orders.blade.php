@@ -86,7 +86,7 @@
                                         </a>
                                     </td>
                                     <td>{{ $order->vendor->name }}</td>
-                                    <td>{{ $order->created_at->format('d M Y') }}</td>
+                                    <td>{{ $order->created_at->displayTime()->format('d M Y') }}</td>
                                     <td>{{ $order->expected_delivery_date ? $order->expected_delivery_date->format('d M Y') : 'N/A' }}
                                     </td>
                                     <td>${{ number_format($order->total_amount, 2) }}</td>

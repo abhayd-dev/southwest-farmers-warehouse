@@ -60,7 +60,7 @@
                     <tbody>
                         @forelse($transactions as $tx)
                         <tr>
-                            <td>{{ $tx->created_at->format('Y-m-d H:i') }}</td>
+                            <td>{{ $tx->created_at->displayTime()->format('Y-m-d H:i') }}</td>
                             <td>{{ $tx->product->product_name ?? 'Unknown' }}</td>
                             <td>
                                 <span class="badge badge-{{ $tx->quantity_change > 0 ? 'success' : 'danger' }}">

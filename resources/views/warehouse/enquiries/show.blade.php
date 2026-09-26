@@ -12,7 +12,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-bold"><i class="mdi mdi-email-open-outline me-2 text-primary"></i>Message</h6>
-                        <span class="text-muted small">{{ $enquiry->created_at->format('d M Y, h:i A') }}</span>
+                        <span class="text-muted small">{{ $enquiry->created_at->displayTime()->format('d M Y, h:i A') }}</span>
                     </div>
                     <div class="card-body p-4">
                         <label class="form-label fw-bold text-muted small text-uppercase">Subject</label>
@@ -26,7 +26,7 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             <h6 class="fw-bold text-success"><i class="mdi mdi-check-circle me-1"></i> Resolved</h6>
-                            <p class="text-muted mb-0">{{ optional($enquiry->resolved_at)->format('d M Y, h:i A') }}</p>
+                            <p class="text-muted mb-0">{{ $enquiry->resolved_at?->displayTime()->format('d M Y, h:i A') }}</p>
                             @if($enquiry->resolution_notes)
                                 <div class="mt-2 pt-2 border-top">{{ $enquiry->resolution_notes }}</div>
                             @endif

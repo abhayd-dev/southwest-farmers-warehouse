@@ -110,7 +110,7 @@ class FinanceReportController extends Controller
             if ($request->filled('product_id')) $query->where('product_id', $request->product_id);
 
             return DataTables::of($query)
-                ->addColumn('date', fn($row) => $row->created_at->format('d M Y, h:i A'))
+                ->addColumn('date', fn($row) => $row->created_at->displayTime()->format('d M Y, h:i A'))
                 ->addColumn('type_badge', function ($row) {
                     $badges = [
                         'purchase_in' => ['color' => 'success', 'icon' => 'mdi-arrow-down-bold'],
@@ -256,7 +256,7 @@ class FinanceReportController extends Controller
         // Calculate COGS trend (since we can't easily SUM a related table dynamically without a complex join, we'll do it via the collection)
         $cogsTrend = [];
         foreach ($sales as $sale) {
-            $date = $sale->created_at->format('Y-m-d');
+            $date = $sale->created_at->displayTime()->format('Y-m-d');
             if (!isset($cogsTrend[$date])) $cogsTrend[$date] = 0;
             
             foreach ($sale->items as $item) {

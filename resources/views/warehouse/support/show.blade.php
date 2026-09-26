@@ -48,7 +48,7 @@
                                 <h4 class="fw-bold text-dark mb-1">{{ $ticket->subject }}</h4>
                                 <div class="d-flex align-items-center gap-3 text-muted small">
                                     <span><i class="mdi mdi-calendar me-1"></i>
-                                        {{ $ticket->created_at->format('d M Y, h:i A') }}</span>
+                                        {{ $ticket->created_at->displayTime()->format('d M Y, h:i A') }}</span>
                                     <span><i class="mdi mdi-account me-1"></i>
                                         {{ $ticket->createdBy->name ?? 'User' }}</span>
                                     <span><i class="mdi mdi-tag me-1"></i> {{ $ticket->category }}</span>
@@ -268,7 +268,7 @@
                                 <span class="text-muted small">SLA Due Date</span>
                                 <div class="text-end">
                                     <div class="fw-bold {{ $ticket->isOverdue() ? 'text-danger' : 'text-dark' }}">
-                                        {{ $ticket->sla_due_at->format('d M, h:i A') }}
+                                        {{ $ticket->sla_due_at->displayTime()->format('d M, h:i A') }}
                                     </div>
                                     @if ($ticket->isOverdue())
                                         <small class="text-danger fw-bold">OVERDUE</small>

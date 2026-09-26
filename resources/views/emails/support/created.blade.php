@@ -25,7 +25,7 @@
             </tr>
             <tr>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>SLA Due:</strong></td>
-                <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ $ticket->sla_due_at->format('d M Y, h:i A') }}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ $ticket->sla_due_at->displayTime()->format('d M Y, h:i A') }}</td>
             </tr>
         </table>
 

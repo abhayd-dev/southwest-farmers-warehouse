@@ -74,7 +74,7 @@
                                             {{ $order->po_number }}
                                         </a>
                                     </td>
-                                    <td>{{ $order->updated_at->format('d M Y') }}</td>
+                                    <td>{{ $order->updated_at->displayTime()->format('d M Y') }}</td>
                                     <td>{{ $receivedUnits }}</td>
                                     <td>${{ number_format($receivedValue, 2) }}</td>
                                     <td>

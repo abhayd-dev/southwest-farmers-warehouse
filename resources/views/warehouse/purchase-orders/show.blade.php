@@ -332,7 +332,7 @@
                                             <strong>{{ $purchaseOrder->approved_by_email }}</strong></small>
                                         @if ($purchaseOrder->approved_at)
                                             <small
-                                                class="text-muted">{{ $purchaseOrder->approved_at->format('d M, Y H:i') }}</small>
+                                                class="text-muted">{{ $purchaseOrder->approved_at->displayTime()->format('d M, Y H:i') }}</small>
                                         @endif
                                     </div>
                                 @endif

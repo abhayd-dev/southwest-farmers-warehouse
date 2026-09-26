@@ -62,11 +62,12 @@
                     <div class="col-md-3">
                         <label class="form-label small text-muted mb-1">Status</label>
                         <select class="form-select form-select-sm" id="filter_status">
-                            <option value="all">All</option>
+                            <option value="open">Open Orders (not completed / cancelled)</option>
                             <option value="draft">Draft</option>
                             <option value="pending_approval">Waiting for Approval</option>
                             <option value="approved">Approved</option>
                             <option value="ordered">Ordered</option>
+                            <option value="in_transit">In Transit</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -99,6 +100,7 @@
                                 <th class="px-4">PO Number</th>
                                 <th>Vendor</th>
                                 <th>Date</th>
+                                <th>Open Since</th>
                                 <th>Amount</th>
                                 <th>Order progress</th>
                                 <th>Status</th>
@@ -140,6 +142,11 @@
                     {
                         data: 'order_date',
                         name: 'order_date'
+                    },
+                    {
+                        data: 'open_since',
+                        name: 'created_at',
+                        searchable: false
                     },
                     {
                         data: 'total_amount',

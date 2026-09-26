@@ -177,7 +177,7 @@
                                     <td class="px-4 py-3 fw-bold">#{{ $req->id }}</td>
                                     <td class="py-3">
                                         <div class="fw-semibold text-dark">{{ $req->store->store_name ?? 'Unknown Store' }}</div>
-                                        <small class="text-muted">{{ $req->created_at->format('d M Y') }}</small>
+                                        <small class="text-muted">{{ $req->created_at->displayTime()->format('d M Y') }}</small>
                                     </td>
                                     <td class="py-3">
                                         <div class="fw-semibold text-dark">{{ $req->product->product_name ?? 'Unknown Product' }}</div>

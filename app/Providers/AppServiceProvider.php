@@ -32,6 +32,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // UTC timestamp -> Central (config app.display_timezone), for display
+        // only; storage stays UTC. Client 9/11 list, item 8: Audit Log times
+        // were 5 hours ahead.
+        $displayTime = function () {
+            return $this->copy()->setTimezone(config('app.display_timezone', 'UTC'));
+        };
+        \Illuminate\Support\Carbon::macro('displayTime', $displayTime);
+        \Carbon\Carbon::macro('displayTime', $displayTime);
+        \Carbon\CarbonImmutable::macro('displayTime', $displayTime);
+
         Paginator::useBootstrapFive();
         if ($this->app->environment('production')) {
             URL::forceScheme('https');

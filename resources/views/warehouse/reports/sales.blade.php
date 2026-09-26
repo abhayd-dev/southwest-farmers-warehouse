@@ -96,7 +96,7 @@
                     <tbody>
                         @forelse($sales as $sale)
                         <tr>
-                            <td>{{ $sale->created_at->format('Y-m-d H:i') }}</td>
+                            <td>{{ $sale->created_at->displayTime()->format('Y-m-d H:i') }}</td>
                             <td>{{ $sale->invoice_number }}</td>
                             <td>{{ $sale->store->store_name }}</td>
                             <td>${{ number_format($sale->total_amount, 2) }}</td>

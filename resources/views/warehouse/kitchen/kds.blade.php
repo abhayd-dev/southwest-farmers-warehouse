@@ -42,7 +42,7 @@
                             <div class="card-header bg-white border-0 pb-1 pt-2 px-3 d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="mb-0 fw-bold text-dark">#{{ $order->invoice_number }}</h6>
-                                    <small class="text-muted">{{ $order->created_at->format('h:i A') }}</small>
+                                    <small class="text-muted">{{ $order->created_at->displayTime()->format('h:i A') }}</small>
                                 </div>
                                 <span class="badge bg-dark bg-opacity-10 text-dark border">{{ $order->order_type ?? 'Web Order' }}</span>
                             </div>

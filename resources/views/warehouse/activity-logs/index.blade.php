@@ -148,8 +148,8 @@
                                     @endif
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <div class="fw-bold text-dark small">{{ $log->created_at->format('d M Y') }}</div>
-                                    <div class="text-muted" style="font-size: 0.75rem;">{{ $log->created_at->format('h:i:s A') }}</div>
+                                    <div class="fw-bold text-dark small">{{ $log->created_at->displayTime()->format('d M Y') }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{ $log->created_at->displayTime()->format('h:i:s A') }}</div>
                                 </td>
                             </tr>
                             @empty

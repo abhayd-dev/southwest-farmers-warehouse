@@ -90,7 +90,7 @@
                                         $transaction->quantity_change * ($transaction->product->cost_price ?? 0);
                                 @endphp
                                 <tr>
-                                    <td>{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                                    <td>{{ $transaction->created_at->displayTime()->format('d M Y H:i') }}</td>
                                     <td>{{ $transaction->user->name ?? 'N/A' }}</td>
                                     <td>{{ $transaction->vendor->name ?? 'N/A' }}</td>
                                     <td>{{ $transaction->reference_no ?? 'N/A' }}</td>

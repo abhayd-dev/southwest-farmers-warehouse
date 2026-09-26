@@ -49,7 +49,7 @@
                                 </span>
                             </td>
                             <td>{{ $request->initiator->name ?? 'System' }}</td>
-                            <td>{{ $request->created_at->format('d M Y H:i') }}</td>
+                            <td>{{ $request->created_at->displayTime()->format('d M Y H:i') }}</td>
                             <td>
                                 <a href="{{ route('warehouse.stock-control.recall.show', $request) }}" 
                                    class="btn btn-sm btn-outline-primary">

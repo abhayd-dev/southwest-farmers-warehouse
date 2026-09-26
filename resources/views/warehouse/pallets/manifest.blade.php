@@ -171,7 +171,7 @@
         </div>
         <div class="meta-box">
             <label>Date Created</label>
-            <strong>{{ $pallet->created_at->format('d M Y') }}</strong>
+            <strong>{{ $pallet->created_at->displayTime()->format('d M Y') }}</strong>
         </div>
     </div>
 
@@ -231,7 +231,7 @@
     </div>
 
     <div class="footer">
-        Printed on {{ now()->format('d M Y, H:i') }} &bull; Warehouse Management System
+        Printed on {{ now()->displayTime()->format('d M Y, H:i') }} &bull; Warehouse Management System
     </div>
 
     <script>

@@ -280,12 +280,12 @@
                             </tr>
                             <tr>
                                 <td class="text-muted small">Created</td>
-                                <td class="small">{{ $storeOrder->created_at->format('d M Y H:i') }}</td>
+                                <td class="small">{{ $storeOrder->created_at->displayTime()->format('d M Y H:i') }}</td>
                             </tr>
                             @if ($storeOrder->approved_at)
                                 <tr>
                                     <td class="text-muted small">Approved At</td>
-                                    <td class="small">{{ $storeOrder->approved_at->format('d M Y H:i') }}</td>
+                                    <td class="small">{{ $storeOrder->approved_at->displayTime()->format('d M Y H:i') }}</td>
                                 </tr>
                             @endif
                             <tr>

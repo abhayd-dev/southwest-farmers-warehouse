@@ -71,7 +71,7 @@
         <div class="d-flex align-items-start gap-2">
             <i class="mdi mdi-information-outline text-info mt-1"></i>
             <div class="small text-muted">
-                <div><strong>Created On:</strong> {{ $transfer->created_at->format('d M Y, h:i A') }}</div>
+                <div><strong>Created On:</strong> {{ $transfer->created_at->displayTime()->format('d M Y, h:i A') }}</div>
                 @if ($transfer->notes)
                     <div class="mt-1"><strong>Note:</strong> {{ $transfer->notes }}</div>
                 @endif

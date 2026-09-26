@@ -189,7 +189,7 @@
                             <tbody>
                                 @forelse($transactions as $txn)
                                     <tr>
-                                        <td class="ps-4 text-muted small">{{ $txn->created_at->format('d M Y H:i') }}</td>
+                                        <td class="ps-4 text-muted small">{{ $txn->created_at->displayTime()->format('d M Y H:i') }}</td>
                                         <td>
                                             <span class="badge bg-{{ $txn->quantity_change > 0 ? 'success' : 'warning' }} text-uppercase">
                                                 {{ $txn->type }}

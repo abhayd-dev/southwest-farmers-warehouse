@@ -21,7 +21,7 @@
                     @if ($pending)
                         More was received than ordered. The stock is in; the approver{{ $purchaseOrder->approval_email ? ' (' . $purchaseOrder->approval_email . ')' : '' }} decides whether the invoice covers the extra.
                     @else
-                        By {{ $purchaseOrder->over_receipt_decided_by }} on {{ $purchaseOrder->over_receipt_decided_at?->format('M d, Y h:i A') }}.
+                        By {{ $purchaseOrder->over_receipt_decided_by }} on {{ $purchaseOrder->over_receipt_decided_at?->displayTime()->format('M d, Y h:i A') }}.
                         {{ $approved ? 'Invoice reflects the quantity received.' : 'Invoice kept at the quantity ordered.' }}
                     @endif
                 </small>

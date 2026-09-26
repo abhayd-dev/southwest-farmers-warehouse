@@ -52,11 +52,40 @@ class PurchaseOrderListing
             ->addColumn('vendor_name', fn ($row) => optional($row->vendor)->name ?? 'N/A')
             ->editColumn('order_date', fn ($row) => $row->order_date ? Carbon::parse($row->order_date)->format('d M Y') : '-')
             ->addColumn('total_amount', fn ($row) => '$ ' . number_format($row->total_amount, 2))
+            ->addColumn('open_since', fn ($row) => $this->openSince($row))
             ->addColumn('progress', fn ($row) => $this->progressBar($row))
             ->addColumn('status_badge', fn ($row) => $this->statusBadge($row))
             ->addColumn('action', fn ($row) => $this->actionButtons($row))
-            ->rawColumns(['progress', 'status_badge', 'action'])
+            ->rawColumns(['open_since', 'progress', 'status_badge', 'action'])
             ->make(true);
+    }
+
+    /**
+     * When the PO was opened and how long it has been open (client PDF 9/24,
+     * item 4). Closed orders show the open date only.
+     */
+    private function openSince(PurchaseOrder $row): string
+    {
+        if (! $row->created_at) {
+            return '-';
+        }
+
+        $opened = '<div class="small text-dark">' . $row->created_at->displayTime()->format('M d, Y h:i A') . '</div>';
+
+        if (in_array($row->status, [PurchaseOrder::STATUS_COMPLETED, PurchaseOrder::STATUS_CANCELLED], true)) {
+            return $opened . '<small class="text-muted">Closed</small>';
+        }
+
+        $minutes = (int) $row->created_at->diffInMinutes(now());
+        $age = match (true) {
+            $minutes < 60 => $minutes . ' min',
+            $minutes < 1440 => intdiv($minutes, 60) . 'h ' . ($minutes % 60) . 'm',
+            default => intdiv($minutes, 1440) . 'd ' . intdiv($minutes % 1440, 60) . 'h',
+        };
+        $days = intdiv($minutes, 1440);
+        $color = $days >= 14 ? 'danger' : ($days >= 7 ? 'warning' : 'success');
+
+        return $opened . '<span class="badge bg-' . $color . '-subtle text-' . $color . ' border border-' . $color . '-subtle"><i class="mdi mdi-timer-outline"></i> Open ' . $age . '</span>';
     }
 
     private function progressBar(PurchaseOrder $row): string

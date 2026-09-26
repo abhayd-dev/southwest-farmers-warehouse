@@ -301,11 +301,11 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">Created:</small>
-                                    <small class="fw-semibold">{{ $warehouse->created_at->format('M d, Y') }}</small>
+                                    <small class="fw-semibold">{{ $warehouse->created_at->displayTime()->format('M d, Y') }}</small>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">Last Updated:</small>
-                                    <small class="fw-semibold">{{ $warehouse->updated_at->format('M d, Y') }}</small>
+                                    <small class="fw-semibold">{{ $warehouse->updated_at->displayTime()->format('M d, Y') }}</small>
                                 </div>
                             </div>
                         </div>
