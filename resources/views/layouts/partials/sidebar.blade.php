@@ -68,6 +68,9 @@
                 @endif
 
                 {{-- ================= KITCHEN & CATERING ================= --}}
+                {{-- Hidden for now at the client's request (2026-09-26); the routes and
+                     pages still exist. Remove this comment's opening and closing markers to
+                     show the Kitchen & Catering menu again.
                 <li class="menu-title mt-2">Kitchen & Catering</li>
                 <li>
                     <a href="#sidebarKitchen" data-bs-toggle="collapse"
@@ -136,6 +139,7 @@
                         </ul>
                     </div>
                 </li>
+                --}}
 
                 {{-- ================= PRODUCT CATALOG ================= --}}
                 @if (auth()->user()->can('view_products'))
