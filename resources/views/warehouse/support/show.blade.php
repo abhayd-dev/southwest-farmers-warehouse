@@ -238,11 +238,29 @@
                                             <option value="{{ $u->id }}"
                                                 {{ $ticket->assigned_to_id == $u->id ? 'selected' : '' }}>
                                                 {{ $u->name }}
-                                                option>
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
+                                <small class="text-muted d-block mb-3"><i class="mdi mdi-information-outline"></i>
+                                    Changing either field asks you to confirm, then saves straight away.</small>
                             </form>
+
+                            @if ($ticket->status !== 'closed')
+                                <form action="{{ route('warehouse.support.update', $ticket->id) }}" method="POST" id="closeTicketForm">
+                                    @csrf @method('PUT')
+                                    <input type="hidden" name="status" value="closed">
+                                    <button type="button" class="btn btn-outline-danger w-100" id="closeTicketBtn">
+                                        <i class="mdi mdi-lock-check me-1"></i> Close Ticket
+                                    </button>
+                                </form>
+                            @else
+                                <form action="{{ route('warehouse.support.update', $ticket->id) }}" method="POST">
+                                    @csrf @method('PUT')
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button class="btn btn-outline-secondary w-100"><i class="mdi mdi-lock-open-variant me-1"></i> Reopen Ticket</button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -324,6 +342,24 @@
                                     element.value = originalValue;
                                 }
                             });
+                        });
+                    });
+                }
+
+                const closeBtn = document.getElementById('closeTicketBtn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        Swal.fire({
+                            title: 'Close this ticket?',
+                            text: 'The store will be notified. You can reopen it later if needed.',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            confirmButtonText: 'Yes, close it'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('closeTicketForm').submit();
+                            }
                         });
                     });
                 }
