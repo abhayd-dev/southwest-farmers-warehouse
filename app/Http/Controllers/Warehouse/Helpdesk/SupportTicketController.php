@@ -86,29 +86,23 @@ class SupportTicketController extends Controller
             }
         }
 
-        // Send Email (Only if not internal note)
+        // Store-facing reply (not an internal note)
         if (!$msg->is_internal) {
-            // Assuming store user has email
-            $recipient = $ticket->createdBy->email ?? $ticket->store->email;
-            Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
-
             // Auto-update status if open
             if ($ticket->status === 'open') {
                 $ticket->update(['status' => 'in_progress']);
             }
-        }
 
-        if (!$request->has('is_internal')) {
-            // If replying to a user's ticket, notify them
-            if ($ticket->created_by && $ticket->created_by != auth()->id()) {
-                NotificationService::send(
-                    $ticket->created_by,
-                    'Ticket Reply',
-                    "New reply on ticket #{$ticket->ticket_number}",
-                    'success',
-                    route('warehouse.support.show', $ticket->id)
-                );
+            // Best-effort email: a mail outage must not turn a saved reply into
+            // a 500 (QA: "shows status 500 error when I try to send a message").
+            try {
+                $recipient = $ticket->createdBy->email ?? $ticket->store->email;
+                Mail::to($recipient)->send(new SupportTicketReplied($ticket, $msg));
+            } catch (\Throwable $e) {
+                Log::error('Failed to send SupportTicketReplied email for ticket #' . $ticket->id . ': ' . $e->getMessage());
             }
+
+            $this->notifyStore($ticket, 'Ticket Reply', "New reply from the warehouse on ticket #{$ticket->ticket_number}.", 'success');
         }
 
         return back()->with('success', 'Reply sent successfully.');
@@ -121,7 +115,11 @@ class SupportTicketController extends Controller
 
         if ($request->has('status') && $request->status !== $ticket->status) {
             $oldStatus = $ticket->status;
-            $ticket->update(['status' => $request->status]);
+            $ticket->update([
+                'status' => $request->status,
+                'resolved_at' => $request->status === 'resolved' ? now() : $ticket->resolved_at,
+                'closed_at' => $request->status === 'closed' ? now() : null,
+            ]);
 
             // Log Status Change
             SupportStatusLog::create([
@@ -140,15 +138,7 @@ class SupportTicketController extends Controller
                 Log::error('Failed to send SupportTicketStatusChanged email for ticket #' . $ticket->id . ': ' . $e->getMessage());
             }
 
-            if ($ticket->created_by && $ticket->created_by != auth()->id()) {
-                NotificationService::send(
-                    $ticket->created_by,
-                    'Ticket Updated',
-                    "Your ticket #{$ticket->ticket_number} status is now: " . ucfirst($ticket->status),
-                    'info',
-                    route('warehouse.support.show', $ticket->id)
-                );
-            }
+            $this->notifyStore($ticket, 'Ticket Updated', "Your ticket #{$ticket->ticket_number} is now: " . ucfirst(str_replace('_', ' ', $ticket->status)) . '.');
         }
 
         if ($request->has('assigned_to_id')) {
@@ -156,5 +146,32 @@ class SupportTicketController extends Controller
         }
 
         return back()->with('success', 'Ticket updated.');
+    }
+
+    /**
+     * In-app notice to the store user who raised the ticket (their bell on the
+     * Store side). The old code checked a non-existent $ticket->created_by, so
+     * stores were never notified in-app of warehouse replies or status changes.
+     */
+    private function notifyStore(SupportTicket $ticket, string $title, string $message, string $type = 'info'): void
+    {
+        if ($ticket->created_by_type !== \App\Models\StoreUser::class || ! $ticket->created_by_id) {
+            return;
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::table('store_notifications')->insert([
+                'user_id' => $ticket->created_by_id,
+                'store_id' => $ticket->store_id,
+                'title' => $title,
+                'message' => $message,
+                'type' => $type,
+                'url' => '/store/support/' . $ticket->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to notify store about ticket #' . $ticket->id . ': ' . $e->getMessage());
+        }
     }
 }
