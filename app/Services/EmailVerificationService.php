@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\URL;
 
 class EmailVerificationService
 {
+    /** Why the last send() failed, for showing to the user (null on success). */
+    public ?string $lastError = null;
+
     /**
      * Registry of verifiable contexts. Add an entry here to support
      * verification for a new email field elsewhere in the app.
@@ -51,8 +54,10 @@ class EmailVerificationService
     {
         $config = self::registry($type);
         $email = $model->{$config['email_field']};
+        $this->lastError = null;
 
         if (!$email) {
+            $this->lastError = 'No email address is on file.';
             return false;
         }
 
@@ -66,6 +71,7 @@ class EmailVerificationService
             Mail::to($email)->send(new VerifyContactEmail($label, $email, $verifyUrl));
         } catch (\Throwable $e) {
             Log::error("Failed to send verification email for {$type} #{$model->id}: " . $e->getMessage());
+            $this->lastError = \App\Support\MailFailure::reason($e);
             return false;
         }
 

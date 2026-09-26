@@ -43,8 +43,11 @@ class ContactEmailVerificationController extends Controller
 
         $sent = $service->send($request->type, $model, $request->label);
 
+        // Show the real reason: this used to say "check that an email address
+        // is on file" for every failure, including the mail server refusing
+        // the message (client PDF 9/24, items 5-6).
         return back()->with($sent ? 'success' : 'error', $sent
             ? 'Verification email sent.'
-            : 'Could not send verification email — check that an email address is on file.');
+            : 'Could not send verification email to ' . ($model->{$config['email_field']} ?: 'this record') . ': ' . $service->lastError);
     }
 }
