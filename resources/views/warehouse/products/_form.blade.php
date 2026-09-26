@@ -337,6 +337,8 @@
 
             <div class="col-md-4 d-flex align-items-end">
                 <div class="form-check form-switch fs-5 mb-1">
+                    {{-- An unchecked box isn't submitted; the hidden 0 makes "off" save. --}}
+                    <input type="hidden" name="is_stackable" value="0">
                     <input class="form-check-input" type="checkbox" name="is_stackable" value="1"
                         id="isStackableSwitch"
                         {{ old('is_stackable', $product->is_stackable ?? true) ? 'checked' : '' }}>
@@ -346,6 +348,7 @@
 
             <div class="col-md-4 d-flex align-items-end">
                 <div class="form-check form-switch fs-5 mb-1">
+                    <input type="hidden" name="is_fragile" value="0">
                     <input class="form-check-input" type="checkbox" name="is_fragile" value="1"
                         id="isFragileSwitch" {{ old('is_fragile', $product->is_fragile ?? false) ? 'checked' : '' }}>
                     <label class="form-check-label fs-6 fw-semibold text-danger" for="isFragileSwitch">Is

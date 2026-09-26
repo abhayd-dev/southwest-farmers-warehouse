@@ -17,6 +17,8 @@ class Product extends Model
         'subcategory_id' => 'integer',
         'allow_decimal' => 'boolean',
         'is_active' => 'boolean',
+        'is_stackable' => 'boolean',
+        'is_fragile' => 'boolean',
         'promotion_start_date' => 'datetime',
         'promotion_end_date' => 'datetime',
         'created_at' => 'datetime',

@@ -93,6 +93,9 @@ class ProductController extends Controller
 
             return DB::transaction(function () use ($request) {
                 $data = $request->except('icon');
+                // Switches: an unchecked box sends nothing, which must still save as "off".
+                $data['is_stackable'] = $request->boolean('is_stackable');
+                $data['is_fragile'] = $request->boolean('is_fragile');
 
                 // Explicitly set store_id to NULL for Warehouse Products
                 $data['store_id'] = null;
@@ -186,6 +189,9 @@ class ProductController extends Controller
             ]);
 
             $data = $request->except('icon');
+            // Switches: an unchecked box sends nothing, which must still save as "off".
+            $data['is_stackable'] = $request->boolean('is_stackable');
+            $data['is_fragile'] = $request->boolean('is_fragile');
 
             if ($request->hasFile('icon')) {
                 if ($product->icon && Storage::disk('r2')->exists($product->icon)) {
