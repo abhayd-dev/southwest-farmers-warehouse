@@ -62,7 +62,7 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
 
         $this->assertSame(PurchaseOrder::STATUS_PARTIAL, $po->status); // shown as IN TRANSIT
         $this->assertSame('container', $po->shipment_type);
-        $this->assertSame(25, $item->fresh()->pending_quantity);
+        $this->assertEquals(25, $item->fresh()->pending_quantity);
     }
 
     public function test_short_truck_receipt_closes_the_order(): void
@@ -79,7 +79,7 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
         [$po, $item] = $this->po(100, 2);
         $po = $this->receive($po, $item, 125, 'truck');
 
-        $this->assertSame(125, $item->fresh()->received_quantity);
+        $this->assertEquals(125, $item->fresh()->received_quantity);
         $this->assertSame(PurchaseOrder::OVER_RECEIPT_PENDING, $po->over_receipt_status);
         $this->assertEquals([['item_id' => $item->id, 'product' => 'Lemon 60ct', 'ordered' => 100, 'received' => 125, 'unit_cost' => 2.0]], $po->over_receipt_lines);
         Mail::assertSent(OverReceiptApprovalRequest::class, fn ($m) => $m->hasTo('approver@example.com'));
@@ -94,7 +94,7 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
 
         $po->refresh();
         $this->assertSame(PurchaseOrder::OVER_RECEIPT_APPROVED, $po->over_receipt_status);
-        $this->assertSame(125, $item->fresh()->requested_quantity);
+        $this->assertEquals(125, $item->fresh()->requested_quantity);
         $this->assertEquals(250, $po->total_amount);
         $this->assertFalse(app(OverReceiptService::class)->decide($po, 'reject', 'x'), 'second decision is ignored');
     }
@@ -107,9 +107,9 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
 
         app(OverReceiptService::class)->decide($po->fresh(), 'reject', 'approver@example.com');
 
-        $this->assertSame(100, $item->fresh()->requested_quantity);
+        $this->assertEquals(100, $item->fresh()->requested_quantity);
         $this->assertEquals(200, $po->fresh()->total_amount);
-        $this->assertSame(125, $item->fresh()->received_quantity, 'stock stays received');
+        $this->assertEquals(125, $item->fresh()->received_quantity, 'stock stays received');
     }
 
     public function test_signed_email_link_approves_and_unsigned_is_refused(): void
@@ -148,5 +148,21 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
             'invoice_number' => 'INV-1',
             'items' => [$item->id => ['receive_qty' => 10]],
         ])->assertSessionHasErrors('shipment_type');
+    }
+
+    public function test_decimal_quantities_can_be_received(): void
+    {
+        // QA: "Receiving orders still cannot accept decimal values" (e.g. by weight).
+        [$po, $item] = $this->po(20, 2);
+        $this->actingAs($this->superAdmin())->post(route('warehouse.purchase-orders.receive', $po), [
+            'invoice_number' => 'INV-1', 'shipment_type' => 'container',
+            'items' => [$item->id => ['receive_qty' => '12.5']],
+        ])->assertSessionHasNoErrors();
+
+        $item->refresh();
+        $this->assertSame(12.5, $item->received_quantity);
+        $this->assertSame(7.5, $item->pending_quantity);
+        $this->assertEquals(12.5, \App\Models\ProductStock::where('product_id', $item->product_id)->value('quantity'));
+        $this->assertSame(PurchaseOrder::STATUS_PARTIAL, $po->fresh()->status);
     }
 }

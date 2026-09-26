@@ -364,7 +364,7 @@
                                                             <input type="number"
                                                                 name="items[{{ $item->id }}][ordered_qty]"
                                                                 class="form-control form-control-sm text-center fw-medium ordered-qty-input"
-                                                                min="0" value="{{ $item->requested_quantity }}">
+                                                                min="0" step="0.01" value="{{ $item->requested_quantity }}">
                                                             <small class="text-muted d-block">Edit if the shipment
                                                                 differs from what was ordered</small>
                                                         </td>
@@ -374,7 +374,7 @@
                                                             <input type="number"
                                                                 name="items[{{ $item->id }}][receive_qty]"
                                                                 class="form-control form-control-sm text-center fw-bold text-primary receive-qty-input"
-                                                                min="0"
+                                                                min="0" step="0.01"
                                                                 value="0">
                                                             <small class="text-muted">Pending:
                                                                 <span class="pending-qty" data-pending="{{ $item->pending_quantity }}">{{ $item->pending_quantity }}</span>
@@ -586,7 +586,7 @@
                 // Get total receiving quantity
                 let totalQty = 0;
                 document.querySelectorAll('.receive-qty-input').forEach(input => {
-                    totalQty += parseInt(input.value) || 0;
+                    totalQty += parseFloat(input.value) || 0;
                 });
 
                 let landedFeePerUnit = totalQty > 0 ? (totalOverhead / totalQty) : 0;
@@ -601,7 +601,7 @@
                         let trueCostDisplay = row.querySelector('.true-cost-display');
                         if (trueCostDisplay) {
                             // If receiving qty is 0, true cost might just be PO price for display
-                            let qty = parseInt(input.value) || 0;
+                            let qty = parseFloat(input.value) || 0;
                             if(qty === 0) {
                                 trueCostDisplay.innerText = poPrice.toFixed(2);
                             } else {

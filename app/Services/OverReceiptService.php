@@ -74,8 +74,8 @@ class OverReceiptService
                     continue;
                 }
                 $item->requested_quantity = $decision === 'approve'
-                    ? max((int) $item->requested_quantity, (int) $item->received_quantity)
-                    : (int) $line['ordered'];
+                    ? max((float) $item->requested_quantity, (float) $item->received_quantity)
+                    : (float) $line['ordered'];
                 $item->save();
             }
 

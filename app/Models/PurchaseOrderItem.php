@@ -20,6 +20,13 @@ class PurchaseOrderItem extends Model
         'receiving_unit_cost'
     ];
 
+    // Decimal quantities (QA: receiving by weight). Cast to float so whole
+    // numbers still display as "100", not "100.00".
+    protected $casts = [
+        'requested_quantity' => 'float',
+        'received_quantity' => 'float',
+    ];
+
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -32,6 +39,6 @@ class PurchaseOrderItem extends Model
 
     public function getPendingQuantityAttribute()
     {
-        return max(0, $this->requested_quantity - $this->received_quantity);
+        return max(0, round($this->requested_quantity - $this->received_quantity, 2));
     }
 }

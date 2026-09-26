@@ -164,11 +164,11 @@ class PurchaseOrderService
             $transportation = floatval($transportationCost ?? 0);
             $demurrageCost = floatval($demurrage ?? 0);
 
-            $totalReceivedQty = array_sum(array_map(fn($item) => intval($item['receive_qty'] ?? 0), $receivedItems));
+            $totalReceivedQty = array_sum(array_map(fn($item) => round((float) ($item['receive_qty'] ?? 0), 2), $receivedItems));
             $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes + $transportation + $demurrageCost) / $totalReceivedQty : 0;
 
             foreach ($receivedItems as $itemId => $data) {
-                $qtyToReceive = intval($data['receive_qty'] ?? 0);
+                $qtyToReceive = round((float) ($data['receive_qty'] ?? 0), 2);
                 $poItem = $data['poItemModel'];
 
                 if ($qtyToReceive <= 0) {
@@ -261,7 +261,7 @@ class PurchaseOrderService
                     'remarks' => "PO# {$po->po_number} / Inv# " . ($invoiceNumber ?? 'N/A')
                 ]);
 
-                $orderedBeforeThisReceipt = (int) $poItem->requested_quantity;
+                $orderedBeforeThisReceipt = (float) $poItem->requested_quantity;
                 $poItem->received_quantity += $qtyToReceive;
                 $poItem->receiving_unit_cost = $poPrice;
 
@@ -274,7 +274,7 @@ class PurchaseOrderService
                         'item_id' => $poItem->id,
                         'product' => $poItem->product->product_name ?? ('Product #' . $poItem->product_id),
                         'ordered' => $orderedBeforeThisReceipt,
-                        'received' => (int) $poItem->received_quantity,
+                        'received' => (float) $poItem->received_quantity,
                         'unit_cost' => (float) $poItem->unit_cost,
                     ];
                 }
@@ -290,7 +290,7 @@ class PurchaseOrderService
                 // forever waiting on a remainder that was never coming.
                 $orderedQtyOverride = $data['ordered_qty'] ?? null;
                 if ($orderedQtyOverride !== null && $orderedQtyOverride !== '') {
-                    $poItem->requested_quantity = max(0, intval($orderedQtyOverride));
+                    $poItem->requested_quantity = max(0, round((float) $orderedQtyOverride, 2));
                 }
 
                 $poItem->save();

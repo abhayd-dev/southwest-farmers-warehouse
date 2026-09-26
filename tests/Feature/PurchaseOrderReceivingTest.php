@@ -68,8 +68,8 @@ class PurchaseOrderReceivingTest extends TestCase
         $result = $this->receive($po, [$item->id => ['receive_qty' => 125, 'ordered_qty' => 125]]);
 
         $item->refresh();
-        $this->assertSame(125, $item->received_quantity);
-        $this->assertSame(125, $item->requested_quantity, 'Ordered Qty is corrected to match what arrived');
+        $this->assertEquals(125, $item->received_quantity);
+        $this->assertEquals(125, $item->requested_quantity, 'Ordered Qty is corrected to match what arrived');
         $this->assertSame(PurchaseOrder::STATUS_COMPLETED, $result->status);
         $this->assertSame(125 * 15.0, (float) $result->total_amount, 'invoice total reflects the corrected quantity');
 
@@ -84,8 +84,8 @@ class PurchaseOrderReceivingTest extends TestCase
         $result = $this->receive($po, [$item->id => ['receive_qty' => 75, 'ordered_qty' => 75]]);
 
         $item->refresh();
-        $this->assertSame(75, $item->received_quantity);
-        $this->assertSame(75, $item->requested_quantity);
+        $this->assertEquals(75, $item->received_quantity);
+        $this->assertEquals(75, $item->requested_quantity);
         $this->assertSame(
             PurchaseOrder::STATUS_COMPLETED,
             $result->status,
@@ -103,8 +103,8 @@ class PurchaseOrderReceivingTest extends TestCase
         $result = $this->receive($po, [$item->id => ['receive_qty' => 75]]);
 
         $item->refresh();
-        $this->assertSame(75, $item->received_quantity);
-        $this->assertSame(100, $item->requested_quantity, 'unchanged when no override is sent');
+        $this->assertEquals(75, $item->received_quantity);
+        $this->assertEquals(100, $item->requested_quantity, 'unchanged when no override is sent');
         $this->assertSame(PurchaseOrder::STATUS_PARTIAL, $result->status);
     }
 
@@ -127,7 +127,7 @@ class PurchaseOrderReceivingTest extends TestCase
         ]);
 
         $this->assertSame(PurchaseOrder::STATUS_PARTIAL, $result->status);
-        $this->assertSame(0, $itemB->refresh()->received_quantity);
+        $this->assertEquals(0, $itemB->refresh()->received_quantity);
     }
 
     public function test_a_line_left_untouched_does_not_trigger_a_shortage_email(): void
@@ -164,6 +164,6 @@ class PurchaseOrderReceivingTest extends TestCase
             'items' => [$item->id => ['receive_qty' => 999, 'ordered_qty' => 999]],
         ])->assertRedirect(route('warehouse.receiving.show', $po->id));
 
-        $this->assertSame(999, $item->refresh()->received_quantity);
+        $this->assertEquals(999, $item->refresh()->received_quantity);
     }
 }
