@@ -123,6 +123,7 @@ class WarehouseController extends Controller
             $data['pending_requests'] = StockRequest::where('status', 'pending')->count();
 
             $data['recent_requests'] = StockRequest::with('store')
+                ->where('status', '!=', StockRequest::STATUS_DRAFT)
                 ->latest()
                 ->limit(6)
                 ->get();

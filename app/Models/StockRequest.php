@@ -25,6 +25,7 @@ class StockRequest extends Model
         'batch_details'
     ];
 
+    const STATUS_DRAFT = 'draft'; // store-side only until the store reviews it
     const STATUS_PENDING = 'pending';
     const STATUS_DISPATCHED = 'dispatched'; // Warehouse sends items
     const STATUS_VERIFY_PAYMENT = 'verify_payment'; // Optional intermediate step if needed, but per prompt: Dispatched -> Verify Payment (Action) -> Completed
