@@ -219,6 +219,12 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
 
         Route::post('stores/update-status', [StoreController::class, 'updateStatus'])->name('warehouse.stores.update-status');
         Route::get('stores/{id}/analytics', [StoreController::class, 'analytics'])->name('warehouse.stores.analytics');
+        // Store Groups -- registered before the stores resource so "groups"
+        // isn't swallowed by stores/{store}.
+        Route::get('stores/groups', [\App\Http\Controllers\Warehouse\Stores\StoreGroupController::class, 'index'])->name('warehouse.stores.groups.index');
+        Route::post('stores/groups', [\App\Http\Controllers\Warehouse\Stores\StoreGroupController::class, 'store'])->name('warehouse.stores.groups.store');
+        Route::put('stores/groups/{group}', [\App\Http\Controllers\Warehouse\Stores\StoreGroupController::class, 'update'])->name('warehouse.stores.groups.update');
+        Route::delete('stores/groups/{group}', [\App\Http\Controllers\Warehouse\Stores\StoreGroupController::class, 'destroy'])->name('warehouse.stores.groups.destroy');
         Route::resource('stores', StoreController::class)->names('warehouse.stores');
         Route::post('stores/{id}/staff', [StoreController::class, 'storeStaff'])->name('warehouse.stores.staff.store');
         Route::delete('stores/staff/{id}', [StoreController::class, 'destroyStaff'])->name('warehouse.stores.staff.destroy');

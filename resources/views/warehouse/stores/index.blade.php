@@ -15,9 +15,14 @@
                 </h4>
                 <p class="text-muted mb-0 small mt-1">Manage physical store locations and managers</p>
             </div>
-            <a href="{{ route('warehouse.stores.create') }}" class="btn btn-primary w-40 w-md-auto shadow-sm">
-                <i class="mdi mdi-plus me-1"></i> Register New Store
-            </a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('warehouse.stores.groups.index') }}" class="btn btn-outline-primary shadow-sm">
+                    <i class="mdi mdi-folder-multiple me-1"></i> Store Groups
+                </a>
+                <a href="{{ route('warehouse.stores.create') }}" class="btn btn-primary w-40 w-md-auto shadow-sm">
+                    <i class="mdi mdi-plus me-1"></i> Register New Store
+                </a>
+            </div>
         </div>
 
         {{-- FILTER SECTION --}}
@@ -34,7 +39,7 @@
                     </div>
 
                     {{-- City Filter --}}
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <select name="city" class="form-select">
                             <option value="">All Cities</option>
                             @foreach($cities as $city)
@@ -43,8 +48,18 @@
                         </select>
                     </div>
 
+                    {{-- Group Filter --}}
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <select name="store_group_id" class="form-select">
+                            <option value="">All Groups</option>
+                            @foreach($storeGroups as $group)
+                                <option value="{{ $group->id }}" {{ request('store_group_id') == $group->id ? 'selected' : '' }}>{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     {{-- Status Filter --}}
-                    <div class="col-12 col-sm-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <select name="status" class="form-select">
                             <option value="">All Status</option>
                             <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Active</option>
@@ -76,6 +91,7 @@
                             <tr>
                                 <th class="ps-4 py-3">Store Details</th>
                                 <th class="py-3">Location</th>
+                                <th class="py-3">Group</th>
                                 <th class="py-3">Manager</th>
                                 <th class="py-3 text-center">Status</th>
                                 <th class="text-end pe-4 py-3">Actions</th>
@@ -102,6 +118,13 @@
                                             {{ Str::limit($store->address, 30) }}
                                         </small>
                                     </div>
+                                </td>
+                                <td class="py-3">
+                                    @if($store->group)
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $store->group->name }}</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
                                 </td>
                                 <td class="py-3">
                                     @if($store->manager)
@@ -145,7 +168,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <div class="d-flex flex-column align-items-center justify-content-center">
                                         <div class="bg-light rounded-circle p-4 mb-3">
                                             <i class="mdi mdi-store-off text-muted opacity-50" style="font-size: 3rem;"></i>

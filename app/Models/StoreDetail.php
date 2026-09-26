@@ -28,6 +28,7 @@ class StoreDetail extends Model
         'latitude',
         'longitude',
         'is_active',
+        'store_group_id',
     ];
 
     protected $casts = [
@@ -37,6 +38,11 @@ class StoreDetail extends Model
     ];
 
     // ===== RELATIONSHIPS =====
+
+    public function group()
+    {
+        return $this->belongsTo(StoreGroup::class, 'store_group_id');
+    }
 
     /**
      * The warehouse this store belongs to.

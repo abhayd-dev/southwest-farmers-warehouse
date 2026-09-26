@@ -24,6 +24,8 @@ class StoreUser extends Authenticatable
         'phone',
         'parent_id',
         'is_active',
+        'store_group_id',
+        'profile_photo',
     ];
 
     protected $hidden = [

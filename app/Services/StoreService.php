@@ -32,6 +32,7 @@ class StoreService
                 'latitude'     => $data['latitude'] ?? null,
                 'longitude'    => $data['longitude'] ?? null,
                 'is_active'    => true,
+                'store_group_id' => ! empty($data['store_group_id']) ? (int) $data['store_group_id'] : null,
             ]);
 
             $managerRole = StoreRole::where('name', 'Super Admin')->orWhere('name', 'Manager')->first();

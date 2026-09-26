@@ -140,7 +140,18 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Store Group</label>
+                                    <select name="store_group_id" class="form-select">
+                                        <option value="">-- No Group --</option>
+                                        @foreach($storeGroups as $group)
+                                            <option value="{{ $group->id }}" {{ (old('store_group_id') ?? '') == $group->id ? 'selected' : '' }}>{{ $group->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Staff assigned this group (e.g. a Regional Manager) can switch between its stores. <a href="{{ route('warehouse.stores.groups.index') }}">Manage groups</a></small>
+                                </div>
+
                                 {{-- MAP SECTION --}}
                                 <div class="col-12 mt-4">
                                     <div class="card bg-light border-0">

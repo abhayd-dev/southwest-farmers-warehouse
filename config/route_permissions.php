@@ -66,6 +66,9 @@ return [
         'warehouse.product-options.*' => 'manage_categories',
 
         // Stores
+        'warehouse.stores.groups.store' => 'edit_stores',
+        'warehouse.stores.groups.update' => 'edit_stores',
+        'warehouse.stores.groups.destroy' => 'edit_stores',
         'warehouse.stores.create' => 'create_stores',
         'warehouse.stores.store' => 'create_stores',
         'warehouse.stores.*' => 'view_stores',

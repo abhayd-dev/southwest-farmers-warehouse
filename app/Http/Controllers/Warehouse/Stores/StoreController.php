@@ -26,7 +26,7 @@ class StoreController extends Controller
 
     public function index(Request $request)
     {
-        $query = StoreDetail::with('manager');
+        $query = StoreDetail::with(['manager', 'group']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -44,18 +44,25 @@ class StoreController extends Controller
             $query->where('is_active', $request->status);
         }
 
+        if ($request->filled('store_group_id')) {
+            $query->where('store_group_id', $request->store_group_id);
+        }
+
         $stores = $query->latest()->paginate(10);
         $stores->appends($request->all());
 
         $cities = StoreDetail::select('city')->distinct()->orderBy('city')->pluck('city');
 
-        return view('warehouse.stores.index', compact('stores', 'cities'));
+        $storeGroups = \App\Models\StoreGroup::orderBy('name')->get();
+
+        return view('warehouse.stores.index', compact('stores', 'cities', 'storeGroups'));
     }
 
     public function create()
     {
         $markets = \App\Models\Market::active()->get();
-        return view('warehouse.stores.create', compact('markets'));
+        $storeGroups = \App\Models\StoreGroup::orderBy('name')->get();
+        return view('warehouse.stores.create', compact('markets', 'storeGroups'));
     }
 
     public function store(Request $request)
@@ -74,6 +81,7 @@ class StoreController extends Controller
             'manager_email'   => 'required|email|unique:store_users,email',
             'manager_phone'   => 'nullable|string|max:15',
             'password'        => 'required|min:8|confirmed',
+            'store_group_id'  => 'nullable|exists:store_groups,id',
         ]);
 
         try {
@@ -172,7 +180,8 @@ class StoreController extends Controller
     {
         $store = StoreDetail::with('markets')->findOrFail($id);
         $markets = \App\Models\Market::active()->get();
-        return view('warehouse.stores.edit', compact('store', 'markets'));
+        $storeGroups = \App\Models\StoreGroup::orderBy('name')->get();
+        return view('warehouse.stores.edit', compact('store', 'markets', 'storeGroups'));
     }
 
     public function update(Request $request, $id)
@@ -186,7 +195,10 @@ class StoreController extends Controller
             'address'     => 'required|string',
             'latitude'    => 'nullable|numeric',
             'longitude'   => 'nullable|numeric',
+            'store_group_id' => 'nullable|exists:store_groups,id',
         ]);
+        // "No group" arrives as '' -- a bigint column needs null.
+        $request->merge(['store_group_id' => $request->filled('store_group_id') ? (int) $request->store_group_id : null]);
 
         try {
             $this->storeService->updateStore($store, $request->all());
