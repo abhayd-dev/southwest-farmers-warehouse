@@ -55,9 +55,13 @@
             allowInput: true
         });
 
-        // Initialize Select2 on all select elements unless they have the class .no-select2
+        // Initialize Select2 on all select elements unless they have the class .no-select2.
+        // Never on selects that belong to other widgets: SweetAlert's, and flatpickr's
+        // month dropdown -- as Select2 its list opened behind the calendar and it
+        // didn't follow the prev/next arrows (flatpickr only updates the real select).
+        const SELECT2_TARGETS = 'select:not(.no-select2, .swal2-select, [class^="swal2-"], .flatpickr-monthDropdown-months)';
         $(document).ready(function() {
-            $('select:not(.no-select2, .swal2-select, [class^="swal2-"])').each(function() {
+            $(SELECT2_TARGETS).each(function() {
                 $(this).select2({
                     theme: 'bootstrap-5',
                     width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
@@ -68,7 +72,9 @@
             
             // Fix Select2 search focus within Bootstrap Modals
             $(document).on('shown.bs.modal', function (e) {
-                $(this).find('select').each(function() {
+                // Only the selects in the modal that just opened (this used to re-init
+                // every select on the page, including .no-select2 and flatpickr ones).
+                $(e.target).find(SELECT2_TARGETS).each(function() {
                     let dropdownParent = $(e.target);
                     // Re-initialize for modal
                     $(this).select2({
