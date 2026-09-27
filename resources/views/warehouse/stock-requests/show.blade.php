@@ -447,18 +447,38 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Product <span class="text-danger">*</span></label>
-                        <select name="product_id" class="form-select" required>
+                        <select name="product_id" id="purchaseInProduct" class="form-select" required>
                             <option value="">Select Product</option>
                             @foreach ($products as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->product_name }} ({{ $prod->upc }})
+                                {{-- The requested product is picked by default. --}}
+                                <option value="{{ $prod->id }}" data-cost="{{ $prod->cost_price }}"
+                                    {{ $prod->id == $stockRequest->product_id ? 'selected' : '' }}>{{ $prod->product_name }} ({{ $prod->upc }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                        <input type="number" name="quantity" class="form-control" required min="1"
-                            placeholder="Enter quantity to add">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="quantity" class="form-control" required min="1"
+                                placeholder="Enter quantity to add">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Cost per Unit ($)</label>
+                            <input type="number" name="cost_price" id="purchaseInCost" class="form-control" min="0" step="0.01"
+                                placeholder="Product cost">
+                            <small class="text-muted">Leave empty to use the product's cost.</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Batch Number</label>
+                            <input type="text" name="batch_number" class="form-control" maxlength="50" placeholder="Auto-generated if empty">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Expiry Date</label>
+                            <input type="date" name="expiry_date" class="form-control">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Purchase Reference</label>
@@ -480,6 +500,19 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+        // Purchase In: show the chosen product's cost as the default (Select2-aware).
+        document.addEventListener('DOMContentLoaded', function () {
+            const product = document.getElementById('purchaseInProduct');
+            const cost = document.getElementById('purchaseInCost');
+            if (!product || !cost) return;
+            const showCost = () => {
+                const c = product.options[product.selectedIndex]?.dataset.cost;
+                cost.placeholder = c ? 'Product cost: ' + Number(c).toFixed(2) : 'Product cost';
+            };
+            $(product).on('change', showCost);
+            showCost();
+        });
+
             // Existing JavaScript logic remains unchanged...
             const maxQty = {{ min($stockRequest->pending_quantity, $totalStock) }};
 

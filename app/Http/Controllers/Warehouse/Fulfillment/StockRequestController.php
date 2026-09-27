@@ -12,6 +12,7 @@ use App\Models\StockTransaction;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class StockRequestController extends Controller
@@ -142,60 +143,46 @@ class StockRequestController extends Controller
 
     public function purchaseIn(Request $request)
     {
+        // Batch number and cost are optional: the Purchase In popup never had
+        // those fields, so requiring them rejected every submission.
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|numeric|min:1',
-            'batch_number' => 'required|string|max:50',
+            'batch_number' => 'nullable|string|max:50',
             'mfg_date' => 'nullable|date',
             'expiry_date' => 'nullable|date|after_or_equal:mfg_date',
-            'cost_price' => 'required|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
             'remarks' => 'nullable|string',
-            'purchase_ref' => 'nullable|string'
+            'purchase_ref' => 'nullable|string|max:100',
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
-                // 1. Create Batch
-                $batch = ProductBatch::create([
-                    'product_id' => $request->product_id,
-                    'warehouse_id' => 1,
-                    'store_id' => null,
-                    'batch_number' => $request->batch_number,
-                    'manufacturing_date' => $request->mfg_date,
-                    'expiry_date' => $request->expiry_date,
-                    'cost_price' => $request->cost_price,
-                    'quantity' => $request->quantity,
-                    'is_active' => true,
-                ]);
+            $product = Product::findOrFail($request->product_id);
+            $quantity = (float) $request->quantity;
 
-                // 2. Update Warehouse Stock
-                ProductStock::updateOrCreate(
-                    ['warehouse_id' => 1, 'product_id' => $request->product_id],
-                    ['quantity' => DB::raw('quantity + ' . $request->quantity)]
-                );
+            DB::transaction(function () use ($request, $product, $quantity) {
+                // Same path as Stock In elsewhere: batch + warehouse total (created
+                // if the product has none yet) + a stock movement line.
+                $batch = $product->addStock(1, $quantity, 'purchase_in', [
+                    'batch_number' => $request->filled('batch_number') ? trim($request->batch_number) : 'PUR-' . now()->format('ymd-His'),
+                    'mfg_date' => $request->mfg_date,
+                    'exp_date' => $request->expiry_date,
+                    'cost_price' => $request->filled('cost_price') ? $request->cost_price : ($product->cost_price ?? 0),
+                ], Auth::id(), $request->remarks ?: 'Purchase received');
 
-                // 3. Log Transaction
-                StockTransaction::create([
-                    'product_id' => $request->product_id,
-                    'product_batch_id' => $batch->id,
-                    'warehouse_id' => 1,
-                    'type' => 'purchase_in',
-                    'quantity_change' => $request->quantity,
-                    'running_balance' => ProductStock::where('warehouse_id', 1)->where('product_id', $request->product_id)->first()->quantity,
-                    'ware_user_id' => Auth::id(),
-                    'reference_id' => 'PUR-' . $request->purchase_ref ?? time(),
-                    'remarks' => $request->remarks ?? 'Purchase received',
+                StockTransaction::where('product_batch_id', $batch->id)->update([
+                    'reference_id' => $request->filled('purchase_ref') ? trim($request->purchase_ref) : 'PUR-' . $batch->id,
                 ]);
             });
 
             NotificationService::sendToAdmins(
-                "Direct Stock Added", 
-                "Added {$request->quantity} units of Product ID: {$request->product_id}", 
+                "Direct Stock Added",
+                "Added {$quantity} units of {$product->product_name}",
                 'info',
                 route('warehouse.stocks.index')
             );
 
-            return response()->json(['success' => true, 'message' => 'Batch created & stock added to warehouse']);
+            return response()->json(['success' => true, 'message' => "Added {$quantity} units of {$product->product_name} to warehouse stock."]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Purchase in failed: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json(['success' => false, 'message' => \App\Support\ErrorMessage::from($e, 'Something went wrong. Please try again later.')], 400);
