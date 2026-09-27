@@ -101,6 +101,16 @@
                                     class="btn btn-outline-dark shadow-sm" target="_blank">
                                     <i class="mdi mdi-printer me-1"></i> Print PO
                                 </a>
+                                @if (auth()->user()->can('approve_po') || auth()->user()->can('create_po'))
+                                    {{-- In case the first email never arrived. --}}
+                                    <form action="{{ route('warehouse.purchase-orders.send-approval', $purchaseOrder->id) }}"
+                                        method="POST" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-outline-info shadow-sm" type="submit">
+                                            <i class="mdi mdi-email-sync me-1"></i> Resend approval email
+                                        </button>
+                                    </form>
+                                @endif
                                 @if (auth()->user()->can('approve_po'))
                                     <a href="{{ URL::temporarySignedRoute('warehouse.purchase-orders.approve', now()->addDays(7), ['purchaseOrder' => $purchaseOrder->id, 'action' => 'approve']) }}"
                                         class="btn btn-success shadow-sm">

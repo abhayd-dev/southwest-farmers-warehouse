@@ -229,15 +229,18 @@ class PurchaseOrderController extends Controller
                 return back()->with('error', 'No approval email set for this PO. Please edit the PO to add one.');
             }
             
-            // Update status first so it changes even if email fails
-            $purchaseOrder->update(['approval_status' => PurchaseOrder::APPROVAL_PENDING]);
-            
+            // Email first: the PO only shows "waiting for approval" once the
+            // approver has actually been sent the email. (It used to switch first,
+            // so a failed send left POs pending with nobody notified.)
             $this->approvalService->sendApprovalEmail($purchaseOrder);
-            
-            return back()->with('success', 'Approval email sent successfully to ' . $purchaseOrder->approval_email);
+
+            $wasPending = $purchaseOrder->approval_status === PurchaseOrder::APPROVAL_PENDING;
+            $purchaseOrder->update(['approval_status' => PurchaseOrder::APPROVAL_PENDING]);
+
+            return back()->with('success', ($wasPending ? 'Approval email sent again to ' : 'Approval email sent successfully to ') . $purchaseOrder->approval_email);
         } catch (\Exception $e) {
             Log::error('Failed to send approval email: ' . $e->getMessage(), ['exception' => $e]);
-            return back()->with('error', 'Approval email to ' . $purchaseOrder->approval_email . ' failed: ' . \App\Support\MailFailure::reason($e));
+            return back()->with('error', 'Approval email to ' . $purchaseOrder->approval_email . ' was NOT sent, so the order was not sent for approval: ' . \App\Support\MailFailure::reason($e));
         }
     }
 
