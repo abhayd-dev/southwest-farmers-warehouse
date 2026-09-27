@@ -128,7 +128,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted fw-bold mb-1">Subcategory</label>
-                                    <select id="filterSubcategory" class="form-select form-select-sm shadow-none" onchange="filterProducts()">
+                                    <select id="filterSubcategory" class="form-select form-select-sm shadow-none" onchange="onSubcategoryChange()">
                                         <option value="">All Subcategories</option>
                                     </select>
                                 </div>
@@ -224,69 +224,49 @@
                 }
             }
 
+            // The filter bar works on the row being edited: the row whose product
+            // dropdown was last opened / picked, or the row just added. Other rows
+            // keep their products whatever the filters say.
+            let activeRowIdx = null;
+
+            function clearRow(idx) {
+                const $row = $(`#row-${idx}`);
+                if (!$row.length) return;
+                $row.find('.product-select').val('').trigger('change.select2');
+                $row.find('.cost-input').val('');
+                $row.find('.qty-input').val('');
+                calculateRow(idx);
+            }
+
+            // The active row's product, if any, when it no longer fits the filters.
+            function clearActiveRowIfOutsideFilters() {
+                if (activeRowIdx === null) return;
+                const productId = $(`#row-${activeRowIdx} .product-select`).val();
+                if (!productId) return;
+                const p = products.find(prod => prod.id == productId);
+                const dept = $('#filterDepartment').val(), cat = $('#filterCategory').val(), sub = $('#filterSubcategory').val();
+                if (!p || (dept && p.department_id != dept) || (cat && p.category_id != cat) || (sub && p.subcategory_id != sub)) {
+                    clearRow(activeRowIdx);
+                }
+            }
+
             window.onDepartmentChange = function() {
-                // Selecting a department narrows Category, which narrows Subcategory —
-                // both downstream filters reset since they may no longer apply.
+                // A new department starts the row over: Category, Subcategory, and the
+                // row's Product / Unit Cost / Quantity all reset (client, 9/27).
                 rebuildCategoryOptions($('#filterDepartment').val(), null);
                 rebuildSubcategoryOptions(null, $('#filterDepartment').val(), null);
+                if (activeRowIdx !== null) clearRow(activeRowIdx);
                 filterProducts();
             }
 
             window.onCategoryChange = function() {
                 rebuildSubcategoryOptions($('#filterCategory').val(), $('#filterDepartment').val(), null);
+                clearActiveRowIfOutsideFilters();
                 filterProducts();
             }
 
-            // Per-row memory of which filters were active when that row's product was
-            // chosen, so switching filters for the NEXT row never disturbs earlier rows,
-            // and clicking back into an earlier row restores the filters that found it.
-            function rememberRowFilters(idx) {
-                const $row = $(`#row-${idx}`);
-                const productId = $row.find('.product-select').val();
-                let dept = $('#filterDepartment').val();
-                let cat = $('#filterCategory').val();
-                let subcat = $('#filterSubcategory').val();
-
-                // No filters were used to find this product — fall back to the
-                // product's own department/category/subcategory so "click back"
-                // still has something correct to restore.
-                if (!dept && !cat && !subcat && productId) {
-                    const p = products.find(prod => prod.id == productId);
-                    if (p) {
-                        dept = p.department_id || '';
-                        cat = p.category_id || '';
-                        subcat = p.subcategory_id || '';
-                    }
-                }
-
-                $row.attr('data-dept', dept || '');
-                $row.attr('data-cat', cat || '');
-                $row.attr('data-subcat', subcat || '');
-            }
-
-            window.restoreRowFilters = function(idx) {
-                const $row = $(`#row-${idx}`);
-
-                // A row with no product chosen yet has never had rememberRowFilters()
-                // called for it, so its data-dept/cat/subcat attributes are simply
-                // absent (not merely empty). Restoring "nothing remembered" as
-                // "no department/category/subcategory" was wiping out whatever
-                // filters the user had just picked the moment they opened this
-                // row's product dropdown — client feedback 9/21, items 3-4: filters
-                // resetting to default and the product list showing everything the
-                // instant the product dropdown was opened. Leave the active filters
-                // alone here; there's nothing to restore.
-                if (typeof $row.attr('data-dept') === 'undefined') {
-                    return;
-                }
-
-                const dept = $row.attr('data-dept') || '';
-                const cat = $row.attr('data-cat') || '';
-                const subcat = $row.attr('data-subcat') || '';
-
-                $('#filterDepartment').val(dept);
-                rebuildCategoryOptions(dept, cat);
-                rebuildSubcategoryOptions($('#filterCategory').val(), dept, subcat);
+            window.onSubcategoryChange = function() {
+                clearActiveRowIfOutsideFilters();
                 filterProducts();
             }
 
@@ -371,14 +351,18 @@
                     placeholder: 'Select Product',
                     allowClear: true
                 }).on('select2:select', function() {
+                    activeRowIdx = thisRowIdx;
                     updateCost(thisRowIdx);
                 }).on('select2:clear', function() {
                     $(`#row-${thisRowIdx} .cost-input`).val('');
                     calculateRow(thisRowIdx);
                 }).on('select2:opening', function() {
-                    // Clicking back into this row restores the filters that found its product.
-                    restoreRowFilters(thisRowIdx);
+                    // Opening a row's product list makes it the row the filters work on.
+                    // It no longer puts that row's old filters back -- that reverted the
+                    // Department / Category / Subcategory the user had just picked.
+                    activeRowIdx = thisRowIdx;
                 });
+                activeRowIdx = thisRowIdx; // a new row is the one being filled in
 
                 rowIdx++;
 
@@ -389,7 +373,6 @@
             window.updateCost = function(idx) {
                 const select = $(`#row-${idx} .product-select`);
                 const cost = select.find(':selected').data('cost');
-                rememberRowFilters(idx);
                 if (cost !== undefined && cost !== null && cost !== '') {
                     $(`#row-${idx} .cost-input`).val(cost);
                 }
@@ -406,6 +389,7 @@
 
             window.removeRow = function(idx) {
                 $(`#row-${idx}`).remove();
+                if (activeRowIdx === idx) activeRowIdx = null;
                 calculateGrandTotal();
             }
 
@@ -441,7 +425,6 @@
                         const lastRowIdx = rowIdx - 1;
                         const select = $(`#row-${lastRowIdx} .product-select`);
                         select.val(p.id).trigger('change.select2');
-                        rememberRowFilters(lastRowIdx);
                         if (item.cost !== undefined && item.cost !== null) {
                             $(`#row-${lastRowIdx} .cost-input`).val(item.cost);
                         } else if (p.cost_price) {
@@ -451,6 +434,7 @@
                         calculateRow(lastRowIdx);
                     }
                 });
+                activeRowIdx = null; // re-ordered rows stay put until the user opens one
             @else
                 addRow(); // Add one row by default
             @endif
