@@ -192,6 +192,11 @@ class StockRequestController extends Controller
     public function approveStorePo(Request $request, $id)
     {
         $stockRequest = StockRequest::findOrFail($id);
+        // Only a request still waiting for approval can be approved -- otherwise this
+        // reset a dispatched / rejected / completed request back to "pending".
+        if ($stockRequest->status !== 'awaiting_approval') {
+            return response()->json(['success' => false, 'message' => 'Only a request that is awaiting approval can be approved (this one is ' . str_replace('_', ' ', $stockRequest->status) . ').'], 422);
+        }
         $stockRequest->update([
             'status' => StockRequest::STATUS_PENDING,
             'approved_at' => now(),

@@ -113,6 +113,9 @@ class ProductCategoryController extends Controller
 
     public function changeStatus(Request $request)
     {
+        // A missing/unknown id is a 422 with a reason, not a 500 (or a silent no-op).
+        $request->validate(['id' => 'required|integer|exists:product_categories,id', 'status' => 'required|boolean']);
+
         try {
             ProductCategory::whereNull('store_id')->findOrFail($request->id)
                 ->update(['is_active' => $request->status]);

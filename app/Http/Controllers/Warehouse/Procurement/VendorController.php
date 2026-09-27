@@ -135,6 +135,9 @@ class VendorController extends Controller
 
     public function changeStatus(Request $request)
     {
+        // A missing/unknown id is a 422 with a reason, not a 500 (or a silent no-op).
+        $request->validate(['id' => 'required|integer|exists:vendors,id', 'status' => 'required|boolean']);
+
         try {
             $vendor = Vendor::findOrFail($request->id);
             $vendor->update(['is_active' => $request->status]);

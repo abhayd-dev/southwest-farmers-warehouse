@@ -45,6 +45,9 @@ class StaffController extends Controller
 
     public function changeStatus(Request $request)
     {
+        // A missing/unknown id is a 422 with a reason, not a 500 (or a silent no-op).
+        $request->validate(['id' => 'required|integer|exists:ware_users,id', 'status' => 'required|boolean']);
+
         try {
             $user = WareUser::findOrFail($request->id);
             

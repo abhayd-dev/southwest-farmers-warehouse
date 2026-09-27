@@ -164,7 +164,9 @@ class FinanceReportController extends Controller
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Date', 'Type', 'Product', 'UPC', 'Qty Change', 'Balance', 'Ref ID', 'User']);
             foreach ($transactions as $row) {
-                fputcsv($file, [$row->created_at, $row->type, $row->product->product_name, $row->product->upc, $row->quantity_change, $row->running_balance, $row->reference_id, $row->user->name ?? 'System']);
+                // A movement can outlive its product (deleted since): it used to stop the
+                // CSV halfway with "Attempt to read property product_name on null".
+                fputcsv($file, [$row->created_at, $row->type, $row->product->product_name ?? '(deleted product)', $row->product->upc ?? '', $row->quantity_change, $row->running_balance, $row->reference_id, $row->user->name ?? 'System']);
             }
             fclose($file);
         };

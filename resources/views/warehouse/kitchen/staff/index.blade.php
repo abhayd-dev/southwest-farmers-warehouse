@@ -480,10 +480,18 @@
 <script>
     $(document).ready(function() {
         // Initialize DataTables for Timesheets and Roster
-        $('.table-hover').DataTable({
-            pageLength: 25,
-            ordering: false,
-            language: { search: "", searchPlaceholder: "Search records..." }
+        $('.table-hover').each(function () {
+            // An empty day renders one <td colspan> row, which DataTables can't
+            // handle ("Cannot set properties of undefined (setting '_DT_CellIndex')").
+            // Show that message as DataTables' own empty-table text instead.
+            const emptyRow = $(this).find('tbody td[colspan]').closest('tr');
+            const emptyText = emptyRow.length ? emptyRow.text().trim() : 'No records found.';
+            emptyRow.remove();
+            $(this).DataTable({
+                pageLength: 25,
+                ordering: false,
+                language: { search: "", searchPlaceholder: "Search records...", emptyTable: emptyText }
+            });
         });
     });
 </script>

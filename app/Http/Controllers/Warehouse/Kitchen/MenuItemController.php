@@ -10,7 +10,7 @@ class MenuItemController extends Controller
 {
     public function index()
     {
-        $items = MenuItem::with('category')->get();
+        $items = MenuItem::with('menuCategory')->get(); // the view reads menuCategory (there is no 'category' relation)
         return view('warehouse.kitchen.menu-items', compact('items'));
     }
 }

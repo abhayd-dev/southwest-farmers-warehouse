@@ -41,6 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            // Not found / not allowed / session expired: let Laravel answer with the
+            // right status (404 / 403 / 419), for pages and JSON alike. The JSON branch
+            // below turned these into 500s and logged each one as an "Unhandled Exception".
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException
+                || $e instanceof \Illuminate\Auth\Access\AuthorizationException
+                || $e instanceof \Illuminate\Session\TokenMismatchException
+                || ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface && $e->getStatusCode() < 500)) {
+                return null;
+            }
+
             // A business rule nobody caught: show it as a warning where the user
             // was, not as a 500 (e.g. "Insufficient Stock. Available: 676.00").
             if ($e instanceof \App\Exceptions\BusinessRuleException) {
