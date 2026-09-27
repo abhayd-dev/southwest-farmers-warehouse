@@ -50,7 +50,11 @@
                             <input type="hidden" name="market_id" value="{{ $selectedMarket->id }}">
 
                             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0 text-dark fw-bold">Pricing for {{ $selectedMarket->name }}</h5>
+                                <h5 class="mb-0 text-dark fw-bold">Pricing for {{ $selectedMarket->name }}
+                                    <small class="text-muted fw-normal fs-6 ms-2">
+                                        {{ $products->total() }} {{ \Illuminate\Support\Str::plural('product', $products->total()) }}{{ request()->filled('search') || request()->filled('last_updated') ? ' matching the filters' : '' }}
+                                    </small>
+                                </h5>
                                 <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="mdi mdi-content-save me-1"></i>Save All Prices
                                 </button>
