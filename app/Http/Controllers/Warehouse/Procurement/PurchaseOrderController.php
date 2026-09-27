@@ -249,15 +249,21 @@ class PurchaseOrderController extends Controller
         $this->authorizeAnyOf('receive_po');
         if ($purchaseOrder->status !== PurchaseOrder::STATUS_PARTIAL) abort(403);
 
-        $purchaseOrder->update(['status' => PurchaseOrder::STATUS_COMPLETED]);
+        // Nothing more is coming: complete the order and reduce the invoice to
+        // what was actually received (client 9/27).
+        $lines = $this->poService->closeShort($purchaseOrder, auth()->user()->name);
+        $purchaseOrder->refresh();
 
         NotificationService::sendToAdmins(
             'PO Completed',
-            "PO #{$purchaseOrder->po_number} marked as completed manually.",
+            "PO #{$purchaseOrder->po_number} closed short by " . auth()->user()->name . '. Invoice adjusted to the received quantity: $' . number_format($purchaseOrder->total_amount, 2) . '.',
             'success',
             route('warehouse.purchase-orders.show', $purchaseOrder->id)
         );
-        return back()->with('success', 'PO marked as Completed (Partially Received).');
+
+        return back()->with('success', 'Order completed. ' . ($lines
+            ? count($lines) . ' short line(s) adjusted to the quantity received; invoice total is now $' . number_format($purchaseOrder->total_amount, 2) . '.'
+            : 'Everything ordered had been received.'));
     }
 
     public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
@@ -283,7 +289,8 @@ class PurchaseOrderController extends Controller
                 $request->input('transportation_cost', 0),
                 $request->input('demurrage', 0),
                 $invoiceDocumentPath,
-                $request->input('shipment_type')
+                $request->input('shipment_type'),
+                $request->boolean('complete_now')
             );
 
             NotificationService::sendToAdmins(
@@ -294,6 +301,9 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->refresh();
             $message = 'Inventory updated successfully.';
+            if ($purchaseOrder->short_close_lines && $purchaseOrder->short_closed_at?->gt(now()->subMinute())) {
+                $message .= ' The order is completed; the invoice now covers only what was received ($' . number_format($purchaseOrder->total_amount, 2) . ').';
+            }
             if ($purchaseOrder->over_receipt_status === PurchaseOrder::OVER_RECEIPT_PENDING) {
                 $message .= ' More was received than ordered, so the order has been flagged and sent for approval.';
             }

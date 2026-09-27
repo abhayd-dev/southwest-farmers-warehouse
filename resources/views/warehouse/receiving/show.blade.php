@@ -20,6 +20,16 @@
                             <i class="mdi mdi-camera me-1"></i> Attach Invoice Picture
                         </button>
                     @endif
+                    @if ($purchaseOrder->status === 'partial' && auth()->user()->can('receive_po'))
+                        {{-- Client 9/27: the rest of a short order is not coming. --}}
+                        <form action="{{ route('warehouse.purchase-orders.mark-completed', $purchaseOrder->id) }}" method="POST" class="d-inline"
+                              data-confirm-title="Complete this order short?"
+                              data-confirm="Nothing more will be received. Short lines are closed at the quantity received and the invoice is reduced to match."
+                              data-confirm-icon="question" data-confirm-color="#198754" data-confirm-button="Yes, complete order" data-cancel-button="No">
+                            @csrf
+                            <button type="submit" class="btn btn-success shadow-sm"><i class="mdi mdi-check-all me-1"></i> Complete Order (nothing more coming)</button>
+                        </form>
+                    @endif
                     @if ($purchaseOrder->status == 'completed')
                         <a href="{{ route('warehouse.receiving.receipt', $purchaseOrder->id) }}" target="_blank"
                             class="btn btn-outline-primary shadow-sm">
@@ -181,6 +191,7 @@
                 </div>
 
                 @include('warehouse.purchase-orders.partials.over-receipt-panel')
+                @include('warehouse.purchase-orders.partials.short-close-panel')
 
                 {{-- RECEIVE SECTION --}}
                 @if (auth()->user()->can('receive_po'))
@@ -218,7 +229,7 @@
                                             <input class="form-check-input" type="radio" name="shipment_type" id="shipTruck" value="truck" required
                                                 {{ old('shipment_type', $purchaseOrder->shipment_type) === 'truck' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="shipTruck"><i class="mdi mdi-truck"></i> <strong>Truck</strong>
-                                                <small class="text-muted d-block">If less arrives than ordered, the order is closed.</small></label>
+                                                <small class="text-muted d-block">If less arrives than ordered, the order is closed and the invoice is reduced to what was received.</small></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="shipment_type" id="shipContainer" value="container" required
@@ -226,6 +237,12 @@
                                             <label class="form-check-label" for="shipContainer"><i class="mdi mdi-ferry"></i> <strong>Container</strong>
                                                 <small class="text-muted d-block">If less arrives than ordered, the order stays open (In Transit).</small></label>
                                         </div>
+                                    </div>
+                                    <div class="form-check mt-3 pt-2 border-top">
+                                        <input class="form-check-input" type="checkbox" name="complete_now" value="1" id="completeNow"
+                                            {{ old('complete_now') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="completeNow"><strong>Nothing more is coming &mdash; complete this order now</strong>
+                                            <small class="text-muted d-block">Short lines are closed at the quantity received, and the invoice is reduced to match (e.g. ordered 100, received 75: you pay for 75).</small></label>
                                     </div>
                                     <small class="text-muted d-block mt-2">Receiving more than ordered is allowed; the order is then flagged and sent to the approver.</small>
                                     @error('shipment_type')

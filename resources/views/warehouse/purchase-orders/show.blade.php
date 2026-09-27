@@ -219,6 +219,16 @@
                                 <i class="mdi mdi-printer me-1"></i> Print Receipt
                             </a>
                             @endif
+                            @if ($purchaseOrder->status === 'partial' && auth()->user()->can('receive_po'))
+                                {{-- Client 9/27: the rest of a short order is not coming. --}}
+                                <form action="{{ route('warehouse.purchase-orders.mark-completed', $purchaseOrder->id) }}" method="POST" class="d-inline"
+                                      data-confirm-title="Complete this order short?"
+                                      data-confirm="Nothing more will be received. Short lines are closed at the quantity received and the invoice is reduced to match."
+                                      data-confirm-icon="question" data-confirm-color="#198754" data-confirm-button="Yes, complete order" data-cancel-button="No">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success shadow-sm"><i class="mdi mdi-check-all me-1"></i> Complete Order</button>
+                                </form>
+                            @endif
                         @endif
 
                         <a href="{{ route('warehouse.purchase-orders.index') }}"
@@ -395,6 +405,7 @@
         @endif
 
         @include('warehouse.purchase-orders.partials.over-receipt-panel')
+        @include('warehouse.purchase-orders.partials.short-close-panel')
 
         {{-- ITEMS LIST (READ ONLY) --}}
         <div class="card border-0 shadow-sm">

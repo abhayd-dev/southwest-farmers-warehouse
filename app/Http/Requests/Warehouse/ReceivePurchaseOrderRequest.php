@@ -23,6 +23,9 @@ class ReceivePurchaseOrderRequest extends FormRequest
             'demurrage' => 'nullable|numeric|min:0',
             // Client PDF 9/24, items 2-3: decides what a short receipt does.
             'shipment_type' => 'required|in:truck,container',
+            // Client 9/27: nothing more is coming -- complete the order now even
+            // if lines are short (the invoice is reduced to what was received).
+            'complete_now' => 'nullable|boolean',
             'items' => 'required|array',
             // No upper bound: a shipment can arrive over or under the
             // originally ordered quantity (client feedback 9/21, items 1-2).

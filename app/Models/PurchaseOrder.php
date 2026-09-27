@@ -50,6 +50,9 @@ class PurchaseOrder extends Model
         'over_receipt_lines',
         'over_receipt_decided_by',
         'over_receipt_decided_at',
+        'short_close_lines',
+        'short_closed_by',
+        'short_closed_at',
     ];
 
     protected $casts = [
@@ -60,6 +63,8 @@ class PurchaseOrder extends Model
         'vendor_response_at' => 'datetime',
         'over_receipt_lines' => 'array',
         'over_receipt_decided_at' => 'datetime',
+        'short_close_lines' => 'array',
+        'short_closed_at' => 'datetime',
     ];
 
     const SHIPMENT_TRUCK = 'truck';

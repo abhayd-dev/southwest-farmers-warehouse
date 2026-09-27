@@ -115,12 +115,12 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null, ?string $shipmentType = null)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null, ?string $shipmentType = null, bool $completeNow = false)
     {
         $shortageItemIds = [];
         $newOverReceipt = false;
 
-        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, &$shortageItemIds, &$newOverReceipt) {
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, $completeNow, &$shortageItemIds, &$newOverReceipt) {
             $po = PurchaseOrder::findOrFail($poId);
 
             $updateData = [
@@ -172,6 +172,13 @@ class PurchaseOrderService
                 $poItem = $data['poItemModel'];
 
                 if ($qtyToReceive <= 0) {
+                    // An Ordered Qty edit counts even on a line where nothing arrived
+                    // this time (e.g. set to 0: none of it is coming).
+                    $orderedOnlyEdit = $data['ordered_qty'] ?? null;
+                    if ($orderedOnlyEdit !== null && $orderedOnlyEdit !== '' && round((float) $orderedOnlyEdit, 2) != (float) $poItem->requested_quantity) {
+                        $poItem->requested_quantity = max(0, round((float) $orderedOnlyEdit, 2));
+                        $poItem->save();
+                    }
                     // Nothing arrived on this line in this shipment -- still
                     // counts toward whether the PO as a whole is complete
                     // (previously this line was skipped entirely here, so a
@@ -310,8 +317,13 @@ class PurchaseOrderService
             // Client PDF 9/24, items 2-3: a short receipt off a container
             // leaves the order open (shown as "In Transit"); off a truck the
             // rest isn't coming, so the order is closed.
-            if ($allCompleted || $shipmentType === PurchaseOrder::SHIPMENT_TRUCK) {
+            if ($allCompleted || $shipmentType === PurchaseOrder::SHIPMENT_TRUCK || $completeNow) {
                 $po->status = PurchaseOrder::STATUS_COMPLETED;
+                // Closed with lines still short (truck, or "nothing more is coming"):
+                // the invoice becomes what was actually received.
+                if (! $allCompleted) {
+                    $this->applyShortClose($po, Auth::user()->name ?? 'System');
+                }
             } else {
                 $po->status = PurchaseOrder::STATUS_PARTIAL;
             }
@@ -356,5 +368,56 @@ class PurchaseOrderService
         }
 
         return $po;
+    }
+    /**
+     * Client 9/27: complete an order that came in short with nothing more
+     * coming -- used by "Close order" on a partial PO.
+     *
+     * @return array the short lines (ordered vs received), empty if none were short
+     */
+    public function closeShort(PurchaseOrder $po, string $closedBy): array
+    {
+        return DB::transaction(function () use ($po, $closedBy) {
+            $po = PurchaseOrder::lockForUpdate()->findOrFail($po->id);
+            $lines = $this->applyShortClose($po, $closedBy);
+            $po->status = PurchaseOrder::STATUS_COMPLETED;
+            $po->save();
+
+            return $lines;
+        });
+    }
+
+    /**
+     * Every line received short gets its invoice quantity (requested_quantity)
+     * set to what was received, and the invoice total is recalculated -- so
+     * payment covers only what arrived. The original ordered quantities are
+     * kept in short_close_lines. The caller saves $po.
+     */
+    private function applyShortClose(PurchaseOrder $po, string $closedBy): array
+    {
+        $lines = [];
+        foreach ($po->items()->with('product')->get() as $item) {
+            if ((float) $item->received_quantity >= (float) $item->requested_quantity) {
+                continue;
+            }
+            $lines[] = [
+                'item_id' => $item->id,
+                'product' => $item->product->product_name ?? ('Product #' . $item->product_id),
+                'ordered' => (float) $item->requested_quantity,
+                'received' => (float) $item->received_quantity,
+                'unit_cost' => (float) $item->unit_cost,
+            ];
+            $item->requested_quantity = (float) $item->received_quantity;
+            $item->save();
+        }
+
+        $po->total_amount = $po->items()->get()->sum(fn ($i) => $i->requested_quantity * $i->unit_cost);
+        if ($lines) {
+            $po->short_close_lines = $lines;
+            $po->short_closed_by = $closedBy;
+            $po->short_closed_at = now();
+        }
+
+        return $lines;
     }
 }
