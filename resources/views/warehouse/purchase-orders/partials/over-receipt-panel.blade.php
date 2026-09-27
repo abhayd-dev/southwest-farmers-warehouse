@@ -28,13 +28,14 @@
             </div>
             @if ($pending && (auth()->user()->isSuperAdmin() || auth()->user()->hasPermission('approve_po')))
                 <div class="d-flex gap-2">
-                    <form method="POST" action="{{ route('warehouse.purchase-orders.over-receipt', $purchaseOrder) }}">
+                    <form method="POST" action="{{ route('warehouse.purchase-orders.over-receipt', $purchaseOrder) }}"
+                          data-confirm-title="Approve the extra quantity?" data-confirm="The invoice will be raised to the quantity actually received." data-confirm-icon="question" data-confirm-color="#198754" data-confirm-button="Yes, approve">
                         @csrf
                         <input type="hidden" name="decision" value="approve">
                         <button class="btn btn-sm btn-success"><i class="mdi mdi-check"></i> Approve</button>
                     </form>
                     <form method="POST" action="{{ route('warehouse.purchase-orders.over-receipt', $purchaseOrder) }}"
-                          onsubmit="return confirm('Reject? The invoice will stay at the quantity originally ordered.')">
+                          data-confirm-title="Reject the extra quantity?" data-confirm="The invoice will stay at the quantity originally ordered." data-confirm-button="Yes, reject">
                         @csrf
                         <input type="hidden" name="decision" value="reject">
                         <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-close"></i> Reject</button>

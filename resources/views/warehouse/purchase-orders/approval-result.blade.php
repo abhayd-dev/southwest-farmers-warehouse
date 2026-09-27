@@ -59,8 +59,7 @@
                         @if(isset($cancelUrl))
                         <div class="mt-3 pt-3 border-top">
                             <p class="text-muted small mb-2">Need to reverse this? You can still cancel the order.</p>
-                            <a href="{{ $cancelUrl }}" class="btn btn-outline-danger btn-sm"
-                               onclick="return confirm('Cancel this purchase order?');">
+                            <a href="{{ $cancelUrl }}" class="btn btn-outline-danger btn-sm" id="cancelOrderLink">
                                 Cancel This Order
                             </a>
                         </div>
@@ -109,5 +108,24 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // SweetAlert instead of the browser's confirm() (this page has no app layout).
+    document.getElementById('cancelOrderLink')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        const url = this.href;
+        Swal.fire({
+            title: 'Cancel PO #{{ $po->po_number ?? '' }}?',
+            text: 'The order will be cancelled. This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, cancel order',
+            cancelButtonText: 'No, keep it',
+        }).then(result => { if (result.isConfirmed) window.location.href = url; });
+    });
+</script>
 </body>
 </html>

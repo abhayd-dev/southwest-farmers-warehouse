@@ -234,21 +234,26 @@
 
         // Remove Item
         document.querySelectorAll('.remove-item-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', async function() {
                 const itemId = this.dataset.itemId;
-                if (!confirm('Remove this item from the pallet?')) return;
+                const answer = await Swal.fire({
+                    title: 'Remove this item from the pallet?', icon: 'warning',
+                    showCancelButton: true, reverseButtons: true,
+                    confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, remove', cancelButtonText: 'No, keep it',
+                });
+                if (!answer.isConfirmed) return;
 
                 fetch(`/warehouse/pallets/items/${itemId}`, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
                 })
-                .then(r => r.json())
+                .then(jsonOrThrow)
                 .then(data => {
-                    if (data.success) {
-                        document.getElementById(`item-row-${itemId}`)?.remove();
-                        updateWeightDisplay(data.total_weight, data.remaining, data.weight_percent);
-                    }
-                });
+                    document.getElementById(`item-row-${itemId}`)?.remove();
+                    updateWeightDisplay(data.total_weight, data.remaining, data.weight_percent);
+                })
+                .catch(err => Swal.fire('Error', serverErrorMessage(err, 'Could not remove the item'), 'error'));
             });
         });
 

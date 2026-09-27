@@ -83,7 +83,7 @@
                                 </form>
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -123,7 +123,7 @@
                                 @endif
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -148,7 +148,7 @@
                                 @endif
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -171,7 +171,7 @@
                                     </form>
                                     <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline"
-                                        onsubmit="return confirm('Are you sure you want to cancel this order completely?');">
+                                        data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                         @csrf
                                         <button class="btn btn-danger shadow-sm">
                                             <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -202,7 +202,7 @@
                             @endif
                             <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                 method="POST" class="d-inline"
-                                onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                 @csrf
                                 <button class="btn btn-danger shadow-sm">
                                     <i class="mdi mdi-cancel me-1"></i> Cancel order

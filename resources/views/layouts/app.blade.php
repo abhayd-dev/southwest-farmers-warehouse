@@ -156,6 +156,40 @@
     </script>
     <script>
         /**
+         * SweetAlert instead of the browser's confirm() for any form or link with
+         * data-confirm="question text". Optional: data-confirm-title,
+         * data-confirm-button, data-cancel-button, data-confirm-color, data-confirm-icon.
+         */
+        (function () {
+            function ask(el) {
+                return Swal.fire({
+                    title: el.dataset.confirmTitle || 'Are you sure?',
+                    text: el.dataset.confirm,
+                    icon: el.dataset.confirmIcon || 'warning',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    confirmButtonColor: el.dataset.confirmColor || '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: el.dataset.confirmButton || 'Yes',
+                    cancelButtonText: el.dataset.cancelButton || 'No, go back',
+                }).then(result => result.isConfirmed);
+            }
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form.matches || !form.matches('form[data-confirm]') || typeof Swal === 'undefined') return;
+                e.preventDefault();
+                ask(form).then(ok => { if (ok) form.submit(); }); // form.submit() skips this listener
+            });
+            document.addEventListener('click', function (e) {
+                const link = e.target.closest && e.target.closest('a[data-confirm]');
+                if (!link || typeof Swal === 'undefined') return;
+                e.preventDefault();
+                ask(link).then(ok => { if (ok) window.location.href = link.href; });
+            });
+        })();
+    </script>
+    <script>
+        /**
          * The real reason a request failed, from a jQuery xhr, a fetch()
          * JSON body, or an Error -- the server sends the real error to
          * warehouse staff while SHOW_REAL_ERRORS is on. Falls back to
