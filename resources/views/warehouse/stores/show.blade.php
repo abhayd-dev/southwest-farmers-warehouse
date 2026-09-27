@@ -587,6 +587,9 @@
                             return res.json();
                         })
                         .then(data => {
+                            // The charts' "no data" text said "Loading..." for good when a
+                            // store simply had no sales for the filters.
+                            [trendChart, catChart, prodChart].forEach(c => c.updateOptions({ noData: { text: 'No sales for these filters' } }));
                             if (data.sales_trend) {
                                 trendChart.updateOptions({
                                     series: [{
@@ -616,34 +619,48 @@
                                 });
                             }
                         })
-                        .catch(err => console.error("Fetch Error:", err));
+                        .catch(err => {
+                            console.error("Fetch Error:", err);
+                            [trendChart, catChart, prodChart].forEach(c => c.updateOptions({ noData: { text: 'Could not load sales data' } }));
+                        });
                 }
 
-                ['product_type', 'subcategory_id'].forEach(id => document.getElementById(id).addEventListener('change',
-                    fetchData));
-                $('#product_id').on('change', fetchData);
+                // These selects are Select2 (the layout converts every <select>), and
+                // Select2 reports a pick with jQuery's trigger('change'), which never
+                // reaches addEventListener -- so listen through jQuery.
+                $('#product_type, #subcategory_id, #product_id').on('change', fetchData);
 
-                document.getElementById('category_id').addEventListener('change', function() {
+                $('#category_id').on('change', function() {
                     const id = this.value;
                     const sub = document.getElementById('subcategory_id');
+                    // Redraw Select2's box without firing the change handlers above.
+                    const redraw = () => $(sub).trigger('change.select2');
                     sub.disabled = true;
                     // FIX: Ensure value is empty string so backend skips it
                     sub.innerHTML = '<option value="">Loading...</option>';
+                    redraw();
 
                     if (id) {
                         fetch("{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(
-                                ':id', id))
-                            .then(r => r.json())
+                                ':id', id), { headers: { 'Accept': 'application/json' } })
+                            .then(jsonOrThrow)
                             .then(d => {
-                                sub.innerHTML = '<option value="" selected>All Subcategories</option>' + d
+                                if (this.value !== id) return; // another category was picked meanwhile
+                                const list = Array.isArray(d) ? d : (d.subcategories || d.data || []);
+                                sub.innerHTML = '<option value="" selected>' + (list.length ? 'All Subcategories' : 'No subcategories') + '</option>' + list
                                     .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
                                 sub.disabled = false;
-                                if (window.jQuery && $(sub).data('select2')) {
-                                    $(sub).trigger('change');
-                                }
+                                redraw();
+                            })
+                            .catch(err => {
+                                console.error('Could not load subcategories', err);
+                                sub.innerHTML = '<option value="" selected>Could not load - reselect the category</option>';
+                                sub.disabled = false;
+                                redraw();
                             });
                     } else {
                         sub.innerHTML = '<option value="" selected>Select Category First</option>';
+                        redraw();
                     }
                     fetchData();
                 });
