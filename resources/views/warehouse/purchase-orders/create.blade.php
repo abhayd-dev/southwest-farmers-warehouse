@@ -233,6 +233,7 @@
                 const $row = $(`#row-${idx}`);
                 if (!$row.length) return;
                 $row.find('.product-select').val('').trigger('change.select2');
+                $row.removeData('productId');
                 $row.find('.cost-input').val('');
                 $row.find('.qty-input').val('');
                 calculateRow(idx);
@@ -255,7 +256,8 @@
                 // row's Product / Unit Cost / Quantity all reset (client, 9/27).
                 rebuildCategoryOptions($('#filterDepartment').val(), null);
                 rebuildSubcategoryOptions(null, $('#filterDepartment').val(), null);
-                if (activeRowIdx !== null) clearRow(activeRowIdx);
+                // Only a row that has a product: a fresh empty row keeps its default quantity.
+                if (activeRowIdx !== null && $(`#row-${activeRowIdx} .product-select`).val()) clearRow(activeRowIdx);
                 filterProducts();
             }
 
@@ -371,11 +373,18 @@
             }
 
             window.updateCost = function(idx) {
-                const select = $(`#row-${idx} .product-select`);
+                const $row = $(`#row-${idx}`);
+                const select = $row.find('.product-select');
                 const cost = select.find(':selected').data('cost');
-                if (cost !== undefined && cost !== null && cost !== '') {
-                    $(`#row-${idx} .cost-input`).val(cost);
+                // Picking the SAME product again keeps a Unit Cost the user typed
+                // (client 9/27: custom costs went back to the system price); a
+                // different product still starts from its own default cost.
+                const sameProduct = String($row.data('productId') ?? '') === String(select.val());
+                const typedCost = $row.find('.cost-input').val() !== '';
+                if (!(sameProduct && typedCost) && cost !== undefined && cost !== null && cost !== '') {
+                    $row.find('.cost-input').val(cost);
                 }
+                $row.data('productId', select.val());
                 calculateRow(idx);
             }
 
@@ -425,6 +434,7 @@
                         const lastRowIdx = rowIdx - 1;
                         const select = $(`#row-${lastRowIdx} .product-select`);
                         select.val(p.id).trigger('change.select2');
+                        $(`#row-${lastRowIdx}`).data('productId', String(p.id));
                         if (item.cost !== undefined && item.cost !== null) {
                             $(`#row-${lastRowIdx} .cost-input`).val(item.cost);
                         } else if (p.cost_price) {
