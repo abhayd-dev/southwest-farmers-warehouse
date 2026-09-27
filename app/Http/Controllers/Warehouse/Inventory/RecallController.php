@@ -10,6 +10,7 @@ use App\Models\StockTransaction;
 use App\Models\StoreDetail;
 use App\Models\Product;
 use App\Services\NotificationService;
+use App\Support\DisplayDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class RecallController extends Controller
 
         if ($request->filled('status')) $query->where('status', $request->status);
         if ($request->filled('store_id')) $query->where('store_id', $request->store_id);
+        $this->filterByDay($query, $request, 'recall_requests.created_at');
 
         return DataTables::of($query)
             ->addColumn('store_name', fn($row) => $row->store->store_name ?? '-')
@@ -51,6 +53,7 @@ class RecallController extends Controller
 
         if ($request->filled('status')) $query->where('status', $request->status);
         if ($request->filled('store_id')) $query->where('store_id', $request->store_id);
+        $this->filterByDay($query, $request, 'recall_requests.created_at');
 
         return DataTables::of($query)
             ->addColumn('store_name', fn($row) => $row->store->store_name ?? '-')
@@ -73,16 +76,66 @@ class RecallController extends Controller
                 'products.upc',
                 DB::raw('(product_batches.expiry_date - CURRENT_DATE) as days_left')
             ])
-            ->where('product_batches.warehouse_id', 1)
-            ->where(function ($q) {
-                $q->where('product_batches.damaged_quantity', '>', 0)
-                    ->orWhere('product_batches.expiry_date', '<=', now()->addDays(90));
-            });
+            ->leftJoin('store_details', 'product_batches.store_id', '=', 'store_details.id')
+            ->addSelect(DB::raw("COALESCE(store_details.store_name, 'Warehouse') as store_name"));
+
+        // No store chosen: the warehouse's own batches (as before); a store: that store's.
+        if ($request->filled('store_id')) {
+            $query->where('product_batches.store_id', $request->store_id);
+        } else {
+            $query->where('product_batches.warehouse_id', 1)->whereNull('product_batches.store_id');
+        }
+
+        // Report Type: expiring (within 90 days / expired), damaged, or both.
+        $expiring = fn ($q) => $q->whereNotNull('product_batches.expiry_date')->where('product_batches.expiry_date', '<=', now()->addDays(90)->toDateString());
+        $damaged = fn ($q) => $q->where('product_batches.damaged_quantity', '>', 0);
+        match ($request->input('report_type')) {
+            'expiry' => $query->where($expiring),
+            'damage' => $query->where($damaged),
+            default => $query->where(fn ($q) => $q->where($damaged)->orWhere($expiring)),
+        };
+
+        // Date From / To = the expiry date range (a plain date, no time zone).
+        if ($from = $this->filterDate($request->input('date_from'))) {
+            $query->where('product_batches.expiry_date', '>=', $from);
+        }
+        if ($to = $this->filterDate($request->input('date_to'))) {
+            $query->where('product_batches.expiry_date', '<=', $to);
+        }
 
         return DataTables::of($query)
+            // Computed columns: tell the search box what they are (an alias can't go in WHERE).
+            ->filterColumn('store_name', fn ($q, $keyword) => $q->whereRaw("COALESCE(store_details.store_name, 'Warehouse') ILIKE ?", ['%' . $keyword . '%']))
+            ->filterColumn('days_left', fn ($q, $keyword) => $q->whereRaw('(product_batches.expiry_date - CURRENT_DATE)::text = ?', [trim($keyword)]))
+            ->filterColumn('product_name', fn ($q, $keyword) => $q->where('products.product_name', 'ILIKE', '%' . $keyword . '%'))
             ->addColumn('status', fn($row) => $row->days_left <= 0 ? '<span class="badge bg-danger">Expired</span>' : '<span class="badge bg-warning">Warning</span>')
             ->rawColumns(['status'])
             ->make(true);
+    }
+
+    /** Date From / To as the day staff mean (Chicago), not the UTC date. */
+    private function filterByDay($query, Request $request, string $column): void
+    {
+        if ($from = $this->filterDate($request->input('date_from'))) {
+            $query->where($column, '>=', DisplayDay::start($from));
+        }
+        if ($to = $this->filterDate($request->input('date_to'))) {
+            $query->where($column, '<=', DisplayDay::end($to));
+        }
+    }
+
+    /** Y-m-d from the date picker (or 09/26/2026); null when empty or not a date. */
+    private function filterDate(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        foreach (['Y-m-d', 'm/d/Y', 'n/j/Y'] as $format) {
+            $date = \DateTime::createFromFormat('!' . $format, $value);
+            if ($date && $date->format($format) === $value) {
+                return $date->format('Y-m-d');
+            }
+        }
+
+        return null;
     }
 
     // ===== CREATE (Warehouse -> Store) =====

@@ -63,10 +63,11 @@ $(function() {
         ajax: {
             url: '{{ route('warehouse.stock-control.recall.my-requests') }}',
             data: function(d) {
-                d.date_from = $('input[data-filter="date_from"]').val();
-                d.date_to = $('input[data-filter="date_to"]').val();
-                d.status = $('select[data-filter="status"]').val();
-                d.store_id = $('select[data-filter="store_id"]').val();
+                // Scoped to this tab: the other tabs have inputs with the same data-filter.
+                d.date_from = $('input.date-filter[data-filter="date_from"]').val();
+                d.date_to = $('input.date-filter[data-filter="date_to"]').val();
+                d.status = $('select.filter-control[data-filter="status"]').val();
+                d.store_id = $('select.filter-control[data-filter="store_id"]').val();
             }
         },
         columns: [
