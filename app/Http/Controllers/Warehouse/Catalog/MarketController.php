@@ -30,8 +30,17 @@ class MarketController extends Controller
 
     public function changeStatus(Request $request)
     {
+        $request->validate(
+            ['id' => 'required|exists:markets,id', 'status' => 'required|boolean'],
+            ['id.exists' => 'This market no longer exists. Please refresh the page.']
+        );
+
         $market = Market::findOrFail($request->id);
-        $market->update(['is_active' => $request->status]);
-        return response()->json(['message' => 'Status updated']);
+        $market->update(['is_active' => $request->boolean('status')]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Market \"{$market->name}\" " . ($market->is_active ? 'activated' : 'deactivated') . '.',
+        ]);
     }
 }

@@ -153,6 +153,7 @@
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            "Accept": "application/json",
                             "X-CSRF-TOKEN": "{{ csrf_token() }}"
                         },
                         body: JSON.stringify({
@@ -160,9 +161,13 @@
                             status: newStatus
                         })
                     })
-                    .then(r => r.json())
+                    .then(jsonOrThrow)
                     .then(data => {
-                        // success silently or message
+                        Swal.fire({ icon: 'success', title: data.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true });
+                    })
+                    .catch(err => {
+                        this.checked = !newStatus; // not saved: put the switch back
+                        Swal.fire({ icon: 'error', title: serverErrorMessage(err, 'Failed to update status'), toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true });
                     });
                 });
             });
