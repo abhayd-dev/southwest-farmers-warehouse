@@ -495,14 +495,21 @@
             });
 
             // Set Pricing modal: load the chosen category's subcategories.
-            // Reported: category showed CATERING but Subcategory never loaded --
-            // the dropdown can show a value without a change event ever firing
-            // (browser form restore, re-selecting the same value), and a failed
-            // request left it stuck. So: listen to change *and* input, re-sync
-            // whenever the modal opens, and always leave the select usable.
+            // Every <select> here is turned into Select2 by the layout, and Select2
+            // reports a pick with jQuery's .trigger('change') -- which never reaches
+            // addEventListener listeners, so the change is heard through jQuery
+            // (that also catches native change events). Also re-sync whenever the
+            // modal opens, and always leave the select usable.
             const catSelect = document.getElementById('priceCategorySelect');
             const subSelect = document.getElementById('priceSubcategorySelect');
             let loadedFor = null;
+
+            // Select2 draws its own box; tell it the options changed.
+            function refreshSubSelect() {
+                if (window.jQuery) {
+                    $(subSelect).trigger('change.select2');
+                }
+            }
 
             function loadPricingSubcategories() {
                 const id = catSelect.value;
@@ -512,11 +519,13 @@
                 if (!id) {
                     subSelect.innerHTML = '<option value="">Select Category First</option>';
                     subSelect.disabled = true;
+                    refreshSubSelect();
                     return;
                 }
 
                 subSelect.innerHTML = '<option value="">Loading...</option>';
                 subSelect.disabled = true;
+                refreshSubSelect();
 
                 const url = "{{ route('warehouse.product-options.fetch-subcategories', ':id') }}".replace(':id', id);
                 fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
@@ -532,20 +541,23 @@
                             subSelect.appendChild(opt);
                         });
                         subSelect.disabled = false;
-                        if (window.jQuery && $(subSelect).data('select2')) {
-                            $(subSelect).trigger('change');
-                        }
+                        refreshSubSelect();
                     })
                     .catch(err => {
                         console.error('Could not load subcategories', err);
                         loadedFor = null; // allow a retry
                         subSelect.innerHTML = '<option value="">Could not load subcategories - reselect the category</option>';
                         subSelect.disabled = false;
+                        refreshSubSelect();
                     });
             }
 
             if (catSelect && subSelect) {
-                catSelect.addEventListener('change', loadPricingSubcategories);
+                if (window.jQuery) {
+                    $(catSelect).on('change', loadPricingSubcategories); // Select2 + native changes
+                } else {
+                    catSelect.addEventListener('change', loadPricingSubcategories);
+                }
                 catSelect.addEventListener('input', loadPricingSubcategories);
                 const pricingModal = document.getElementById('pricingModal');
                 if (pricingModal) {
