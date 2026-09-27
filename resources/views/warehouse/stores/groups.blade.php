@@ -27,6 +27,18 @@
             <div class="alert alert-danger">{{ $errors->first() }}</div>
         @endif
 
+        {{-- Staff are assigned from the Store app, so say where. --}}
+        <div class="alert alert-info d-flex align-items-start small mb-4">
+            <i class="mdi mdi-information-outline fs-5 me-2"></i>
+            <div>
+                <strong>How to assign staff to a group:</strong>
+                in the <strong>Store</strong> app, log in as a Super Admin, go to
+                <strong>Staff Management &rarr; Store Staff</strong>, then <strong>Add New Staff</strong> (or <strong>Edit</strong> an existing person).
+                In <strong>Location</strong>, pick the group under <em>Store Groups</em> instead of a single store and save.
+                That person can then switch between every store in the group, and they are counted under <strong>Staff Assigned</strong> here.
+            </div>
+        </div>
+
         {{-- GROUPS --}}
         <div class="card border-0 shadow-lg">
             <div class="card-body p-0">
@@ -59,15 +71,24 @@
                                     <td class="py-3 text-center">{{ $group->staff_count }}</td>
                                     <td class="text-end pe-4 py-3">
                                         @can('edit_stores')
-                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#groupModal-{{ $group->id }}">
-                                                <i class="mdi mdi-pencil"></i> Edit
-                                            </button>
-                                            <form action="{{ route('warehouse.stores.groups.destroy', $group) }}" method="POST" class="d-inline"
-                                                  onsubmit="return confirm('Delete this group? Its stores and staff stay, they are just no longer grouped.')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete"></i></button>
-                                            </form>
+                                            {{-- Same icon buttons as the other lists (x-action-buttons); the
+                                                 delete-form class gives the SweetAlert confirmation. --}}
+                                            <x-action-buttons>
+                                                <button type="button" class="btn btn-sm btn-outline-primary btn-edit" title="Edit"
+                                                        data-bs-toggle="modal" data-bs-target="#groupModal-{{ $group->id }}">
+                                                    <i class="mdi mdi-pencil"></i>
+                                                </button>
+                                                <form action="{{ route('warehouse.stores.groups.destroy', $group) }}" method="POST" class="d-inline delete-form"
+                                                      data-confirm-title="Delete group &quot;{{ $group->name }}&quot;?"
+                                                      data-confirm-text="Its stores and staff are not deleted - they just stop being grouped."
+                                                      data-confirm-button="Yes, delete group">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-delete" title="Delete">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </button>
+                                                </form>
+                                            </x-action-buttons>
                                         @endcan
                                     </td>
                                 </tr>

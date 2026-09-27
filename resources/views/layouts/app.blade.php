@@ -135,14 +135,16 @@
 
                     const form = e.target;
 
+                    // A form can word its own confirmation with data-confirm-title /
+                    // data-confirm-text / data-confirm-button.
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
+                        title: form.dataset.confirmTitle || 'Are you sure?',
+                        text: form.dataset.confirmText || "You won't be able to revert this!",
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#d33',
                         cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!'
+                        confirmButtonText: form.dataset.confirmButton || 'Yes, delete it!'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             form.submit();
