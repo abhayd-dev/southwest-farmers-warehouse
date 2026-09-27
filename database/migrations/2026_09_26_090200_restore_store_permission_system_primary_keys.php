@@ -89,6 +89,12 @@ return new class extends Migration
         if (!Schema::hasTable($table) || Schema::hasIndex($table, $constraint)) {
             return;
         }
+        // A fresh database built from the create migrations already has a primary
+        // key (under another name); only the live one had lost it. Postgres allows one.
+        if ($primary && DB::connection()->getDriverName() === 'pgsql'
+            && DB::selectOne("SELECT 1 AS found FROM pg_constraint WHERE conrelid = ?::regclass AND contype = 'p'", [$table])) {
+            return;
+        }
 
         $on = collect($keyColumns)->map(fn ($c) => "a.{$c} = b.{$c}")->implode(' AND ');
 
