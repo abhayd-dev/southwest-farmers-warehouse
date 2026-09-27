@@ -170,7 +170,8 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         // Auto-fill weight from product selection
-        document.getElementById('productSelect')?.addEventListener('change', function() {
+        // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+        $('#productSelect').on('change', function() {
             const opt = this.options[this.selectedIndex];
             const weight = opt.dataset.weight || '';
             document.getElementById('itemWeight').value = weight;

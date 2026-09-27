@@ -160,7 +160,8 @@
 
                 let currentProduct = null;
 
-                productSelect.addEventListener('change', function() {
+                // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+                $(productSelect).on('change', function() {
                     const productId = this.value;
                     if (!productId) {
                         resetForm();
@@ -193,6 +194,7 @@
 
                     // Select 'purchase' by default if available
                     if (data.purchase_unit) unitTypeSelect.value = 'purchase';
+                    $(unitTypeSelect).trigger('change.select2'); // redraw the Select2 box
 
                     // 3. Handle Batch Section
                     if (data.is_batch_active) {
@@ -222,7 +224,7 @@
 
                 // Listeners for calc updates
                 qtyInput.addEventListener('input', updateConversionText);
-                unitTypeSelect.addEventListener('change', updateConversionText);
+                $(unitTypeSelect).on('change', updateConversionText);
 
                 function resetForm() {
                     currentProduct = null;

@@ -314,7 +314,8 @@
                         // Store initial value
                         select.dataset.original = select.value;
 
-                        select.addEventListener('change', function() {
+                        // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+                        $(select).on('change', function() {
                             const type = this.dataset.type;
                             const newValueText = this.options[this.selectedIndex].text;
                             const originalValue = this.dataset.original;
@@ -340,6 +341,7 @@
                                 } else {
                                     // If cancelled, revert the select to original value
                                     element.value = originalValue;
+                                    $(element).trigger('change.select2'); // redraw without re-asking
                                 }
                             });
                         });

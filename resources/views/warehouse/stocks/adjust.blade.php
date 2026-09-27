@@ -136,7 +136,8 @@
 
     @push('scripts')
         <script>
-            document.getElementById('productSelect').addEventListener('change', function() {
+            // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+            $('#productSelect').on('change', function() {
                 const option = this.options[this.selectedIndex];
                 const unit = option.dataset.unit || 'Unit';
                 document.getElementById('unitDisplay').textContent = unit;

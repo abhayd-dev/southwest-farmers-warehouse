@@ -230,7 +230,8 @@
                 });
 
                 // Auto-association AJAX trigger
-                sourceSelect.addEventListener('change', function() {
+                // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+                $(sourceSelect).on('change', function() {
                     const productId = this.value;
                     if (!productId) return;
 

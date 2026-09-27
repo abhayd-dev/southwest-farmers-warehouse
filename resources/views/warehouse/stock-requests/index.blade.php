@@ -339,6 +339,7 @@
                 maxQty = parseInt(qty);
 
                 document.getElementById('dispatch_status').value = 'dispatched';
+                $('#dispatch_status').trigger('change.select2'); // redraw the Select2 box
                 document.getElementById('dispatch_qty_div').style.display = 'block';
                 document.getElementById('dispatch_qty').setAttribute('required', 'true');
                 document.getElementById('admin_note_star').classList.add('d-none');
@@ -463,7 +464,8 @@
 
             const dispatchStatus = document.getElementById('dispatch_status');
             if (dispatchStatus) {
-                dispatchStatus.addEventListener('change', function() {
+                // Select2 (layout) reports picks via jQuery .trigger('change'), which addEventListener never hears.
+                $(dispatchStatus).on('change', function() {
                     const qtyDiv = document.getElementById('dispatch_qty_div');
                     const qtyInput = document.getElementById('dispatch_qty');
                     const star = document.getElementById('admin_note_star');
