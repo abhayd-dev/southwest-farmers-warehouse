@@ -244,7 +244,7 @@
                                         <label class="form-check-label" for="completeNow"><strong>Nothing more is coming &mdash; complete this order now</strong>
                                             <small class="text-muted d-block">Short lines are closed at the quantity received, and the invoice is reduced to match (e.g. ordered 100, received 75: you pay for 75).</small></label>
                                     </div>
-                                    <small class="text-muted d-block mt-2">Receiving more than ordered is allowed; the order is then flagged and sent to the approver.</small>
+                                    <small class="text-muted d-block mt-2">Receiving more than ordered is allowed. Raise <strong>Ordered Qty</strong> to match and that counts as the approval (the invoice follows it); otherwise the order is flagged and sent to the approver.</small>
                                     @error('shipment_type')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror

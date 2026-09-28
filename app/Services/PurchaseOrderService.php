@@ -120,7 +120,8 @@ class PurchaseOrderService
         $shortageItemIds = [];
         $newOverReceipt = false;
 
-        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, $completeNow, &$shortageItemIds, &$newOverReceipt) {
+        $raisedByReceiver = [];
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, $completeNow, &$shortageItemIds, &$newOverReceipt, &$raisedByReceiver) {
             $po = PurchaseOrder::findOrFail($poId);
 
             $updateData = [
@@ -144,6 +145,7 @@ class PurchaseOrderService
 
             $allCompleted = true;
             $overLines = [];
+            $raisedLines = [];
             $productIds = [];
             foreach ($receivedItems as $itemId => $data) {
                 $poItem = PurchaseOrderItem::findOrFail($itemId);
@@ -272,32 +274,32 @@ class PurchaseOrderService
                 $poItem->received_quantity += $qtyToReceive;
                 $poItem->receiving_unit_cost = $poPrice;
 
-                // Client PDF 9/24, item 1: more arrived than was ordered. It's
-                // still received, but the order is flagged for approval
-                // (OverReceiptService) -- measured against the quantity as it
-                // was ordered, not any Ordered Qty edit made on this screen.
-                if ($poItem->received_quantity > $orderedBeforeThisReceipt) {
-                    $overLines[$poItem->id] = [
-                        'item_id' => $poItem->id,
-                        'product' => $poItem->product->product_name ?? ('Product #' . $poItem->product_id),
-                        'ordered' => $orderedBeforeThisReceipt,
-                        'received' => (float) $poItem->received_quantity,
-                        'unit_cost' => (float) $poItem->unit_cost,
-                    ];
-                }
-
                 // Client feedback 9/21, items 1-2: a shipment can arrive over
                 // or under what was ordered (e.g. 125 against an order of
-                // 100, or 75 with nothing further coming). The warehouse
-                // isn't sending the excess back or waiting on the shortfall,
-                // so the Ordered Qty itself gets corrected to match what
-                // actually came in -- this is also what the invoice total
-                // below is based on, and it's what lets a short shipment
-                // complete the order below instead of sitting "partial"
-                // forever waiting on a remainder that was never coming.
+                // 100, or 75 with nothing further coming). The Ordered Qty
+                // can be corrected on this screen to match what actually came
+                // in -- that is what the invoice total below is based on.
                 $orderedQtyOverride = $data['ordered_qty'] ?? null;
                 if ($orderedQtyOverride !== null && $orderedQtyOverride !== '') {
                     $poItem->requested_quantity = max(0, round((float) $orderedQtyOverride, 2));
+                    if ((float) $poItem->requested_quantity > $orderedBeforeThisReceipt) {
+                        $raisedLines[] = ($poItem->product->product_name ?? ('Product #' . $poItem->product_id))
+                            . ' ' . $this->qty($orderedBeforeThisReceipt) . ' -> ' . $this->qty($poItem->requested_quantity);
+                    }
+                }
+
+                // Client PDF 9/24, item 1: more arrived than ordered is still
+                // received, but flagged for the approver (OverReceiptService).
+                // Client 9/28: raising Ordered Qty here IS the approval, so only
+                // what arrived beyond the (possibly raised) Ordered Qty is flagged.
+                if ($poItem->received_quantity > (float) $poItem->requested_quantity) {
+                    $overLines[$poItem->id] = [
+                        'item_id' => $poItem->id,
+                        'product' => $poItem->product->product_name ?? ('Product #' . $poItem->product_id),
+                        'ordered' => (float) $poItem->requested_quantity,
+                        'received' => (float) $poItem->received_quantity,
+                        'unit_cost' => (float) $poItem->unit_cost,
+                    ];
                 }
 
                 $poItem->save();
@@ -345,6 +347,8 @@ class PurchaseOrderService
                 $po->over_receipt_decided_at = null;
                 $newOverReceipt = true;
             }
+            $raisedByReceiver = $raisedLines;
+
             // Reset approval flag for future partial receipts
             $po->cost_increase_approved = false;
             $po->save();
@@ -365,6 +369,16 @@ class PurchaseOrderService
 
         if ($newOverReceipt) {
             app(\App\Services\OverReceiptService::class)->requestApproval($po);
+        }
+
+        // The Ordered Qty raise counted as the approval: leave a record of who did it.
+        if ($raisedByReceiver) {
+            NotificationService::sendToAdmins(
+                'Ordered Qty raised while receiving',
+                "PO #{$po->po_number}: " . (Auth::user()->name ?? 'System') . ' raised Ordered Qty (counts as approval, invoice updated): ' . implode('; ', $raisedByReceiver) . '.',
+                'info',
+                route('warehouse.purchase-orders.show', $po->id)
+            );
         }
 
         return $po;
@@ -419,5 +433,10 @@ class PurchaseOrderService
         }
 
         return $lines;
+    }
+
+    private function qty($value): string
+    {
+        return rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
     }
 }

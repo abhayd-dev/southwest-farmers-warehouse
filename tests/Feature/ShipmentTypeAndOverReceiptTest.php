@@ -99,16 +99,34 @@ class ShipmentTypeAndOverReceiptTest extends TestCase
         $this->assertFalse(app(OverReceiptService::class)->decide($po, 'reject', 'x'), 'second decision is ignored');
     }
 
-    public function test_rejecting_an_over_receipt_keeps_the_ordered_quantity_even_if_ordered_qty_was_edited(): void
+    public function test_raising_ordered_qty_to_what_arrived_counts_as_the_approval(): void
     {
+        // Client 9/28: editing Ordered Qty up to the received quantity is the approval.
         [$po, $item] = $this->po(100, 2);
         $this->actingAs($this->superAdmin());
         app(PurchaseOrderService::class)->receiveItems($po->id, [$item->id => ['receive_qty' => 125, 'ordered_qty' => 125]], 'INV-1', 0, 0, 0, 0, 0, null, 'truck');
 
-        app(OverReceiptService::class)->decide($po->fresh(), 'reject', 'approver@example.com');
+        $po->refresh();
+        $this->assertNull($po->over_receipt_status, 'not sent to the approver');
+        $this->assertEquals(125, $item->fresh()->requested_quantity);
+        $this->assertEquals(250, $po->total_amount, 'invoice = 125 x $2');
+        $this->assertSame(PurchaseOrder::STATUS_COMPLETED, $po->status);
+        $this->assertDatabaseHas('ware_notifications', ['title' => 'Ordered Qty raised while receiving']);
+    }
 
-        $this->assertEquals(100, $item->fresh()->requested_quantity);
-        $this->assertEquals(200, $po->fresh()->total_amount);
+    public function test_only_what_arrived_beyond_a_raised_ordered_qty_goes_to_the_approver(): void
+    {
+        [$po, $item] = $this->po(100, 2);
+        $this->actingAs($this->superAdmin());
+        app(PurchaseOrderService::class)->receiveItems($po->id, [$item->id => ['receive_qty' => 125, 'ordered_qty' => 110]], 'INV-1', 0, 0, 0, 0, 0, null, 'truck');
+
+        $po->refresh();
+        $this->assertSame(PurchaseOrder::OVER_RECEIPT_PENDING, $po->over_receipt_status);
+        $this->assertEquals(110, $po->over_receipt_lines[0]['ordered'], 'the raised quantity is already approved');
+
+        app(OverReceiptService::class)->decide($po->fresh(), 'reject', 'approver@example.com');
+        $this->assertEquals(110, $item->fresh()->requested_quantity);
+        $this->assertEquals(220, $po->fresh()->total_amount);
         $this->assertEquals(125, $item->fresh()->received_quantity, 'stock stays received');
     }
 
