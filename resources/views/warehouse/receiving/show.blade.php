@@ -648,7 +648,10 @@
                         if (!barcode) return;
 
                         let found = false;
-                        document.querySelectorAll('.receive-qty-input').closest('tr').forEach(row => {
+                        // (was querySelectorAll(...).closest('tr'): a NodeList has no
+                        // closest(), so every scan threw a TypeError and found nothing)
+                        document.querySelectorAll('.receive-qty-input').forEach(qty => {
+                            const row = qty.closest('tr');
                             const upcText = row.querySelector('small.text-muted')?.innerText || '';
                             if (upcText.includes(barcode)) {
                                 found = true;
