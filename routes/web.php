@@ -20,6 +20,19 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         Artisan::call('config:clear');
         return 'Cache cleared successfully!';
     });
+
+    // TEMPORARY (remove after the SendGrid check): /mail-test?to=someone@example.com
+    // sends one of every warehouse email to that address (read-only) and shows the
+    // result per email. The address comes from the URL each time; nothing is stored.
+    Route::get('/mail-test', function (\Illuminate\Http\Request $request) {
+        $to = (string) $request->query('to', '');
+        if (! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return response('Add ?to=your@email.com to the URL.', 422);
+        }
+        set_time_limit(180);
+        Artisan::call('mail:send-samples', ['to' => $to]);
+        return response('<pre>' . e(Artisan::output()) . '</pre>');
+    })->middleware('throttle:5,10');
 });
 
 // Public, signed link clicked from a "confirm your email" message — no login required.
