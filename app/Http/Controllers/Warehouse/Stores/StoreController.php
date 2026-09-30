@@ -181,7 +181,12 @@ class StoreController extends Controller
         $store = StoreDetail::with('markets')->findOrFail($id);
         $markets = \App\Models\Market::active()->get();
         $storeGroups = \App\Models\StoreGroup::orderBy('name')->get();
-        return view('warehouse.stores.edit', compact('store', 'markets', 'storeGroups'));
+        // Candidates for the manager position: this store's active staff (plus the current manager).
+        $storeStaff = StoreUser::where('store_id', $store->id)
+            ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $store->store_user_id))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+        return view('warehouse.stores.edit', compact('store', 'markets', 'storeGroups', 'storeStaff'));
     }
 
     public function update(Request $request, $id)
@@ -196,14 +201,31 @@ class StoreController extends Controller
             'latitude'    => 'nullable|numeric',
             'longitude'   => 'nullable|numeric',
             'store_group_id' => 'nullable|exists:store_groups,id',
+            'store_user_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('store_users', 'id')->where('store_id', $store->id)->where('is_active', true),
+            ],
+        ], [
+            'store_user_id.exists' => 'The new manager must be an active staff member of this store.',
         ]);
         // "No group" arrives as '' -- a bigint column needs null.
         $request->merge(['store_group_id' => $request->filled('store_group_id') ? (int) $request->store_group_id : null]);
 
         try {
-            $this->storeService->updateStore($store, $request->all());
+            $previousManagerId = $store->store_user_id;
+            $this->storeService->updateStore($store, $request->except('store_user_id'));
+
+            $message = 'Store details updated.';
+            if ($request->filled('store_user_id') && (int) $request->store_user_id !== (int) $previousManagerId) {
+                $newManager = $this->storeService->reassignManager($store, (int) $request->store_user_id);
+                $message = "Store details updated. {$newManager->name} is now the store manager.";
+                if ($previousManagerId && ($previous = StoreUser::find($previousManagerId))) {
+                    $message .= " {$previous->name} still has a staff login; remove them under Store Staff if they should no longer have access.";
+                }
+            }
+
             return redirect()->route('warehouse.stores.index')
-                ->with('success', 'Store details updated.');
+                ->with('success', $message);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Store update failed: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));

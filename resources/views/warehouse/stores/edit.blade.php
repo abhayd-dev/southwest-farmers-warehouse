@@ -152,15 +152,31 @@
                                         <small class="text-muted">{{ $store->manager->email }}</small>
                                     </div>
                                 </div>
-                                <div class="alert alert-warning border-0 shadow-sm py-2 px-3 small">
-                                    <i class="mdi mdi-alert-circle-outline me-1"></i> To change, visit <a href="{{ route('warehouse.staff.index') }}" class="alert-link">Store Panel -> My Profile Update</a>.
-                                </div>
                             @else
                                 <div class="text-center text-muted py-3">
                                     <i class="mdi mdi-account-off fs-1 opacity-25"></i>
                                     <p class="mb-0">No Manager Assigned</p>
                                 </div>
                             @endif
+
+                            {{-- Reassign the manager position to another staff member of this store. --}}
+                            <label class="form-label fw-semibold small mb-1">Change Manager</label>
+                            <select name="store_user_id" class="form-select @error('store_user_id') is-invalid @enderror">
+                                @unless($store->manager)
+                                    <option value="">-- Select staff --</option>
+                                @endunless
+                                @foreach($storeStaff as $member)
+                                    <option value="{{ $member->id }}" @selected(old('store_user_id', $store->store_user_id) == $member->id)>
+                                        {{ $member->name }} ({{ $member->email }}){{ $member->id == $store->store_user_id ? ' - current' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('store_user_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <small class="text-muted d-block mt-2">
+                                Pick a staff member of this store to make them the manager.
+                                To add someone new, use <a href="{{ route('warehouse.stores.show', $store->id) }}">View Store &rarr; Store Staff &rarr; Add Staff</a> first.
+                                The previous manager keeps their login as staff.
+                            </small>
                         </div>
                     </div>
 

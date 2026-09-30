@@ -48,6 +48,7 @@ class StoreService
             ]);
 
             $store->update(['store_user_id' => $manager->id]);
+            $this->grantStoreRoles($manager, [$manager->store_role_id]);
 
             if (!empty($data['market_id'])) {
                 $store->markets()->sync([$data['market_id']]);
@@ -74,6 +75,38 @@ class StoreService
         });
     }
 
+    /**
+     * Hand the store's manager position to another staff member of the same
+     * store. The new manager gets the manager's role (so the same access);
+     * the previous manager keeps their account and role untouched.
+     */
+    public function reassignManager(StoreDetail $store, int $storeUserId): StoreUser
+    {
+        return DB::transaction(function () use ($store, $storeUserId) {
+            $newManager = StoreUser::where('store_id', $store->id)->findOrFail($storeUserId);
+
+            $managerRoleId = StoreUser::whereKey($store->store_user_id)->value('store_role_id')
+                ?? StoreRole::where('name', 'Super Admin')->orWhere('name', 'Manager')->value('id');
+
+            // The store app checks access through store_model_has_roles, so copy
+            // every role the current manager holds there, not just the column.
+            $managerRoleIds = DB::table('store_model_has_roles')
+                ->where('model_type', StoreUser::class)
+                ->where('model_id', $store->store_user_id)
+                ->pluck('role_id')
+                ->push($managerRoleId)
+                ->all();
+
+            if ($managerRoleId) {
+                $newManager->update(['store_role_id' => $managerRoleId]);
+            }
+            $this->grantStoreRoles($newManager, $managerRoleIds);
+            $store->update(['store_user_id' => $newManager->id]);
+
+            return $newManager;
+        });
+    }
+
     public function updateStoreSchedule($storeId, array $data)
     {
         return StoreOrderSchedule::updateOrCreate(
@@ -89,15 +122,37 @@ class StoreService
 
     public function createStoreStaff($storeId, array $data)
     {
-        return StoreUser::create([
-            'store_id'      => $storeId,
-            'store_role_id' => $data['store_role_id'],
-            'name'          => $data['name'],
-            'email'         => $data['email'],
-            'phone'         => $data['phone'] ?? null,
-            'password'      => Hash::make($data['password']),
-            'is_active'     => true,
-        ]);
+        return DB::transaction(function () use ($storeId, $data) {
+            $staff = StoreUser::create([
+                'store_id'      => $storeId,
+                'store_role_id' => $data['store_role_id'],
+                'name'          => $data['name'],
+                'email'         => $data['email'],
+                'phone'         => $data['phone'] ?? null,
+                'password'      => Hash::make($data['password']),
+                'is_active'     => true,
+            ]);
+            $this->grantStoreRoles($staff, [$staff->store_role_id]);
+
+            return $staff;
+        });
+    }
+
+    /**
+     * Add roles to a store user in store_model_has_roles (what the store app
+     * reads for permissions). Existing roles are kept; duplicates are skipped.
+     *
+     * @param array<int|null> $roleIds
+     */
+    private function grantStoreRoles(StoreUser $user, array $roleIds): void
+    {
+        $rows = collect($roleIds)->filter()->unique()
+            ->map(fn ($roleId) => ['role_id' => (int) $roleId, 'model_type' => StoreUser::class, 'model_id' => $user->id])
+            ->values()->all();
+
+        if ($rows) {
+            DB::table('store_model_has_roles')->insertOrIgnore($rows);
+        }
     }
 
     public function deleteStoreStaff($staffId)
