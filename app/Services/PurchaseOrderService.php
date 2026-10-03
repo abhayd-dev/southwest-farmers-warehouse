@@ -53,9 +53,10 @@ class PurchaseOrderService
             // 3. Update Total
             $po->update(['total_amount' => $grandTotal]);
 
-            // Verify the approval email address, if one was provided
+            // Verify the approval email address, if one was provided (skipped
+            // when this approver already confirmed it on an earlier PO).
             if ($po->approval_email) {
-                app(EmailVerificationService::class)->send(
+                app(EmailVerificationService::class)->sendUnlessAlreadyVerified(
                     'po_approval',
                     $po,
                     "Purchase Order #{$po->po_number} approvals"

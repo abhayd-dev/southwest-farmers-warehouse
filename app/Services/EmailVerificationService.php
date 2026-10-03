@@ -79,6 +79,44 @@ class EmailVerificationService
     }
 
     /**
+     * Like send(), but an approver address already confirmed on an earlier PO
+     * is marked verified straight away instead of being asked to confirm
+     * again for every new PO (client issue 10/1). Returns true when the
+     * address is verified now (no email sent).
+     */
+    public function sendUnlessAlreadyVerified(string $type, $model, string $label): bool
+    {
+        if ($this->markVerifiedIfConfirmedBefore($type, $model)) {
+            return true;
+        }
+        $this->send($type, $model, $label);
+
+        return false;
+    }
+
+    protected function markVerifiedIfConfirmedBefore(string $type, $model): bool
+    {
+        $config = self::registry($type);
+        $email = $model->{$config['email_field']};
+
+        if ($type !== 'po_approval' || !$email) {
+            return false;
+        }
+
+        $confirmedBefore = PurchaseOrder::whereRaw('LOWER(approval_email) = ?', [mb_strtolower(trim($email))])
+            ->whereNotNull('approval_email_verified_at')
+            ->where('id', '!=', $model->id)
+            ->exists();
+
+        if ($confirmedBefore) {
+            $model->{$config['verified_field']} = now();
+            $model->saveQuietly();
+        }
+
+        return $confirmedBefore;
+    }
+
+    /**
      * Called only when an email value actually changes (or is set for the first
      * time). Resets the verified flag and sends a fresh confirmation link.
      */
@@ -91,12 +129,13 @@ class EmailVerificationService
             return; // unchanged — nothing to verify
         }
 
-        // Reset verification on the new (unverified) address, then send a link.
+        // Reset verification on the new (unverified) address, then send a link
+        // (unless that approver already confirmed it on an earlier PO).
         $model->{$config['verified_field']} = null;
         $model->saveQuietly();
 
         if ($newEmail) {
-            $this->send($type, $model, $label);
+            $this->sendUnlessAlreadyVerified($type, $model, $label);
         }
     }
 

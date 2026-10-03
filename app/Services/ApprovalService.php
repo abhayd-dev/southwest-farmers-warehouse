@@ -31,9 +31,8 @@ class ApprovalService
             ['purchaseOrder' => $po->id, 'action' => 'reject']
         );
 
-        // Log URLs for testing purposes when email is not configured
-        Log::info("PO #{$po->po_number} Approval Link: " . $approveUrl);
-        Log::info("PO #{$po->po_number} Reject Link: " . $rejectUrl);
+        // Never log the links: anyone reading the logs could approve the PO.
+        Log::info("PO #{$po->po_number}: sending approval email to {$po->approval_email}" . ($isReminder ? ' (reminder)' : ''));
 
         // Send email
         Mail::send('emails.purchase-order-approval', [
@@ -49,6 +48,47 @@ class ApprovalService
         });
 
         return true;
+    }
+
+    /**
+     * Called when the approver confirms their email (client issue 10/1): a PO
+     * still waiting as a draft that has not been sent yet is sent for approval
+     * right away. Returns 'sent', 'failed', or null when nothing was due (no
+     * items, already sent / approved / rejected, or not a draft any more).
+     */
+    public function sendAfterEmailConfirmed(PurchaseOrder $po): ?string
+    {
+        if ($po->status !== PurchaseOrder::STATUS_DRAFT
+            || $po->approval_status !== 'draft'
+            || !$po->approval_email
+            || !$po->items()->exists()) {
+            return null;
+        }
+
+        try {
+            $this->sendApprovalEmail($po);
+        } catch (\Throwable $e) {
+            Log::error("PO #{$po->po_number}: approval email after confirmation failed: " . $e->getMessage());
+            NotificationService::sendToAdmins(
+                'Approval email not sent',
+                "{$po->approval_email} confirmed their email for PO #{$po->po_number}, but the approval email could not be sent: "
+                    . \App\Support\MailFailure::reason($e) . ' Use "Send order for approval" to retry.',
+                'danger',
+                route('warehouse.purchase-orders.show', $po->id)
+            );
+
+            return 'failed';
+        }
+
+        $po->update(['approval_status' => PurchaseOrder::APPROVAL_PENDING]);
+        NotificationService::sendToAdmins(
+            'PO sent for approval',
+            "{$po->approval_email} confirmed their email, so PO #{$po->po_number} was sent to them for approval.",
+            'info',
+            route('warehouse.purchase-orders.show', $po->id)
+        );
+
+        return 'sent';
     }
 
     /**

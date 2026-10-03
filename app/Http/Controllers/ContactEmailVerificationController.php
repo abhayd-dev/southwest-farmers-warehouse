@@ -17,8 +17,17 @@ class ContactEmailVerificationController extends Controller
             $success = false;
         }
 
+        // A confirmed PO approver gets the approval email straight away
+        // (client issue 10/1: it used to wait for someone to click "Send").
+        $approval = null;
+        if ($success && $type === 'po_approval' && ($po = \App\Models\PurchaseOrder::find($id))) {
+            $approval = app(\App\Services\ApprovalService::class)->sendAfterEmailConfirmed($po);
+        }
+
         return view('emails.verify-contact-email-result', [
             'success' => $success,
+            'approval' => $approval,
+            'poNumber' => $po->po_number ?? null,
         ]);
     }
 

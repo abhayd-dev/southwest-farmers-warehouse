@@ -20,6 +20,11 @@
             <div class="icon success">&#10003;</div>
             <h1>Email Verified</h1>
             <p>Thank you — this email address has been confirmed. You can close this page now.</p>
+            @if (($approval ?? null) === 'sent')
+                <p><strong>Purchase Order #{{ $poNumber }}</strong> has been sent to you for approval. Please check your inbox.</p>
+            @elseif (($approval ?? null) === 'failed')
+                <p>The approval email for Purchase Order #{{ $poNumber }} could not be sent yet. The warehouse team has been notified.</p>
+            @endif
         @else
             <div class="icon error">&#10007;</div>
             <h1>Verification Link Invalid</h1>
