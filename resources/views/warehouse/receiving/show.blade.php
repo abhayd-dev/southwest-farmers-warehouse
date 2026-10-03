@@ -218,11 +218,11 @@
                             </div>
 
                             <form action="{{ route('warehouse.purchase-orders.receive', $purchaseOrder->id) }}"
-                                method="POST" enctype="multipart/form-data">
+                                method="POST" enctype="multipart/form-data" id="receiveForm" novalidate>
                                 @csrf
 
                                 {{-- Client PDF 9/24, items 2-3: what happens if less arrives than ordered --}}
-                                <div class="mb-4 p-3 border rounded bg-light">
+                                <div class="mb-4 p-3 border rounded bg-light" id="shipmentTypeBox">
                                     <label class="form-label fw-semibold d-block">Shipment Type <span class="text-danger">*</span></label>
                                     <div class="d-flex flex-wrap gap-4">
                                         <div class="form-check">
@@ -636,6 +636,43 @@
             
             // Initial calculation
             calculateTrueCost();
+
+            // Process Receive used to "do nothing" when a required field was
+            // empty: the browser blocked the submit and jumped to the field with
+            // a small bubble that was easy to miss (client ticket 18, usually no
+            // Shipment Type chosen). Now the cashier is told exactly what is missing.
+            const receiveForm = document.getElementById('receiveForm');
+            if (receiveForm) {
+                receiveForm.addEventListener('submit', function(e) {
+                    const invalid = receiveForm.querySelector(':invalid');
+                    if (!invalid) {
+                        const btn = receiveForm.querySelector('button[type="submit"]');
+                        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...'; }
+                        return;
+                    }
+                    e.preventDefault();
+
+                    let message, target = invalid;
+                    if (invalid.name === 'shipment_type') {
+                        message = 'Choose the Shipment Type: Truck or Container.';
+                        target = document.getElementById('shipmentTypeBox');
+                    } else if (invalid.name === 'invoice_number') {
+                        message = 'Enter the Vendor Invoice Number.';
+                    } else {
+                        const row = invalid.closest('tr');
+                        const product = row ? (row.querySelector('td:nth-child(2) .fw-bold, td:nth-child(2)')?.innerText || '').split('\n')[0].trim() : '';
+                        message = (product ? product + ': ' : '') + invalid.validationMessage;
+                    }
+
+                    target.classList.add('border-danger');
+                    if (invalid.classList.contains('form-control')) invalid.classList.add('is-invalid');
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    Swal.fire({ icon: 'warning', title: 'Cannot process yet', text: message });
+                });
+                receiveForm.querySelectorAll('input[name="shipment_type"]').forEach(r => r.addEventListener('change', () =>
+                    document.getElementById('shipmentTypeBox').classList.remove('border-danger')));
+                receiveForm.addEventListener('input', e => e.target.classList.remove('is-invalid'));
+            }
 
             // Scanner Logic
             const scannerInput = document.getElementById('scannerInput');
