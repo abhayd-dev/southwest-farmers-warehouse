@@ -267,6 +267,13 @@
                                 <span class="sidebar-text">Vendors</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('warehouse.vendor-containers.index') }}"
+                                class="tp-link {{ request()->routeIs('warehouse.vendor-containers.*') ? 'active' : '' }}">
+                                <iconify-icon icon="tabler:box"></iconify-icon>
+                                <span class="sidebar-text">Pallets &amp; Dividers</span>
+                            </a>
+                        </li>
                     @endif
 
                     @if (auth()->user()->can('view_po'))

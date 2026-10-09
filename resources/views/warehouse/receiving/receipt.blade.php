@@ -179,7 +179,7 @@
             <td class="right-header">
                 {{-- <div class="received-order-text"></div> --}}
                 <div class="po-title">Received Orders</div>
-                <div class="po-number-small">#{{ $po->po_number }}</div>
+                <div class="po-number-small">{{ $po->po_number }}</div>
             </td>
         </tr>
     </table>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Shortage Report — PO #{{ $po->po_number }}</title>
+    <title>Shortage Report — {{ $po->po_number }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; font-size: 12px; color: #222; }
@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Shortage Report — PO #{{ $po->po_number }}</h1>
+        <h1>Shortage Report — {{ $po->po_number }}</h1>
         <p>Vendor: {{ $po->vendor->name ?? 'N/A' }}</p>
     </div>
 

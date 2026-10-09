@@ -186,7 +186,10 @@ class StoreController extends Controller
             ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $store->store_user_id))
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
-        return view('warehouse.stores.edit', compact('store', 'markets', 'storeGroups', 'storeStaff'));
+        // Surface when the store side's General Manager doesn't match who's
+        // picked here, so admins notice the drift instead of it going unseen.
+        $currentGeneralManager = $store->currentGeneralManager();
+        return view('warehouse.stores.edit', compact('store', 'markets', 'storeGroups', 'storeStaff', 'currentGeneralManager'));
     }
 
     public function update(Request $request, $id)

@@ -75,6 +75,9 @@ return [
 
         // Procurement
         'warehouse.vendors.*' => 'view_vendors',
+        'warehouse.vendor-containers.reconcile' => 'manage_vendors',
+        'warehouse.vendor-containers.*' => 'view_vendors',
+        'warehouse.receiving.return-containers' => 'receive_po',
         'warehouse.purchase-orders.over-receipt' => 'approve_po',
         'warehouse.purchase-orders.*' => 'view_po',
         'warehouse.receiving.*' => 'view_po',

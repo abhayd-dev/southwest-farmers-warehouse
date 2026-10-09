@@ -115,7 +115,7 @@
         e.preventDefault();
         const url = this.href;
         Swal.fire({
-            title: 'Cancel PO #{{ $po->po_number ?? '' }}?',
+            title: 'Cancel {{ $po->po_number ?? '' }}?',
             text: 'The order will be cancelled. This cannot be undone.',
             icon: 'warning',
             showCancelButton: true,

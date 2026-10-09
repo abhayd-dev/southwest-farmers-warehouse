@@ -353,6 +353,8 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             ->names('warehouse.vendors')
             ->except(['show']);
         Route::post('vendors/status', [VendorController::class, 'changeStatus'])->name('warehouse.vendors.status');
+        Route::get('vendor-containers', [\App\Http\Controllers\Warehouse\Procurement\VendorContainerController::class, 'index'])->name('warehouse.vendor-containers.index');
+        Route::post('vendor-containers/{vendor}/reconcile', [\App\Http\Controllers\Warehouse\Procurement\VendorContainerController::class, 'reconcile'])->name('warehouse.vendor-containers.reconcile');
         // No destroy(): POs are cancelled, never deleted. The resource route used to exist and 500'd.
         Route::resource('purchase-orders', PurchaseOrderController::class)->except(['destroy'])->names('warehouse.purchase-orders');
         Route::post('purchase-orders/bulk-store-draft', [PurchaseOrderController::class, 'bulkStoreDraft'])->name('warehouse.purchase-orders.bulk-store-draft');
@@ -370,6 +372,8 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
         Route::post('purchase-orders/{purchase_order}/revert-draft', [PurchaseOrderController::class, 'revertToDraft'])->name('warehouse.purchase-orders.revert-draft');
         Route::post('purchase-orders/{purchase_order}/send-approval', [PurchaseOrderController::class, 'sendApproval'])->name('warehouse.purchase-orders.send-approval');
         Route::post('purchase-orders/{purchaseOrder}/over-receipt', [PurchaseOrderController::class, 'overReceiptDecision'])->name('warehouse.purchase-orders.over-receipt');
+        Route::get('purchase-orders/{purchaseOrder}/correct', [PurchaseOrderController::class, 'correctForm'])->name('warehouse.purchase-orders.correct-form');
+        Route::post('purchase-orders/{purchaseOrder}/correct', [PurchaseOrderController::class, 'correct'])->name('warehouse.purchase-orders.correct');
 
         // (PO Approval Routes moved outside the auth group — see top of file:
         // an external approver clicking the email link is not logged in.)
@@ -382,6 +386,7 @@ Route::middleware(['auth', 'route_permission'])->group(function () {
             Route::get('/{purchaseOrder}', 'show')->name('show');
             Route::get('/{purchaseOrder}/receipt', 'receipt')->name('receipt');
             Route::post('/{purchaseOrder}/upload-invoice', 'uploadInvoice')->name('upload-invoice');
+            Route::post('/{purchaseOrder}/return-containers', 'returnContainers')->name('return-containers');
         });
 
         Route::controller(\App\Http\Controllers\Warehouse\Procurement\CompletedOrderController::class)->prefix('completed-orders')->name('warehouse.completed-orders.')->group(function () {

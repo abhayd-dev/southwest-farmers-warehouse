@@ -15,6 +15,7 @@ use App\Services\PurchaseOrderService;
 use App\Services\ApprovalService;
 use App\Services\PurchaseOrderListing;
 use App\Services\VendorCommunicationService;
+use App\Services\VendorContainerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -25,15 +26,18 @@ class PurchaseOrderController extends Controller
     protected $poService;
     protected $approvalService;
     protected $vendorService;
+    protected $containerService;
 
     public function __construct(
         PurchaseOrderService $poService,
         ApprovalService $approvalService,
-        VendorCommunicationService $vendorService
+        VendorCommunicationService $vendorService,
+        VendorContainerService $containerService
     ) {
         $this->poService = $poService;
         $this->approvalService = $approvalService;
         $this->vendorService = $vendorService;
+        $this->containerService = $containerService;
     }
 
     /** 403 unless the user holds at least one of the permissions (Super Admin always passes). */
@@ -266,6 +270,57 @@ class PurchaseOrderController extends Controller
             : 'Everything ordered had been received.'));
     }
 
+    /**
+     * Client ticket 22: "There is no way to correct a completed order" --
+     * admin-only, since Received Qty corrections move warehouse stock.
+     */
+    public function correctForm(PurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeAnyOf('override_po_quantities');
+        abort_unless($purchaseOrder->status === PurchaseOrder::STATUS_COMPLETED, 403, 'Only completed orders can be corrected.');
+
+        $purchaseOrder->load(['items.product', 'vendor']);
+        return view('warehouse.purchase-orders.correct', compact('purchaseOrder'));
+    }
+
+    public function correct(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        $this->authorizeAnyOf('override_po_quantities');
+        abort_unless($purchaseOrder->status === PurchaseOrder::STATUS_COMPLETED, 403, 'Only completed orders can be corrected.');
+
+        $request->validate([
+            'vendor_invoice_number' => 'nullable|string|max:255',
+            'duties' => 'nullable|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'taxes' => 'nullable|numeric|min:0',
+            'transportation_cost' => 'nullable|numeric|min:0',
+            'demurrage' => 'nullable|numeric|min:0',
+            'reason' => 'required|string|max:500',
+            'items' => 'required|array',
+            'items.*.requested_quantity' => 'required|numeric|min:0',
+            'items.*.received_quantity' => 'required|numeric|min:0',
+            'items.*.unit_cost' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $this->poService->correctCompletedOrder(
+                $purchaseOrder,
+                $request->items,
+                $request->only(['vendor_invoice_number', 'duties', 'shipping_cost', 'taxes', 'transportation_cost', 'demurrage']),
+                $request->reason,
+                auth()->user()->name
+            );
+
+            return redirect()->route('warehouse.purchase-orders.show', $purchaseOrder->id)
+                ->with('success', 'Order corrected.');
+        } catch (\App\Exceptions\BusinessRuleException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('PO correction failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->withInput()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
+        }
+    }
+
     public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
         set_time_limit(300);
@@ -293,13 +348,20 @@ class PurchaseOrderController extends Controller
                 $request->boolean('complete_now')
             );
 
+            $purchaseOrder->refresh();
+
+            $palletsReceived = (float) $request->input('pallets_received', 0);
+            $dividersReceived = (float) $request->input('dividers_received', 0);
+            if (($palletsReceived > 0 || $dividersReceived > 0) && $purchaseOrder->vendor) {
+                $this->containerService->receiveOnPO($purchaseOrder, $palletsReceived, $dividersReceived, auth()->user()->name);
+            }
+
             NotificationService::sendToAdmins(
                 'Inventory Updated',
                 "Stock for PO #{$purchaseOrder->po_number} has been received.",
                 'success'
             );
 
-            $purchaseOrder->refresh();
             $message = 'Inventory updated successfully.';
             if ($purchaseOrder->short_close_lines && $purchaseOrder->short_closed_at?->gt(now()->subMinute())) {
                 $message .= ' The order is completed; the invoice now covers only what was received ($' . number_format($purchaseOrder->total_amount, 2) . ').';

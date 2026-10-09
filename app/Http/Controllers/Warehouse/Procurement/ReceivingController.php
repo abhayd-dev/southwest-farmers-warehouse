@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Warehouse\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
+use App\Services\VendorContainerService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
@@ -11,6 +12,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReceivingController extends Controller
 {
+    protected $containerService;
+
+    public function __construct(VendorContainerService $containerService)
+    {
+        $this->containerService = $containerService;
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -110,7 +118,44 @@ class ReceivingController extends Controller
             return redirect()->route('warehouse.receiving.index')->with('error', 'This order cannot be received at this time.');
         }
 
-        return view('warehouse.receiving.show', compact('purchaseOrder'));
+        $containerBalance = $purchaseOrder->vendor ? $this->containerService->getBalance($purchaseOrder->vendor) : null;
+
+        return view('warehouse.receiving.show', compact('purchaseOrder', 'containerBalance'));
+    }
+
+    /**
+     * Client ticket 23, requirement 2: send a count of pallets/dividers back
+     * to this PO's vendor, depleting that vendor's container balance.
+     */
+    public function returnContainers(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        abort_unless(auth()->user()->can('receive_po'), 403);
+
+        $request->validate([
+            'pallets_returned' => 'nullable|numeric|min:0',
+            'dividers_returned' => 'nullable|numeric|min:0',
+        ]);
+
+        if (!$purchaseOrder->vendor) {
+            return back()->with('error', 'This order has no vendor to return containers to.');
+        }
+
+        try {
+            $this->containerService->returnToVendor(
+                $purchaseOrder->vendor,
+                (float) $request->input('pallets_returned', 0),
+                (float) $request->input('dividers_returned', 0),
+                auth()->user()->name,
+                $purchaseOrder
+            );
+
+            return back()->with('success', 'Containers sent back to ' . $purchaseOrder->vendor->name . '.');
+        } catch (\App\Exceptions\BusinessRuleException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Container return failed: ' . $e->getMessage(), ['exception' => $e]);
+            return back()->with(\App\Support\ErrorMessage::flash($e, 'Something went wrong. Please try again later.'));
+        }
     }
 
     public function receipt(PurchaseOrder $purchaseOrder)

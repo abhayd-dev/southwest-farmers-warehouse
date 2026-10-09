@@ -327,7 +327,7 @@
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="items[${rowIdx}][quantity]" class="form-control qty-input text-center" min="1" value="1" oninput="calculateRow(${rowIdx})" required style="min-width: 80px;">
+                        <input type="number" name="items[${rowIdx}][quantity]" class="form-control qty-input text-center" min="0.01" step="0.01" value="1" oninput="calculateRow(${rowIdx})" required style="min-width: 80px;">
                     </td>
                     <td>
                         <div class="input-group input-group-sm" style="min-width: 120px;">

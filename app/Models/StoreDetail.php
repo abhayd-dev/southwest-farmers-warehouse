@@ -203,6 +203,19 @@ class StoreDetail extends Model
     }
 
     /**
+     * The staff member currently holding the "General Manager" role at this
+     * store, per the store side's own role assignment (store_role_id), which
+     * is set independently of the warehouse-side "Assigned Manager" pick.
+     */
+    public function currentGeneralManager()
+    {
+        return StoreUser::where('store_id', $this->id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'General Manager'))
+            ->first();
+    }
+
+    /**
      * Activate store.
      */
     public function activate()

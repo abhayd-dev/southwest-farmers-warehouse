@@ -40,6 +40,16 @@ class Vendor extends Model
         return $this->hasMany(PurchaseOrder::class);
     }
 
+    public function containerBalance()
+    {
+        return $this->hasOne(VendorContainerBalance::class);
+    }
+
+    public function containerTransactions()
+    {
+        return $this->hasMany(VendorContainerTransaction::class)->latest();
+    }
+
     public function updateRating()
     {
         $totalOrders = $this->purchaseOrders()

@@ -32,6 +32,10 @@ class ReceivePurchaseOrderRequest extends FormRequest
             // Decimals allowed (QA: e.g. produce received by weight).
             'items.*.receive_qty' => 'nullable|numeric|min:0',
             'items.*.ordered_qty' => 'nullable|numeric|min:0',
+            // Client ticket 23: returnable pallet/divider counts received
+            // alongside this shipment, credited to the vendor's balance.
+            'pallets_received' => 'nullable|numeric|min:0',
+            'dividers_received' => 'nullable|numeric|min:0',
         ];
     }
 }

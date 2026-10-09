@@ -14,13 +14,13 @@
                                 </li>
                                 <li class="breadcrumb-item"><a href="{{ route('warehouse.purchase-orders.index') }}"
                                         class="text-decoration-none">Purchase Orders</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">#{{ $purchaseOrder->po_number }}
+                                <li class="breadcrumb-item active" aria-current="page">{{ $purchaseOrder->po_number }}
                                 </li>
                             </ol>
                         </nav>
                         <div class="d-flex align-items-center gap-3">
                             <h4 class="fw-bold mb-0 text-dark">
-                                PO #{{ $purchaseOrder->po_number }}
+                                {{ $purchaseOrder->po_number }}
                             </h4>
                             @php
                                 $displayStatus = strtoupper($purchaseOrder->status);
@@ -83,7 +83,7 @@
                                 </form>
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
+                                    data-confirm-title="Cancel {{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -123,7 +123,7 @@
                                 @endif
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
+                                    data-confirm-title="Cancel {{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -148,7 +148,7 @@
                                 @endif
                                 <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                     method="POST" class="d-inline"
-                                    data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
+                                    data-confirm-title="Cancel {{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                     @csrf
                                     <button class="btn btn-danger shadow-sm">
                                         <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -171,7 +171,7 @@
                                     </form>
                                     <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                         method="POST" class="d-inline"
-                                        data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
+                                        data-confirm-title="Cancel {{ $purchaseOrder->po_number }}?" data-confirm="The whole order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                         @csrf
                                         <button class="btn btn-danger shadow-sm">
                                             <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -202,7 +202,7 @@
                             @endif
                             <form action="{{ route('warehouse.purchase-orders.cancel', $purchaseOrder->id) }}"
                                 method="POST" class="d-inline"
-                                data-confirm-title="Cancel PO #{{ $purchaseOrder->po_number }}?" data-confirm="The order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
+                                data-confirm-title="Cancel {{ $purchaseOrder->po_number }}?" data-confirm="The order will be cancelled. This cannot be undone." data-confirm-button="Yes, cancel order" data-cancel-button="No, keep it">
                                 @csrf
                                 <button class="btn btn-danger shadow-sm">
                                     <i class="mdi mdi-cancel me-1"></i> Cancel order
@@ -228,6 +228,12 @@
                                     @csrf
                                     <button type="submit" class="btn btn-success shadow-sm"><i class="mdi mdi-check-all me-1"></i> Complete Order</button>
                                 </form>
+                            @endif
+                            @if ($purchaseOrder->status === 'completed' && auth()->user()->can('override_po_quantities'))
+                                <a href="{{ route('warehouse.purchase-orders.correct-form', $purchaseOrder->id) }}"
+                                    class="btn btn-outline-warning shadow-sm">
+                                    <i class="mdi mdi-file-document-edit-outline me-1"></i> Correct Order
+                                </a>
                             @endif
                         @endif
 
@@ -288,6 +294,17 @@
                             </a>
                         </div>
                         @endif
+                        @php
+                            // Same breakdown as the printed receipt: items subtotal plus
+                            // duties, shipping and taxes make up the total (ticket 19).
+                            $summaryFees = (float) $purchaseOrder->duties + (float) $purchaseOrder->shipping_cost + (float) $purchaseOrder->taxes;
+                        @endphp
+                        @if ($summaryFees > 0)
+                        <div class="d-flex justify-content-between mb-2 border-top pt-2 mt-2">
+                            <span class="text-muted">Subtotal (items):</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->total_amount, 2) }}</span>
+                        </div>
+                        @endif
                         @if ($purchaseOrder->duties > 0)
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Duties:</span>
@@ -309,7 +326,7 @@
                         <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
                             <span class="text-muted">Total Amount:</span>
                             <span
-                                class="fw-bold text-success fs-4">${{ number_format($purchaseOrder->total_amount, 2) }}</span>
+                                class="fw-bold text-success fs-4">${{ number_format($purchaseOrder->total_amount + $summaryFees, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -339,7 +356,7 @@
                                         </h6>
                                         <small class="text-muted">Approver:
                                             {{ $purchaseOrder->approval_email }}</small><br>
-                                        <x-email-verify-badge :verified="$purchaseOrder->approval_email_verified_at" type="po_approval" :id="$purchaseOrder->id" :label="'Purchase Order #' . $purchaseOrder->po_number . ' approvals'" />
+                                        <x-email-verify-badge :verified="$purchaseOrder->approval_email_verified_at" type="po_approval" :id="$purchaseOrder->id" :label="'Purchase Order ' . $purchaseOrder->po_number . ' approvals'" />
                                         @if ($purchaseOrder->approver_phone)
                                             <small class="text-muted">Approver's Number:
                                                 {{ $purchaseOrder->approver_phone }}</small>

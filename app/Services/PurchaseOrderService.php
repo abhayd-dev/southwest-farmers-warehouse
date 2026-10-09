@@ -436,6 +436,164 @@ class PurchaseOrderService
         return $lines;
     }
 
+    /**
+     * Admin-only correction to an already-completed order (client ticket 22:
+     * "no way to correct a completed order"). Ordered Qty and Unit Cost are
+     * just corrected in place; Received Qty also moves warehouse stock by the
+     * delta -- both product_stocks and the batch this PO created, because
+     * store dispatch draws from batches (StockRequestService::dispatchToStore).
+     * Lowering it is refused if this PO's batch no longer holds that much:
+     * the stock has already gone to a store and can't be clawed back here.
+     */
+    public function correctCompletedOrder(PurchaseOrder $po, array $items, array $meta, string $reason, string $correctedBy): PurchaseOrder
+    {
+        return DB::transaction(function () use ($po, $items, $meta, $reason, $correctedBy) {
+            $po = PurchaseOrder::lockForUpdate()->findOrFail($po->id);
+            abort_unless($po->status === PurchaseOrder::STATUS_COMPLETED, 422, 'Only completed orders can be corrected.');
+
+            $changes = [];
+
+            foreach ($items as $itemId => $data) {
+                $item = PurchaseOrderItem::where('purchase_order_id', $po->id)->findOrFail($itemId);
+
+                $newRequested = round((float) ($data['requested_quantity'] ?? $item->requested_quantity), 2);
+                $newReceived = round((float) ($data['received_quantity'] ?? $item->received_quantity), 2);
+                $newUnitCost = round((float) ($data['unit_cost'] ?? $item->unit_cost), 2);
+
+                $oldRequested = (float) $item->requested_quantity;
+                $oldReceived = (float) $item->received_quantity;
+                $oldUnitCost = (float) $item->unit_cost;
+                $deltaQty = round($newReceived - $oldReceived, 2);
+
+                if (abs($deltaQty) > 0.001) {
+                    $productName = $item->product->product_name ?? ('Product #' . $item->product_id);
+
+                    $stock = ProductStock::where('product_id', $item->product_id)
+                        ->where('warehouse_id', 1)
+                        ->lockForUpdate()
+                        ->first();
+                    $currentStockQty = $stock ? (float) $stock->quantity : 0;
+                    $newStockQty = round($currentStockQty + $deltaQty, 2);
+
+                    // The batch(es) this PO's receipts created for this product, newest first.
+                    $batchIds = StockTransaction::where('type', 'purchase_in')
+                        ->where('reference_id', (string) $po->id)
+                        ->where('product_id', $item->product_id)
+                        ->whereNotNull('product_batch_id')
+                        ->pluck('product_batch_id');
+                    $batches = ProductBatch::whereIn('id', $batchIds)
+                        ->where('warehouse_id', 1)
+                        ->orderByDesc('id')
+                        ->lockForUpdate()
+                        ->get();
+
+                    $batchChanges = []; // [ProductBatch|null, signed qty]
+                    if ($deltaQty > 0) {
+                        $batch = $batches->first();
+                        if (!$batch) {
+                            $batch = ProductBatch::create([
+                                'product_id' => $item->product_id,
+                                'warehouse_id' => 1,
+                                'batch_number' => 'BATCH-' . date('Ymd') . '-' . str_pad($item->product_id, 4, '0', STR_PAD_LEFT) . '-C' . rand(100, 999),
+                                'cost_price' => (float) ($item->receiving_unit_cost ?? $item->unit_cost),
+                                'quantity' => 0,
+                                'is_active' => true,
+                            ]);
+                        }
+                        $batchChanges[] = [$batch, $deltaQty];
+                    } else {
+                        $toRemove = abs($deltaQty);
+                        $stillInBatches = round((float) $batches->sum('quantity'), 2);
+                        if ($stillInBatches + 0.001 < $toRemove || $newStockQty < 0) {
+                            throw new \App\Exceptions\BusinessRuleException(
+                                "{$productName}: can't lower Received Qty by {$toRemove} -- only {$stillInBatches} of what this "
+                                . 'order brought in is still in the warehouse (the rest has gone out to stores). '
+                                . 'Bring that stock back first, then correct the order.'
+                            );
+                        }
+                        foreach ($batches as $batch) {
+                            if ($toRemove <= 0.001) {
+                                break;
+                            }
+                            $take = round(min((float) $batch->quantity, $toRemove), 2);
+                            if ($take > 0) {
+                                $batchChanges[] = [$batch, -$take];
+                                $toRemove = round($toRemove - $take, 2);
+                            }
+                        }
+                    }
+
+                    if ($stock) {
+                        $stock->quantity = $newStockQty;
+                        $stock->save();
+                    } else {
+                        ProductStock::create([
+                            'product_id' => $item->product_id,
+                            'warehouse_id' => 1,
+                            'quantity' => $newStockQty,
+                        ]);
+                    }
+
+                    foreach ($batchChanges as [$batch, $change]) {
+                        $batch->quantity = round((float) $batch->quantity + $change, 2);
+                        $batch->save();
+
+                        StockTransaction::create([
+                            'product_id' => $item->product_id,
+                            'warehouse_id' => 1,
+                            'product_batch_id' => $batch->id,
+                            'type' => 'adjustment',
+                            'quantity_change' => $change,
+                            'running_balance' => $newStockQty,
+                            'ware_user_id' => Auth::id(),
+                            'reference_id' => $po->id,
+                            'remarks' => "Correction on PO# {$po->po_number} by {$correctedBy}: "
+                                . "Received Qty {$oldReceived} -> {$newReceived}. Reason: {$reason}",
+                        ]);
+                    }
+                }
+
+                if (abs($newRequested - $oldRequested) > 0.001
+                    || abs($deltaQty) > 0.001
+                    || abs($newUnitCost - $oldUnitCost) > 0.001) {
+                    $changes[] = sprintf(
+                        '%s: Ordered %s->%s, Received %s->%s, Cost $%s->$%s',
+                        $item->product->product_name ?? ('Product #' . $item->product_id),
+                        $oldRequested, $newRequested,
+                        $oldReceived, $newReceived,
+                        number_format($oldUnitCost, 2), number_format($newUnitCost, 2)
+                    );
+                }
+
+                $item->requested_quantity = $newRequested;
+                $item->received_quantity = $newReceived;
+                $item->unit_cost = $newUnitCost;
+                $item->total_cost = round($newRequested * $newUnitCost, 2);
+                $item->save();
+            }
+
+            $po->vendor_invoice_number = $meta['vendor_invoice_number'] ?? $po->vendor_invoice_number;
+            $po->duties = $meta['duties'] ?? 0;
+            $po->shipping_cost = $meta['shipping_cost'] ?? 0;
+            $po->taxes = $meta['taxes'] ?? 0;
+            $po->transportation_cost = $meta['transportation_cost'] ?? 0;
+            $po->demurrage = $meta['demurrage'] ?? 0;
+            $po->total_amount = $po->items()->get()->sum(fn ($i) => $i->requested_quantity * $i->unit_cost);
+            $po->save();
+
+            if ($changes) {
+                NotificationService::sendToAdmins(
+                    'Completed PO Corrected',
+                    "PO #{$po->po_number} corrected by {$correctedBy}: " . implode('; ', $changes) . '. Reason: ' . $reason,
+                    'warning',
+                    route('warehouse.purchase-orders.show', $po->id)
+                );
+            }
+
+            return $po;
+        });
+    }
+
     private function qty($value): string
     {
         return rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');

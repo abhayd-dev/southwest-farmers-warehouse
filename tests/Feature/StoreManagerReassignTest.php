@@ -133,4 +133,21 @@ class StoreManagerReassignTest extends TestCase
         $staff = StoreUser::where('email', 'added@test.local')->firstOrFail();
         $this->assertSame([$this->cashierRole->id], $this->pivotRoles($staff));
     }
+
+    /** Client ticket 20: Bissonnet showed "Super Admin" while the store side's General Manager is Mr. Ike. */
+    public function test_edit_page_flags_when_the_store_sides_general_manager_is_someone_else(): void
+    {
+        $gm = $this->storeUser('Ike Ogbodick', StoreRole::create(['name' => 'General Manager', 'guard_name' => 'store_user']));
+        $admin = $this->superAdmin();
+
+        $this->actingAs($admin, 'warehouse')->get(route('warehouse.stores.edit', $this->store->id))->assertOk()
+            ->assertSee('has <strong>Ike Ogbodick</strong>', false)
+            ->assertSee("current\n                                    manager's store access (Super Admin)", false);
+
+        $this->update(['store_user_id' => $gm->id])->assertSessionHasNoErrors();
+        $this->assertSame($gm->id, $this->store->refresh()->store_user_id);
+
+        $this->actingAs($admin, 'warehouse')->get(route('warehouse.stores.edit', $this->store->id))->assertOk()
+            ->assertDontSee('as General Manager, which doesn');
+    }
 }

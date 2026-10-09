@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cost Increase Approval - PO #' . $purchaseOrder->po_number)
+@section('title', 'Cost Increase Approval - ' . $purchaseOrder->po_number)
 
 @section('content')
 <div class="container-fluid">
@@ -11,7 +11,7 @@
                     <h5 class="fw-bold mb-0"><i class="mdi mdi-alert-circle-outline me-2"></i> Action Required: Cost Increase Approval</h5>
                 </div>
                 <div class="card-body p-4">
-                    <p class="fs-5">The receiving process for <strong>PO #{{ $purchaseOrder->po_number }}</strong> from <strong>{{ $purchaseOrder->vendor->name ?? 'Vendor' }}</strong> has been paused.</p>
+                    <p class="fs-5">The receiving process for <strong>{{ $purchaseOrder->po_number }}</strong> from <strong>{{ $purchaseOrder->vendor->name ?? 'Vendor' }}</strong> has been paused.</p>
                     
                     <p>One or more items in this order will result in a <strong>True Cost</strong> (including shipping, duties, taxes, demurrage, etc.) that is higher than the product's current cost in the catalog.</p>
                     

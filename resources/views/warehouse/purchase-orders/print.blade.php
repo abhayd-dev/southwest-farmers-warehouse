@@ -175,7 +175,7 @@
                 </td>
                 <td style="width: 40%; vertical-align: top;">
                     <h2 class="po-title">PURCHASE ORDER</h2>
-                    <div class="po-number">#{{ $po->po_number }}</div>
+                    <div class="po-number">{{ $po->po_number }}</div>
                 </td>
             </tr>
         </table>

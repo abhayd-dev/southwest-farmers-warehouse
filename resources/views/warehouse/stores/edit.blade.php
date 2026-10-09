@@ -142,6 +142,16 @@
                             <h5 class="card-title text-info mb-0"><i class="mdi mdi-account-tie me-2"></i> Assigned Manager</h5>
                         </div>
                         <div class="card-body pt-0">
+                            @if($currentGeneralManager && $currentGeneralManager->id != $store->store_user_id)
+                                <div class="alert alert-warning small py-2 px-3 mb-3">
+                                    <i class="mdi mdi-alert-outline me-1"></i>
+                                    The Store side has <strong>{{ $currentGeneralManager->name }}</strong>
+                                    ({{ $currentGeneralManager->email }}) as General Manager, which doesn't
+                                    match the manager assigned here. To match, pick them below and click
+                                    <strong>Update Store</strong>. Note: they will also get the current
+                                    manager's store access{{ optional(optional($store->manager)->role)->name ? ' (' . $store->manager->role->name . ')' : '' }}.
+                                </div>
+                            @endif
                             @if($store->manager)
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="avatar-sm bg-white text-info rounded-circle d-flex justify-content-center align-items-center shadow-sm me-3">

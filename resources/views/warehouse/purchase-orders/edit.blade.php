@@ -17,11 +17,11 @@
                                             Dashboard</a></li>
                                     <li class="breadcrumb-item"><a href="{{ route('warehouse.purchase-orders.index') }}"
                                             class="text-decoration-none">Purchase Orders</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Edit #{{ $purchaseOrder->po_number }}</li>
+                                    <li class="breadcrumb-item active" aria-current="page">Edit {{ $purchaseOrder->po_number }}</li>
                                 </ol>
                             </nav>
                             <h4 class="fw-bold mb-0 text-dark">
-                                <i class="mdi mdi-pencil text-primary"></i> Edit PO #{{ $purchaseOrder->po_number }}
+                                <i class="mdi mdi-pencil text-primary"></i> Edit {{ $purchaseOrder->po_number }}
                             </h4>
                         </div>
                         <div class="d-flex gap-2 w-100 w-md-auto justify-content-end">
@@ -178,7 +178,7 @@
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="items[${rowIdx}][quantity]" class="form-control qty-input text-center" min="1" value="1" oninput="calculateRow(${rowIdx})" required style="min-width: 80px;">
+                        <input type="number" name="items[${rowIdx}][quantity]" class="form-control qty-input text-center" min="0.01" step="0.01" value="1" oninput="calculateRow(${rowIdx})" required style="min-width: 80px;">
                     </td>
                     <td>
                         <div class="input-group input-group-sm" style="min-width: 120px;">

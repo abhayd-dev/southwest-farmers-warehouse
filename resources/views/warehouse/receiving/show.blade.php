@@ -1,15 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Receive Purchase Order #' . $purchaseOrder->po_number)
+@section('title', 'Receive Purchase Order ' . $purchaseOrder->po_number)
 
 @section('content')
     <div class="container-fluid">
-        <div class="row mb-4 align-items-center">
-            <div class="col-12 d-flex justify-content-between">
-                <h4 class="mb-0 font-weight-bold text-dark">
+        <div class="mb-4 bg-white p-3 shadow-sm rounded">
+            <nav class="mb-1">
+                <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="page-breadcrumb-link">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('warehouse.receiving.index') }}" class="page-breadcrumb-link">Receiving Orders</a></li>
+                    <li class="breadcrumb-item text-muted">{{ $purchaseOrder->po_number }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                <h4 class="mb-0 fw-bold text-dark">
                     <i class="mdi mdi-truck-check text-primary me-2"></i> Receive Order: {{ $purchaseOrder->po_number }}
                 </h4>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     @if ($purchaseOrder->invoice_document)
                         <a href="{{ $purchaseOrder->invoice_document_url }}" target="_blank"
                             class="btn btn-outline-info shadow-sm">
@@ -42,7 +49,6 @@
                 </div>
             </div>
         </div>
-
 
 
         <div class="row">
@@ -431,6 +437,50 @@
                                                 @endif
                                             @endforeach
 
+                                            @if ($hasPendingItems && $purchaseOrder->vendor)
+                                                {{-- Client ticket 23: pallets/dividers received with this
+                                                     shipment, credited to the vendor's balance. Ordered Qty
+                                                     is always 0 -- there's no PO line for these. --}}
+                                                <tr class="table-light">
+                                                    <td class="px-3">-</td>
+                                                    <td class="px-3"><span class="fw-semibold text-dark">Pallets</span></td>
+                                                    <td class="text-center">
+                                                        <input type="number" class="form-control form-control-sm text-center" value="0" disabled>
+                                                    </td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center">
+                                                        <input type="number" name="pallets_received"
+                                                            class="form-control form-control-sm text-center fw-bold text-primary"
+                                                            min="0" step="0.01" value="0">
+                                                    </td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                </tr>
+                                                <tr class="table-light">
+                                                    <td class="px-3">-</td>
+                                                    <td class="px-3"><span class="fw-semibold text-dark">Dividers</span></td>
+                                                    <td class="text-center">
+                                                        <input type="number" class="form-control form-control-sm text-center" value="0" disabled>
+                                                    </td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center">
+                                                        <input type="number" name="dividers_received"
+                                                            class="form-control form-control-sm text-center fw-bold text-primary"
+                                                            min="0" step="0.01" value="0">
+                                                    </td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                    <td class="text-center text-muted">-</td>
+                                                </tr>
+                                            @endif
+
                                             @if (!$hasPendingItems)
                                                 <tr>
                                                     <td colspan="11" class="text-center py-4 text-success fw-bold">
@@ -458,6 +508,41 @@
                         <i class="mdi mdi-lock-alert me-3 fs-4"></i>
                         <div>
                             <strong>Access Restricted:</strong> Only Inventory Managers can receive stock.
+                        </div>
+                    </div>
+                @endif
+
+                {{-- RETURN PALLETS/DIVIDERS TO VENDOR --}}
+                @if ($purchaseOrder->vendor && auth()->user()->can('receive_po'))
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <h5 class="fw-bold text-dark mb-0"><i class="mdi mdi-pallet me-2 text-primary"></i> Return
+                                Pallets &amp; Dividers to {{ $purchaseOrder->vendor->name }}</h5>
+                            <span class="text-muted small">
+                                On hand: {{ number_format($containerBalance->pallet_count ?? 0, 2) }} pallet(s),
+                                {{ number_format($containerBalance->divider_count ?? 0, 2) }} divider(s)
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ route('warehouse.receiving.return-containers', $purchaseOrder->id) }}"
+                                method="POST" class="row g-3 align-items-end">
+                                @csrf
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-semibold small mb-1">Pallets Returning</label>
+                                    <input type="number" name="pallets_returned" class="form-control" min="0"
+                                        step="0.01" value="0">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label fw-semibold small mb-1">Dividers Returning</label>
+                                    <input type="number" name="dividers_returned" class="form-control" min="0"
+                                        step="0.01" value="0">
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="mdi mdi-truck-delivery-outline me-1"></i> Send Back to Vendor
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 @endif
@@ -645,33 +730,90 @@
             if (receiveForm) {
                 receiveForm.addEventListener('submit', function(e) {
                     const invalid = receiveForm.querySelector(':invalid');
-                    if (!invalid) {
-                        const btn = receiveForm.querySelector('button[type="submit"]');
-                        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...'; }
+                    if (invalid) {
+                        e.preventDefault();
+
+                        let message, target = invalid;
+                        if (invalid.name === 'shipment_type') {
+                            message = 'Choose the Shipment Type: Truck or Container.';
+                            target = document.getElementById('shipmentTypeBox');
+                        } else if (invalid.name === 'invoice_number') {
+                            message = 'Enter the Vendor Invoice Number.';
+                        } else {
+                            const row = invalid.closest('tr');
+                            const product = row ? (row.querySelector('td:nth-child(2) .fw-bold, td:nth-child(2)')?.innerText || '').split('\n')[0].trim() : '';
+                            message = (product ? product + ': ' : '') + invalid.validationMessage;
+                        }
+
+                        target.classList.add('border-danger');
+                        if (invalid.classList.contains('form-control')) invalid.classList.add('is-invalid');
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        Swal.fire({ icon: 'warning', title: 'Cannot process yet', text: message });
                         return;
                     }
-                    e.preventDefault();
 
-                    let message, target = invalid;
-                    if (invalid.name === 'shipment_type') {
-                        message = 'Choose the Shipment Type: Truck or Container.';
-                        target = document.getElementById('shipmentTypeBox');
-                    } else if (invalid.name === 'invoice_number') {
-                        message = 'Enter the Vendor Invoice Number.';
-                    } else {
-                        const row = invalid.closest('tr');
-                        const product = row ? (row.querySelector('td:nth-child(2) .fw-bold, td:nth-child(2)')?.innerText || '').split('\n')[0].trim() : '';
-                        message = (product ? product + ': ' : '') + invalid.validationMessage;
+                    const submitForReal = () => {
+                        const btn = receiveForm.querySelector('button[type="submit"]');
+                        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...'; }
+                    };
+
+                    // Already confirmed the mismatch once this submit -- proceed.
+                    if (receiveForm.dataset.qtyMismatchConfirmed === '1') {
+                        submitForReal();
+                        return;
                     }
 
-                    target.classList.add('border-danger');
-                    if (invalid.classList.contains('form-control')) invalid.classList.add('is-invalid');
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    Swal.fire({ icon: 'warning', title: 'Cannot process yet', text: message });
+                    // Client ticket 21: flag rows where what's being received
+                    // doesn't match what was ordered and ask before proceeding,
+                    // same as the Truck/Container confirmation above. Compared
+                    // against what is still due, so a second delivery that brings
+                    // in exactly the rest isn't flagged.
+                    const mismatched = [];
+                    document.querySelectorAll('.receive-qty-input').forEach(input => {
+                        const row = input.closest('tr');
+                        const orderedInput = row ? row.querySelector('.ordered-qty-input') : null;
+                        input.classList.remove('border-danger');
+                        if (!orderedInput) return;
+                        const pendingEl = row.querySelector('.pending-qty');
+                        const alreadyReceived = Math.max(0, (parseFloat(orderedInput.defaultValue) || 0) - (parseFloat(pendingEl?.dataset.pending) || 0));
+                        const expectedQty = Math.round(((parseFloat(orderedInput.value) || 0) - alreadyReceived) * 100) / 100;
+                        const receiveQty = Math.round((parseFloat(input.value) || 0) * 100) / 100;
+                        if (receiveQty !== expectedQty) {
+                            input.classList.add('border-danger');
+                            mismatched.push(input);
+                        }
+                    });
+
+                    if (mismatched.length > 0) {
+                        e.preventDefault();
+                        mismatched[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Quantity mismatch',
+                            text: 'You have a Receive Qty that does not match the ORDERED QTY, do you still wish to proceed with processing this order?',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, proceed',
+                            cancelButtonText: 'Cancel',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                receiveForm.dataset.qtyMismatchConfirmed = '1';
+                                receiveForm.requestSubmit();
+                            }
+                        });
+                        return;
+                    }
+
+                    submitForReal();
                 });
                 receiveForm.querySelectorAll('input[name="shipment_type"]').forEach(r => r.addEventListener('change', () =>
                     document.getElementById('shipmentTypeBox').classList.remove('border-danger')));
                 receiveForm.addEventListener('input', e => e.target.classList.remove('is-invalid'));
+                document.querySelectorAll('.receive-qty-input, .ordered-qty-input').forEach(input => {
+                    input.addEventListener('input', () => {
+                        input.closest('tr')?.querySelector('.receive-qty-input')?.classList.remove('border-danger');
+                        delete receiveForm.dataset.qtyMismatchConfirmed;
+                    });
+                });
             }
 
             // Scanner Logic

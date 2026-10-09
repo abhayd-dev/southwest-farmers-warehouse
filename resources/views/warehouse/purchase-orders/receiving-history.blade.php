@@ -11,7 +11,7 @@
                 </a>
                 <div>
                     <h4 class="fw-bold mb-0">Receiving History</h4>
-                    <small class="text-muted">PO #{{ $purchaseOrder->po_number }} &bull;
+                    <small class="text-muted">{{ $purchaseOrder->po_number }} &bull;
                         {{ $purchaseOrder->vendor->name }}</small>
                 </div>
             </div>
