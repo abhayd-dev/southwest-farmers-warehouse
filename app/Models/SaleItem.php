@@ -22,6 +22,11 @@ class SaleItem extends Model
         return $this->belongsTo(Sale::class);
     }
 
+    public function menuItem()
+    {
+        return $this->belongsTo(MenuItem::class);
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);

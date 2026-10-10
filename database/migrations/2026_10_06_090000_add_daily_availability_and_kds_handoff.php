@@ -100,6 +100,12 @@ return new class extends Migration
         if (DB::connection()->getDriverName() === 'pgsql' && Schema::hasColumn('sales', 'kitchen_status')) {
             DB::statement('ALTER TABLE sales DROP CONSTRAINT IF EXISTS sales_kitchen_status_check');
             DB::statement("ALTER TABLE sales ADD CONSTRAINT sales_kitchen_status_check CHECK (kitchen_status IN ('" . implode("','", self::KDS_STATUSES) . "'))");
+        } elseif (Schema::hasColumn('sales', 'kitchen_status')) {
+            // SQLite / MySQL enums can't simply gain a value: make it a plain
+            // string (the allowed steps are enforced by the KDS controllers).
+            Schema::table('sales', function (Blueprint $table) {
+                $table->string('kitchen_status', 20)->default('New')->change();
+            });
         }
     }
 

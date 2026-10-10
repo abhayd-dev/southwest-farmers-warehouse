@@ -23,6 +23,14 @@ class Sale extends Model
         'kitchen_status',
         'order_type',
         'special_instructions',
+        'kitchen_cancel_reason',
+        'kitchen_status_changed_at',
+        'kitchen_status_changed_by',
+    ];
+
+    protected $casts = [
+        'due_at' => 'datetime',
+        'kitchen_status_changed_at' => 'datetime',
     ];
 
     public function store()
