@@ -261,6 +261,12 @@
     <table style="width: 100%; margin-top: 20px;">
         <tr>
             <td style="width: 60%; vertical-align: top;">
+                @if ($po->vendor_notes)
+                    <div class="notes-box" style="margin-top: 0;">
+                        <strong>Vendor Instructions:</strong><br>
+                        {!! nl2br(e($po->vendor_notes)) !!}
+                    </div>
+                @endif
                 @if ($po->notes)
                     <div class="notes-box" style="margin-top: 0;">
                         <strong>Special Instructions / Notes:</strong><br>

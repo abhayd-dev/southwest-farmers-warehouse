@@ -363,6 +363,20 @@ class PurchaseOrderController extends Controller
             );
 
             $message = 'Inventory updated successfully.';
+
+            // Pallets / dividers going back to the vendor are sent with Process
+            // Receive (client: the separate "Send Back to Vendor" button reloaded
+            // the page and wiped the Receive Qty values typed so far).
+            $palletsReturned = (float) $request->input('pallets_returned', 0);
+            $dividersReturned = (float) $request->input('dividers_returned', 0);
+            if (($palletsReturned > 0 || $dividersReturned > 0) && $purchaseOrder->vendor) {
+                try {
+                    $this->containerService->returnToVendor($purchaseOrder->vendor, $palletsReturned, $dividersReturned, auth()->user()->name, $purchaseOrder);
+                    $message .= ' Containers sent back to ' . $purchaseOrder->vendor->name . '.';
+                } catch (\App\Exceptions\BusinessRuleException $e) {
+                    $message .= ' Containers were NOT sent back: ' . $e->getMessage();
+                }
+            }
             if ($purchaseOrder->short_close_lines && $purchaseOrder->short_closed_at?->gt(now()->subMinute())) {
                 $message .= ' The order is completed; the invoice now covers only what was received ($' . number_format($purchaseOrder->total_amount, 2) . ').';
             }

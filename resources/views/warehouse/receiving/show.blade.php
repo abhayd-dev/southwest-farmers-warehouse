@@ -524,25 +524,22 @@
                             </span>
                         </div>
                         <div class="card-body">
-                            <form action="{{ route('warehouse.receiving.return-containers', $purchaseOrder->id) }}"
-                                method="POST" class="row g-3 align-items-end">
-                                @csrf
+                            {{-- Part of the receive form (form="receiveForm"): sent with Process Receive. --}}
+                            <div class="row g-3 align-items-end">
                                 <div class="col-6 col-md-3">
                                     <label class="form-label fw-semibold small mb-1">Pallets Returning</label>
-                                    <input type="number" name="pallets_returned" class="form-control" min="0"
-                                        step="0.01" value="0">
+                                    <input type="number" name="pallets_returned" form="receiveForm" class="form-control" min="0"
+                                        step="0.01" value="{{ old('pallets_returned', 0) }}">
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <label class="form-label fw-semibold small mb-1">Dividers Returning</label>
-                                    <input type="number" name="dividers_returned" class="form-control" min="0"
-                                        step="0.01" value="0">
+                                    <input type="number" name="dividers_returned" form="receiveForm" class="form-control" min="0"
+                                        step="0.01" value="{{ old('dividers_returned', 0) }}">
                                 </div>
-                                <div class="col-12 col-md-3">
-                                    <button type="submit" class="btn btn-outline-primary">
-                                        <i class="mdi mdi-truck-delivery-outline me-1"></i> Send Back to Vendor
-                                    </button>
+                                <div class="col-12 col-md-6 small text-muted">
+                                    <i class="mdi mdi-information-outline"></i> These are sent back to the vendor when you click <strong>Process Receive</strong>.
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 @endif

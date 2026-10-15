@@ -241,6 +241,13 @@
             </div>
         </div>
 
+        @if($po->vendor_notes)
+        <div class="notes-section">
+            <strong>Vendor Instructions:</strong><br>
+            {!! nl2br(e($po->vendor_notes)) !!}
+        </div>
+        @endif
+
         @if($po->notes)
         <div class="notes-section">
             <strong>Special Instructions / Notes:</strong><br>

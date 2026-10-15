@@ -24,6 +24,8 @@ class SavePurchaseOrderRequest extends FormRequest
             'items.*.cost' => 'required|numeric|min:0',
             'approval_email' => 'nullable|email',
             'approver_phone' => 'nullable|string|max:20',
+            'vendor_notes' => 'nullable|string|max:5000',
+            'notes' => 'nullable|string|max:5000',
         ];
     }
 }

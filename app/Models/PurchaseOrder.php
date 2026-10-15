@@ -35,6 +35,7 @@ class PurchaseOrder extends Model
         'status',
         'payment_status',
         'notes',
+        'vendor_notes', // "Vendor Instructions" on the Create PO screen; printed on the PO
         'created_by',
         'approval_email',
         'approver_phone',

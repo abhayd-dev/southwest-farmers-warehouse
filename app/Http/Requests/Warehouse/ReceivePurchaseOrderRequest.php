@@ -26,6 +26,8 @@ class ReceivePurchaseOrderRequest extends FormRequest
             // Client 9/27: nothing more is coming -- complete the order now even
             // if lines are short (the invoice is reduced to what was received).
             'complete_now' => 'nullable|boolean',
+            'pallets_returned' => 'nullable|numeric|min:0',
+            'dividers_returned' => 'nullable|numeric|min:0',
             'items' => 'required|array',
             // No upper bound: a shipment can arrive over or under the
             // originally ordered quantity (client feedback 9/21, items 1-2).

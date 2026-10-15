@@ -425,6 +425,14 @@
         @include('warehouse.purchase-orders.partials.short-close-panel')
 
         {{-- ITEMS LIST (READ ONLY) --}}
+        @if ($purchaseOrder->vendor_notes)
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-1"><i class="mdi mdi-message-text-outline me-1"></i> Vendor Instructions</h6>
+                    <div class="text-muted">{!! nl2br(e($purchaseOrder->vendor_notes)) !!}</div>
+                </div>
+            </div>
+        @endif
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-bold text-dark"><i class="mdi mdi-file-document-outline me-1"></i> Order Items
