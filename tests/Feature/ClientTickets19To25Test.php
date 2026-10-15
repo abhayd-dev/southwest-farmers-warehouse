@@ -177,7 +177,9 @@ class ClientTickets19To25Test extends TestCase
         // Viewing the Receive page must not write anything.
         $this->get(route('warehouse.receiving.show', $po))->assertOk()
             ->assertSee('name="pallets_received"', false)->assertSee('name="dividers_received"', false)
-            ->assertSee('Pallets &amp; Dividers to Cantus Produce', false)->assertSee('Send Back to Vendor');
+            ->assertSee('Pallets &amp; Dividers to Cantus Produce', false)
+            // Client 10/15: no separate button; returns go with Process Receive.
+            ->assertDontSee('Send Back to Vendor')->assertSee('name="pallets_returned" form="receiveForm"', false);
         $this->assertSame(0, VendorContainerBalance::count());
 
         $this->receive($po, [$item->id => ['receive_qty' => 50]], ['pallets_received' => 5, 'dividers_received' => 3])
