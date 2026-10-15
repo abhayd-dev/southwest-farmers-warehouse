@@ -271,6 +271,12 @@
                                 <td class="text-right">${{ number_format($po->duties, 2) }}</td>
                             </tr>
                         @endif
+                        @if ($po->freight > 0)
+                            <tr>
+                                <td class="text-right"><strong>Freight:</strong></td>
+                                <td class="text-right">${{ number_format($po->freight, 2) }}</td>
+                            </tr>
+                        @endif
                         @if ($po->shipping_cost > 0)
                             <tr>
                                 <td class="text-right"><strong>Shipping Cost:</strong></td>
@@ -280,7 +286,7 @@
                         <tr>
                             <td class="text-right grand-total">GRAND TOTAL:</td>
                             <td class="text-right grand-total">
-                                ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost, 2) }}</td>
+                                ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost + $po->freight, 2) }}</td>
                         </tr>
                     </table>
                 </div>

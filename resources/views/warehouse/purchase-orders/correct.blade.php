@@ -133,6 +133,11 @@
                                     <input type="number" name="demurrage" class="form-control correct-overhead" min="0" step="0.01"
                                         value="{{ old('demurrage', $purchaseOrder->demurrage) }}">
                                 </div>
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label fw-semibold">Freight ($)</label>
+                                    <input type="number" name="freight" class="form-control correct-overhead" min="0" step="0.01"
+                                        value="{{ old('freight', $purchaseOrder->freight) }}">
+                                </div>
                             </div>
                         </div>
                     </div>

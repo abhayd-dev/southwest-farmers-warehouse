@@ -310,6 +310,14 @@
                                                 min="0" value="{{ $purchaseOrder->demurrage ?? 0 }}">
                                         </div>
                                     </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Freight ($) <span class="text-muted fw-normal small">(optional)</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="mdi mdi-truck-cargo-container"></i></span>
+                                            <input type="number" name="freight" class="form-control cost-input" step="0.01"
+                                                min="0" value="{{ $purchaseOrder->freight ?? 0 }}">
+                                        </div>
+                                    </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">
                                             Vendor Invoice Picture / Attachment
@@ -494,6 +502,28 @@
                                 </div>
 
                                 @if ($hasPendingItems)
+                                    {{-- Ticket 30: returns go with Process Receive, right above it. --}}
+                                    @if ($purchaseOrder->vendor)
+                                        <div class="border rounded p-3 mt-4 bg-light">
+                                            <div class="d-flex justify-content-between flex-wrap mb-2">
+                                                <span class="fw-bold"><i class="mdi mdi-pallet me-1 text-primary"></i> Return Pallets &amp; Dividers to {{ $purchaseOrder->vendor->name }}</span>
+                                                <span class="text-muted small">On hand: {{ number_format($containerBalance->pallet_count ?? 0, 2) }} pallet(s), {{ number_format($containerBalance->divider_count ?? 0, 2) }} divider(s)</span>
+                                            </div>
+                                            <div class="row g-3 align-items-end">
+                                                <div class="col-6 col-md-3">
+                                                    <label class="form-label fw-semibold small mb-1">Pallets Returning</label>
+                                                    <input type="number" name="pallets_returned" form="receiveForm" class="form-control" min="0" step="0.01" value="{{ old('pallets_returned', 0) }}">
+                                                </div>
+                                                <div class="col-6 col-md-3">
+                                                    <label class="form-label fw-semibold small mb-1">Dividers Returning</label>
+                                                    <input type="number" name="dividers_returned" form="receiveForm" class="form-control" min="0" step="0.01" value="{{ old('dividers_returned', 0) }}">
+                                                </div>
+                                                <div class="col-12 col-md-6 small text-muted">
+                                                    <i class="mdi mdi-information-outline"></i> Sent back to the vendor when you click <strong>Process Receive</strong>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                     <div class="d-flex justify-content-end mt-4">
                                         <button type="submit" class="btn btn-primary shadow-sm px-4">
                                             <i class="mdi mdi-check-all me-1"></i> Process Receive
@@ -508,38 +538,6 @@
                         <i class="mdi mdi-lock-alert me-3 fs-4"></i>
                         <div>
                             <strong>Access Restricted:</strong> Only Inventory Managers can receive stock.
-                        </div>
-                    </div>
-                @endif
-
-                {{-- RETURN PALLETS/DIVIDERS TO VENDOR --}}
-                @if ($purchaseOrder->vendor && auth()->user()->can('receive_po'))
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
-                            <h5 class="fw-bold text-dark mb-0"><i class="mdi mdi-pallet me-2 text-primary"></i> Return
-                                Pallets &amp; Dividers to {{ $purchaseOrder->vendor->name }}</h5>
-                            <span class="text-muted small">
-                                On hand: {{ number_format($containerBalance->pallet_count ?? 0, 2) }} pallet(s),
-                                {{ number_format($containerBalance->divider_count ?? 0, 2) }} divider(s)
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            {{-- Part of the receive form (form="receiveForm"): sent with Process Receive. --}}
-                            <div class="row g-3 align-items-end">
-                                <div class="col-6 col-md-3">
-                                    <label class="form-label fw-semibold small mb-1">Pallets Returning</label>
-                                    <input type="number" name="pallets_returned" form="receiveForm" class="form-control" min="0"
-                                        step="0.01" value="{{ old('pallets_returned', 0) }}">
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label class="form-label fw-semibold small mb-1">Dividers Returning</label>
-                                    <input type="number" name="dividers_returned" form="receiveForm" class="form-control" min="0"
-                                        step="0.01" value="{{ old('dividers_returned', 0) }}">
-                                </div>
-                                <div class="col-12 col-md-6 small text-muted">
-                                    <i class="mdi mdi-information-outline"></i> These are sent back to the vendor when you click <strong>Process Receive</strong>.
-                                </div>
-                            </div>
                         </div>
                     </div>
                 @endif
@@ -679,8 +677,9 @@
                 let taxes = parseFloat(document.querySelector('input[name="taxes"]').value) || 0;
                 let transport = parseFloat(document.querySelector('input[name="transportation_cost"]').value) || 0;
                 let demurrage = parseFloat(document.querySelector('input[name="demurrage"]').value) || 0;
+                let freight = parseFloat(document.querySelector('input[name="freight"]')?.value) || 0;
 
-                let totalOverhead = duties + shipping + taxes + transport + demurrage;
+                let totalOverhead = duties + shipping + taxes + transport + demurrage + freight;
 
                 // Get total receiving quantity
                 let totalQty = 0;

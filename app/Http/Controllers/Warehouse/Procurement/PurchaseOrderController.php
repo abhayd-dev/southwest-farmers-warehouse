@@ -295,6 +295,7 @@ class PurchaseOrderController extends Controller
             'taxes' => 'nullable|numeric|min:0',
             'transportation_cost' => 'nullable|numeric|min:0',
             'demurrage' => 'nullable|numeric|min:0',
+            'freight' => 'nullable|numeric|min:0',
             'reason' => 'required|string|max:500',
             'items' => 'required|array',
             'items.*.requested_quantity' => 'required|numeric|min:0',
@@ -306,7 +307,7 @@ class PurchaseOrderController extends Controller
             $this->poService->correctCompletedOrder(
                 $purchaseOrder,
                 $request->items,
-                $request->only(['vendor_invoice_number', 'duties', 'shipping_cost', 'taxes', 'transportation_cost', 'demurrage']),
+                $request->only(['vendor_invoice_number', 'duties', 'shipping_cost', 'taxes', 'transportation_cost', 'demurrage', 'freight']),
                 $request->reason,
                 auth()->user()->name
             );
@@ -345,7 +346,8 @@ class PurchaseOrderController extends Controller
                 $request->input('demurrage', 0),
                 $invoiceDocumentPath,
                 $request->input('shipment_type'),
-                $request->boolean('complete_now')
+                $request->boolean('complete_now'),
+                $request->input('freight', 0)
             );
 
             $purchaseOrder->refresh();

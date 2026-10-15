@@ -297,7 +297,7 @@
                         @php
                             // Same breakdown as the printed receipt: items subtotal plus
                             // duties, shipping and taxes make up the total (ticket 19).
-                            $summaryFees = (float) $purchaseOrder->duties + (float) $purchaseOrder->shipping_cost + (float) $purchaseOrder->taxes;
+                            $summaryFees = (float) $purchaseOrder->duties + (float) $purchaseOrder->shipping_cost + (float) $purchaseOrder->taxes + (float) $purchaseOrder->freight;
                         @endphp
                         @if ($summaryFees > 0)
                         <div class="d-flex justify-content-between mb-2 border-top pt-2 mt-2">
@@ -315,6 +315,12 @@
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Shipping Cost:</span>
                             <span class="fw-semibold">${{ number_format($purchaseOrder->shipping_cost, 2) }}</span>
+                        </div>
+                        @endif
+                        @if ($purchaseOrder->freight > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Freight:</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->freight, 2) }}</span>
                         </div>
                         @endif
                         @if ($purchaseOrder->taxes > 0)
@@ -425,6 +431,24 @@
         @include('warehouse.purchase-orders.partials.short-close-panel')
 
         {{-- ITEMS LIST (READ ONLY) --}}
+        @php
+            // Ticket 30: pallets / dividers received with and returned on this order.
+            $containerMoves = \App\Models\VendorContainerTransaction::where('purchase_order_id', $purchaseOrder->id)->get();
+            $cm = fn ($type, $dir) => abs((float) $containerMoves->where('container_type', $type)->where('direction', $dir)->sum('quantity_change'));
+        @endphp
+        @if ($containerMoves->isNotEmpty())
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-2"><i class="mdi mdi-pallet me-1"></i> Pallets &amp; Dividers</h6>
+                    <div class="row text-center small">
+                        <div class="col-3"><div class="text-muted">Pallets received</div><div class="fw-bold fs-5">{{ rtrim(rtrim(number_format($cm('pallet', 'received'), 2), '0'), '.') }}</div></div>
+                        <div class="col-3"><div class="text-muted">Pallets returned</div><div class="fw-bold fs-5">{{ rtrim(rtrim(number_format($cm('pallet', 'returned'), 2), '0'), '.') }}</div></div>
+                        <div class="col-3"><div class="text-muted">Dividers received</div><div class="fw-bold fs-5">{{ rtrim(rtrim(number_format($cm('divider', 'received'), 2), '0'), '.') }}</div></div>
+                        <div class="col-3"><div class="text-muted">Dividers returned</div><div class="fw-bold fs-5">{{ rtrim(rtrim(number_format($cm('divider', 'returned'), 2), '0'), '.') }}</div></div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @if ($purchaseOrder->vendor_notes)
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body p-3">

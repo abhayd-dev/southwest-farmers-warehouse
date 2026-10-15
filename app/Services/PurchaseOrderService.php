@@ -116,13 +116,13 @@ class PurchaseOrderService
         });
     }
 
-    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null, ?string $shipmentType = null, bool $completeNow = false)
+    public function receiveItems($poId, $receivedItems, $invoiceNumber = null, $duties = 0, $shippingCost = 0, $taxes = 0, $transportationCost = 0, $demurrage = 0, $invoiceDocument = null, ?string $shipmentType = null, bool $completeNow = false, $freight = 0)
     {
         $shortageItemIds = [];
         $newOverReceipt = false;
 
         $raisedByReceiver = [];
-        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, $completeNow, &$shortageItemIds, &$newOverReceipt, &$raisedByReceiver) {
+        $po = DB::transaction(function () use ($poId, $receivedItems, $invoiceNumber, $duties, $shippingCost, $taxes, $transportationCost, $demurrage, $invoiceDocument, $shipmentType, $completeNow, $freight, &$shortageItemIds, &$newOverReceipt, &$raisedByReceiver) {
             $po = PurchaseOrder::findOrFail($poId);
 
             $updateData = [
@@ -132,6 +132,7 @@ class PurchaseOrderService
                 'taxes' => $taxes,
                 'transportation_cost' => $transportationCost,
                 'demurrage' => $demurrage,
+                'freight' => round((float) ($freight ?? 0), 2),
             ];
 
             if ($invoiceDocument) {
@@ -166,9 +167,10 @@ class PurchaseOrderService
             $taxes = floatval($taxes ?? 0); // Brokerage Fee / Taxes
             $transportation = floatval($transportationCost ?? 0);
             $demurrageCost = floatval($demurrage ?? 0);
+            $freightCost = floatval($freight ?? 0);
 
             $totalReceivedQty = array_sum(array_map(fn($item) => round((float) ($item['receive_qty'] ?? 0), 2), $receivedItems));
-            $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes + $transportation + $demurrageCost) / $totalReceivedQty : 0;
+            $landedFeePerUnit = $totalReceivedQty > 0 ? ($duties + $shipping + $taxes + $transportation + $demurrageCost + $freightCost) / $totalReceivedQty : 0;
 
             foreach ($receivedItems as $itemId => $data) {
                 $qtyToReceive = round((float) ($data['receive_qty'] ?? 0), 2);
@@ -578,6 +580,7 @@ class PurchaseOrderService
             $po->taxes = $meta['taxes'] ?? 0;
             $po->transportation_cost = $meta['transportation_cost'] ?? 0;
             $po->demurrage = $meta['demurrage'] ?? 0;
+            $po->freight = $meta['freight'] ?? ($po->freight ?? 0);
             $po->total_amount = $po->items()->get()->sum(fn ($i) => $i->requested_quantity * $i->unit_cost);
             $po->save();
 

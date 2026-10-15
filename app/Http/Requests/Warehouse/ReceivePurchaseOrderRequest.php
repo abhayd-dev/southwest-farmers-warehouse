@@ -20,6 +20,7 @@ class ReceivePurchaseOrderRequest extends FormRequest
             'shipping_cost' => 'nullable|numeric|min:0',
             'taxes' => 'nullable|numeric|min:0',
             'transportation_cost' => 'nullable|numeric|min:0',
+            'freight' => 'nullable|numeric|min:0',
             'demurrage' => 'nullable|numeric|min:0',
             // Client PDF 9/24, items 2-3: decides what a short receipt does.
             'shipment_type' => 'required|in:truck,container',

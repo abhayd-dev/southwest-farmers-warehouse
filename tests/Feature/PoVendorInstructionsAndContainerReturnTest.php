@@ -71,12 +71,16 @@ class PoVendorInstructionsAndContainerReturnTest extends TestCase
             'invoice_number' => 'INV-9988',
             'shipment_type' => 'truck',
             'items' => [$item => ['receive_qty' => 4]],
+            'pallets_received' => 2,
             'pallets_returned' => 3,
             'dividers_returned' => 1,
         ])->assertSessionHas('success', fn ($m) => str_contains($m, 'Containers sent back'));
 
         $this->assertEquals(4, DB::table('purchase_order_items')->where('id', $item)->value('received_quantity'));
-        $this->assertEquals(2, DB::table('vendor_container_balances')->where('vendor_id', $vendor)->value('pallet_count'));
+        // Ticket 30: received and returned show on the order page.
+        $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()
+            ->assertSee('Pallets &amp; Dividers', false)->assertSee('Pallets received')->assertSee('Pallets returned');
+        $this->assertEquals(4, DB::table('vendor_container_balances')->where('vendor_id', $vendor)->value('pallet_count')); // 5 + 2 received - 3 returned
         $this->assertEquals(1, DB::table('vendor_container_balances')->where('vendor_id', $vendor)->value('divider_count'));
     }
 
@@ -86,9 +90,29 @@ class PoVendorInstructionsAndContainerReturnTest extends TestCase
         $po = PurchaseOrder::find($this->insertRow('purchase_orders', [
             'vendor_id' => $this->insertRow('vendors', ['name' => 'Fine Tropical']), 'po_number' => 'PO-T-2', 'order_date' => now()->toDateString(), 'status' => 'ordered',
         ]));
+        $this->insertRow('purchase_order_items', ['purchase_order_id' => $po->id, 'product_id' => $this->insertRow('products', ['product_name' => 'Plantain']), 'requested_quantity' => 10, 'unit_cost' => 28, 'total_cost' => 280]);
 
         $this->get(route('warehouse.receiving.show', $po))->assertOk()
             ->assertDontSee('Send Back to Vendor')
             ->assertSee('name="pallets_returned" form="receiveForm"', false);
+    }
+
+    public function test_freight_is_saved_shown_and_added_to_true_cost(): void
+    {
+        $this->actingAs($this->superAdmin());
+        $product = $this->insertRow('products', ['product_name' => 'Plantain', 'cost_price' => 28]);
+        $po = PurchaseOrder::find($this->insertRow('purchase_orders', [
+            'vendor_id' => $this->insertRow('vendors', ['name' => 'Fine Tropical']), 'po_number' => 'PO-T-3', 'order_date' => now()->toDateString(), 'status' => 'ordered', 'total_amount' => 280,
+        ]));
+        $item = $this->insertRow('purchase_order_items', ['purchase_order_id' => $po->id, 'product_id' => $product, 'requested_quantity' => 10, 'unit_cost' => 28, 'total_cost' => 280]);
+
+        $this->get(route('warehouse.receiving.show', $po))->assertOk()->assertSee('name="freight"', false);
+        $this->post(route('warehouse.purchase-orders.receive', $po), [
+            'invoice_number' => 'INV-1', 'shipment_type' => 'truck', 'freight' => 50,
+            'items' => [$item => ['receive_qty' => 10]],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertEquals(50, $po->refresh()->freight);
+        $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()->assertSee('Freight:')->assertSee('$50.00');
     }
 }

@@ -31,6 +31,7 @@ class PurchaseOrder extends Model
         'taxes',
         'transportation_cost',
         'demurrage',
+        'freight', // ticket 29: optional freight entered when receiving
         'cost_increase_approved',
         'status',
         'payment_status',
