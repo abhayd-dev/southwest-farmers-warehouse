@@ -43,6 +43,12 @@ class PoVendorInstructionsAndContainerReturnTest extends TestCase
         $this->assertSame("Deliver to dock 2\nCall before arriving", $po->vendor_notes);
 
         $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()->assertSee('Vendor Instructions')->assertSee('Deliver to dock 2');
+        $approval = view('emails.purchase-order-approval', ['po' => $po->load('vendor', 'items.product'), 'approveUrl' => '#', 'rejectUrl' => '#', 'isReminder' => false])->render();
+        $this->assertStringContainsString('Vendor Instructions', $approval);
+        $this->assertStringContainsString('Deliver to dock 2', $approval);
+
+        $this->get(route('warehouse.purchase-orders.edit', $po))->assertOk()->assertSee('Call before arriving');
+
         $html = view('warehouse.purchase-orders.print', ['po' => $po->load('vendor', 'items.product')])->render();
         $this->assertStringContainsString('Vendor Instructions', $html);
         $this->assertStringContainsString('Call before arriving', $html);

@@ -77,6 +77,11 @@
                 </table>
             </div>
 
+            @if ($po->vendor_notes)
+                <div style="background: #fff8e1; border: 1px solid #ffe08a; border-radius: 6px; padding: 10px 12px; margin-bottom: 15px; font-size: 14px;">
+                    <strong>Vendor Instructions:</strong><br>{!! nl2br(e($po->vendor_notes)) !!}
+                </div>
+            @endif
             <h3 style="font-size: 15px; margin-bottom: 10px;">Order Items</h3>
             <table class="items-table">
                 <thead>
