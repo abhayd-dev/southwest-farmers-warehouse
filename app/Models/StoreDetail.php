@@ -209,9 +209,21 @@ class StoreDetail extends Model
      */
     public function currentGeneralManager()
     {
+        // The store app keeps roles in store_model_has_roles (several per person);
+        // store_role_id only holds the first one, so check both.
+        $gmRoleIds = StoreRole::where('name', 'General Manager')->pluck('id');
+        if ($gmRoleIds->isEmpty()) {
+            return null;
+        }
+
         return StoreUser::where('store_id', $this->id)
             ->where('is_active', true)
-            ->whereHas('role', fn ($q) => $q->where('name', 'General Manager'))
+            ->where(fn ($q) => $q->whereIn('store_role_id', $gmRoleIds)
+                ->orWhereIn('id', \Illuminate\Support\Facades\DB::table('store_model_has_roles')
+                    ->where('model_type', StoreUser::class)
+                    ->whereIn('role_id', $gmRoleIds)
+                    ->select('model_id')))
+            ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$this->store_user_id ?? 0])
             ->first();
     }
 

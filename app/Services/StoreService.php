@@ -102,9 +102,40 @@ class StoreService
             }
             $this->grantStoreRoles($newManager, $managerRoleIds);
             $store->update(['store_user_id' => $newManager->id]);
+            $this->moveGeneralManagerRole($store, $newManager);
 
             return $newManager;
         });
+    }
+
+    /**
+     * Ticket 20: keep both sides on the same manager. The store side marks its
+     * manager with the "General Manager" role, so the person assigned here gets
+     * it and everyone else at this store loses it (only one GM per store).
+     */
+    public function moveGeneralManagerRole(StoreDetail $store, StoreUser $manager): void
+    {
+        $gmRoleId = StoreRole::where('name', 'General Manager')->value('id');
+        if (!$gmRoleId) {
+            return;
+        }
+
+        $this->grantStoreRoles($manager, [$gmRoleId]);
+
+        $others = StoreUser::where('store_id', $store->id)->where('id', '!=', $manager->id)->pluck('id');
+        DB::table('store_model_has_roles')
+            ->where('model_type', StoreUser::class)
+            ->where('role_id', $gmRoleId)
+            ->whereIn('model_id', $others)
+            ->delete();
+
+        // Their single-role column must not keep saying General Manager either.
+        foreach (StoreUser::whereIn('id', $others)->where('store_role_id', $gmRoleId)->get() as $previous) {
+            $fallback = DB::table('store_model_has_roles')
+                ->where('model_type', StoreUser::class)->where('model_id', $previous->id)
+                ->value('role_id');
+            $previous->update(['store_role_id' => $fallback]);
+        }
     }
 
     public function updateStoreSchedule($storeId, array $data)
@@ -133,6 +164,12 @@ class StoreService
                 'is_active'     => true,
             ]);
             $this->grantStoreRoles($staff, [$staff->store_role_id]);
+
+            if (StoreRole::whereKey($staff->store_role_id)->value('name') === 'General Manager') {
+                $store = StoreDetail::findOrFail($storeId);
+                $store->update(['store_user_id' => $staff->id]);
+                $this->moveGeneralManagerRole($store, $staff);
+            }
 
             return $staff;
         });

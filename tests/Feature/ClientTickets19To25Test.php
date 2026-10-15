@@ -94,18 +94,20 @@ class ClientTickets19To25Test extends TestCase
     public function test_order_summary_lists_fees_and_includes_them_in_the_total(): void
     {
         [$po] = $this->completedPo();
-        $po->update(['duties' => 10, 'shipping_cost' => 5, 'taxes' => 2.5]);
+        $po->update(['vendor_invoice_number' => 'INV-77', 'duties' => 10, 'shipping_cost' => 5, 'taxes' => 2.5, 'transportation_cost' => 4, 'demurrage' => 3, 'freight' => 1]);
 
+        // QA re-test: every charge, right under the Vendor Invoice, adds up to the total.
         $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()
-            ->assertSeeInOrder(['Subtotal (items):', '$200.00', 'Duties:', '$10.00', 'Shipping Cost:', '$5.00', 'Taxes:', '$2.50', 'Total Amount:', '$217.50'], false);
+            ->assertSeeInOrder(['Vendor Invoice:', 'INV-77', 'Subtotal (items):', '$200.00', 'Duties:', '$10.00', 'Shipping Cost:', '$5.00',
+                'Taxes / Brokerage Fee:', '$2.50', 'Transportation:', '$4.00', 'Demurrage:', '$3.00', 'Freight:', '$1.00', 'Total Amount:', '$225.50'], false);
     }
 
-    public function test_order_summary_without_fees_is_unchanged(): void
+    public function test_order_summary_without_fees_still_shows_the_breakdown(): void
     {
         [$po] = $this->completedPo();
 
         $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()
-            ->assertDontSee('Subtotal (items):')->assertSeeInOrder(['Total Amount:', '$200.00'], false);
+            ->assertSeeInOrder(['Subtotal (items):', '$200.00', 'Duties:', '$0.00', 'Freight:', '$0.00', 'Total Amount:', '$200.00'], false);
     }
 
     // ---- Ticket 22: Correct Order (admin only) ----

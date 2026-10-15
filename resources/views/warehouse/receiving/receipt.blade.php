@@ -283,10 +283,22 @@
                                 <td class="text-right">${{ number_format($po->shipping_cost, 2) }}</td>
                             </tr>
                         @endif
+                        @if ($po->transportation_cost > 0)
+                            <tr>
+                                <td class="text-right"><strong>Transportation Cost:</strong></td>
+                                <td class="text-right">${{ number_format($po->transportation_cost, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($po->demurrage > 0)
+                            <tr>
+                                <td class="text-right"><strong>Demurrage Cost:</strong></td>
+                                <td class="text-right">${{ number_format($po->demurrage, 2) }}</td>
+                            </tr>
+                        @endif
                         <tr>
                             <td class="text-right grand-total">GRAND TOTAL:</td>
                             <td class="text-right grand-total">
-                                ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost + $po->freight, 2) }}</td>
+                                ${{ number_format($subtotal + $po->taxes + $po->duties + $po->shipping_cost + $po->freight + $po->transportation_cost + $po->demurrage, 2) }}</td>
                         </tr>
                     </table>
                 </div>

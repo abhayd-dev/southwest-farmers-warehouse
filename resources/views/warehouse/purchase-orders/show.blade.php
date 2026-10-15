@@ -286,6 +286,35 @@
                             <span class="fw-semibold">{{ $purchaseOrder->vendor_invoice_number }}</span>
                         </div>
                         @endif
+                        @php
+                            // Ticket 19: the charges entered when receiving, listed under the
+                            // Vendor Invoice like the printed receipt. Always shown (even $0.00)
+                            // so the total is easy to check.
+                            $summaryLines = [
+                                'Duties' => (float) $purchaseOrder->duties,
+                                'Shipping Cost' => (float) $purchaseOrder->shipping_cost,
+                                'Taxes / Brokerage Fee' => (float) $purchaseOrder->taxes,
+                                'Transportation' => (float) $purchaseOrder->transportation_cost,
+                                'Demurrage' => (float) $purchaseOrder->demurrage,
+                                'Freight' => (float) $purchaseOrder->freight,
+                            ];
+                            $summaryFees = array_sum($summaryLines);
+                        @endphp
+                        <div class="d-flex justify-content-between mb-2 border-top pt-2 mt-2">
+                            <span class="text-muted">Subtotal (items):</span>
+                            <span class="fw-semibold">${{ number_format($purchaseOrder->total_amount, 2) }}</span>
+                        </div>
+                        @foreach ($summaryLines as $label => $amount)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">{{ $label }}:</span>
+                            <span class="fw-semibold">${{ number_format($amount, 2) }}</span>
+                        </div>
+                        @endforeach
+                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+                            <span class="text-muted">Total Amount:</span>
+                            <span
+                                class="fw-bold text-success fs-4">${{ number_format($purchaseOrder->total_amount + $summaryFees, 2) }}</span>
+                        </div>
                         @if ($purchaseOrder->invoice_document)
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="text-muted">Invoice Picture:</span>
@@ -294,46 +323,6 @@
                             </a>
                         </div>
                         @endif
-                        @php
-                            // Same breakdown as the printed receipt: items subtotal plus
-                            // duties, shipping and taxes make up the total (ticket 19).
-                            $summaryFees = (float) $purchaseOrder->duties + (float) $purchaseOrder->shipping_cost + (float) $purchaseOrder->taxes + (float) $purchaseOrder->freight;
-                        @endphp
-                        @if ($summaryFees > 0)
-                        <div class="d-flex justify-content-between mb-2 border-top pt-2 mt-2">
-                            <span class="text-muted">Subtotal (items):</span>
-                            <span class="fw-semibold">${{ number_format($purchaseOrder->total_amount, 2) }}</span>
-                        </div>
-                        @endif
-                        @if ($purchaseOrder->duties > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Duties:</span>
-                            <span class="fw-semibold">${{ number_format($purchaseOrder->duties, 2) }}</span>
-                        </div>
-                        @endif
-                        @if ($purchaseOrder->shipping_cost > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Shipping Cost:</span>
-                            <span class="fw-semibold">${{ number_format($purchaseOrder->shipping_cost, 2) }}</span>
-                        </div>
-                        @endif
-                        @if ($purchaseOrder->freight > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Freight:</span>
-                            <span class="fw-semibold">${{ number_format($purchaseOrder->freight, 2) }}</span>
-                        </div>
-                        @endif
-                        @if ($purchaseOrder->taxes > 0)
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Taxes:</span>
-                            <span class="fw-semibold">${{ number_format($purchaseOrder->taxes, 2) }}</span>
-                        </div>
-                        @endif
-                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
-                            <span class="text-muted">Total Amount:</span>
-                            <span
-                                class="fw-bold text-success fs-4">${{ number_format($purchaseOrder->total_amount + $summaryFees, 2) }}</span>
-                        </div>
                     </div>
                 </div>
             </div>

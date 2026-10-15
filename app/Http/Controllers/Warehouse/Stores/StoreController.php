@@ -221,9 +221,9 @@ class StoreController extends Controller
             $message = 'Store details updated.';
             if ($request->filled('store_user_id') && (int) $request->store_user_id !== (int) $previousManagerId) {
                 $newManager = $this->storeService->reassignManager($store, (int) $request->store_user_id);
-                $message = "Store details updated. {$newManager->name} is now the store manager.";
+                $message = "Store details updated. {$newManager->name} is now the store manager (General Manager on the Store side).";
                 if ($previousManagerId && ($previous = StoreUser::find($previousManagerId))) {
-                    $message .= " {$previous->name} still has a staff login; remove them under Store Staff if they should no longer have access.";
+                    $message .= " {$previous->name} is no longer General Manager but still has a staff login; remove them under Store Staff if they should no longer have access.";
                 }
             }
 

@@ -150,4 +150,40 @@ class StoreManagerReassignTest extends TestCase
         $this->actingAs($admin, 'warehouse')->get(route('warehouse.stores.edit', $this->store->id))->assertOk()
             ->assertDontSee('as General Manager, which doesn');
     }
+
+    /** Ticket 20 (QA failed): picking a manager here moves the store side's General Manager role too. */
+    public function test_reassigning_moves_the_general_manager_role_on_both_sides(): void
+    {
+        $gmRole = StoreRole::create(['name' => 'General Manager', 'guard_name' => 'store_user']);
+        $oldGm = $this->storeUser('Ike Ogbodick', $gmRole);
+
+        $this->update(['store_user_id' => $this->cashier->id])->assertSessionHasNoErrors();
+
+        $this->assertSame($this->cashier->id, $this->store->refresh()->store_user_id);
+        $this->assertContains($gmRole->id, $this->pivotRoles($this->cashier));
+        $this->assertNotContains($gmRole->id, $this->pivotRoles($oldGm));
+        $this->assertNotSame($gmRole->id, $oldGm->refresh()->store_role_id);
+        $this->assertSame($this->cashier->id, $this->store->currentGeneralManager()->id);
+    }
+
+    /** The store app can hold General Manager as a second role; it still counts. */
+    public function test_general_manager_held_as_a_second_role_is_found(): void
+    {
+        $gmRole = StoreRole::create(['name' => 'General Manager', 'guard_name' => 'store_user']);
+        $ike = $this->storeUser('Ike Ogbodick', $this->cashierRole);
+        DB::table('store_model_has_roles')->insert(['role_id' => $gmRole->id, 'model_type' => StoreUser::class, 'model_id' => $ike->id]);
+
+        $this->assertSame($ike->id, $this->store->currentGeneralManager()->id);
+    }
+
+    /** One-time sync: a store whose only General Manager isn't the warehouse's manager gets matched. */
+    public function test_sync_migration_points_the_store_at_its_general_manager(): void
+    {
+        $gmRole = StoreRole::create(['name' => 'General Manager', 'guard_name' => 'store_user']);
+        $ike = $this->storeUser('Ike Ogbodick', $gmRole);
+
+        (require database_path('migrations/2026_10_15_090100_sync_store_manager_with_general_manager.php'))->up();
+
+        $this->assertSame($ike->id, $this->store->refresh()->store_user_id);
+    }
 }

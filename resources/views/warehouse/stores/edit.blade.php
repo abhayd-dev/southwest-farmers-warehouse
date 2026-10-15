@@ -185,7 +185,7 @@
                             <small class="text-muted d-block mt-2">
                                 Pick a staff member of this store to make them the manager.
                                 To add someone new, use <a href="{{ route('warehouse.stores.show', $store->id) }}">View Store &rarr; Store Staff &rarr; Add Staff</a> first.
-                                The previous manager keeps their login as staff.
+                                This also makes them <strong>General Manager</strong> on the Store side and removes that role from the previous manager, who keeps a staff login.
                             </small>
                         </div>
                     </div>
