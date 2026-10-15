@@ -236,7 +236,7 @@
                             <div class="list-group-item border-0 px-3 py-2">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1 overflow-hidden">
-                                        <h6 class="mb-1 fw-bold text-dark text-truncate small">#{{ $po->po_number }}</h6>
+                                        <h6 class="mb-1 fw-bold text-dark text-truncate small">{{ $po->po_number }}</h6>
                                         <p class="text-muted mb-2 text-truncate small">{{ $po->vendor->name ?? 'N/A' }}</p>
                                         @php
                                             $badges = [
