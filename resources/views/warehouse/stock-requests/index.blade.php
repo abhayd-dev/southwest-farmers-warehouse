@@ -194,6 +194,11 @@
                                                 default => 'bg-secondary',
                                             };
                                             $statusLabel = str_replace('_', ' ', ucfirst($req->status));
+                                            // Ticket 32: approved by the Area Manager, waiting for the warehouse to pick it.
+                                            if ($req->status === 'pending' && $req->approved_at) {
+                                                $badge = 'bg-success';
+                                                $statusLabel = 'Approved';
+                                            }
                                         @endphp
                                         <span class="badge {{ $badge }}">{{ $statusLabel }}</span>
                                     </td>

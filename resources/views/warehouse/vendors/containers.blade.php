@@ -50,7 +50,7 @@
                                     <td class="text-center">{{ number_format($balance->pallet_count ?? 0, 2) }}</td>
                                     <td class="text-center">{{ number_format($balance->divider_count ?? 0, 2) }}</td>
                                     <td class="text-center text-muted small">
-                                        {{ $balance && $balance->updated_at ? $balance->updated_at->format('d M Y, g:i A') : '-' }}
+                                        {{ $balance && $balance->updated_at ? $balance->updated_at->copy()->timezone(config('app.display_timezone', 'America/Chicago'))->format('m/d/Y, g:i A T') : '-' }}
                                     </td>
                                     @if (auth()->user()->can('manage_vendors'))
                                         <td class="text-center">
