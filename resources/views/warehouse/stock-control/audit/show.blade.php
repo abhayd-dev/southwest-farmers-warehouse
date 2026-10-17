@@ -51,8 +51,11 @@
                         <table class="table table-hover table-striped align-middle mb-0">
                             <thead class="bg-light text-uppercase small">
                                 <tr>
-                                    <th class="ps-4">Product Name</th>
+                                    <th class="ps-4">Lot No.</th>
+                                    <th>Product Name</th>
                                     <th>UPC</th>
+                                    <th>Warehouse</th>
+                                    <th>Location</th>
                                     <th class="text-center bg-info bg-opacity-10">System Qty (Frozen)</th>
                                     <th class="text-center" width="150">Physical Count</th>
                                     <th class="text-center">Variance</th>
@@ -81,17 +84,12 @@
                                             $audit->status != 'completed';
                                     @endphp
                                     <tr>
-                                        <td class="ps-4 fw-semibold">
-                                            {{ $item->product?->product_name ?? 'Unknown Product' }}
-                                            @if ($item->product?->stock && $item->product?->stock->bin_location)
-                                                <div class="small">
-                                                    <i class="mdi mdi-map-marker text-primary"></i>
-                                                    <span
-                                                        class="fw-bold text-dark">{{ $item->product->stock->bin_location }}</span>
-                                                </div>
-                                            @endif
-                                        </td>
+                                        {{-- Ticket 36: Lot No. (product id), then Warehouse / Location after UPC --}}
+                                        <td class="ps-4"><span class="badge bg-light text-dark border">{{ $item->product_id }}</span></td>
+                                        <td class="fw-semibold">{{ $item->product?->product_name ?? 'Unknown Product' }}</td>
                                         <td class="text-muted small">{{ $item->product?->upc ?? 'N/A' }}</td>
+                                        <td class="small">{{ $item->product?->stock?->warehouse?->warehouse_name ?? '-' }}</td>
+                                        <td class="small fw-semibold">{{ $item->product?->stock?->bin_location ?: '-' }}</td>
 
                                         {{-- System Qty --}}
                                         <td class="text-center bg-info bg-opacity-10 fw-bold">

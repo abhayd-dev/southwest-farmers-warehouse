@@ -157,7 +157,7 @@ class StockAuditController extends Controller
         $audit = StockAudit::findOrFail($id);
         $items = StockAuditItem::where('stock_audit_id', $id)
             ->whereHas('product')
-            ->with('product')
+            ->with('product.stock.warehouse')
             ->get();
 
         $fileName = 'Inventory_Count_' . $audit->audit_number . '_' . date('Y_m_d') . '.csv';
@@ -170,7 +170,7 @@ class StockAuditController extends Controller
             'Expires' => '0'
         ];
 
-        $columns = ['Product Name', 'UPC', 'System Qty', 'Physical Count', 'Variance', 'Cost Price'];
+        $columns = ['Lot No.', 'Product Name', 'UPC', 'Warehouse', 'Location', 'System Qty', 'Physical Count', 'Variance', 'Cost Price'];
 
         $callback = function () use ($items, $columns) {
             $file = fopen('php://output', 'w');
@@ -178,8 +178,11 @@ class StockAuditController extends Controller
 
             foreach ($items as $item) {
                 fputcsv($file, [
+                    $item->product_id,
                     $item->product->product_name ?? 'Unknown',
                     $item->product->upc ?? '-',
+                    $item->product?->stock?->warehouse?->warehouse_name ?? '-',
+                    $item->product?->stock?->bin_location ?: '-',
                     $item->system_qty,
                     $item->physical_qty,
                     $item->variance_qty ?? ($item->physical_qty - $item->system_qty),
@@ -197,7 +200,7 @@ class StockAuditController extends Controller
         $audit = StockAudit::with(['initiator'])->findOrFail($id);
         $items = StockAuditItem::where('stock_audit_id', $id)
             ->whereHas('product')
-            ->with(['product.stock'])
+            ->with(['product.stock.warehouse'])
             ->paginate(50);
 
         return view('warehouse.stock-control.audit.show', compact('audit', 'items'));
