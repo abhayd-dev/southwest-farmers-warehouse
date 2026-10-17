@@ -133,7 +133,7 @@
                             <input type="text" name="search" value="{{ request('search') }}"
                                 class="form-control rounded-3 border"
                                 style="padding-left: 36px; height: 38px;"
-                                placeholder="Search by name, SKU or Barcode...">
+                                placeholder="Search by name, Lot No., SKU or Barcode...">
                         </div>
 
                         {{-- Status filter — compact --}}

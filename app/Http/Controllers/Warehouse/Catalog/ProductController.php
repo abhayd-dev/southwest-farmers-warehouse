@@ -34,6 +34,8 @@ class ProductController extends Controller
                     $s = $request->search;
                     $q->where(function ($query) use ($s) {
                         $query->where('product_name', 'ilike', "%$s%")
+                            // LOT NO. on the list is the product id (ticket 35).
+                            ->when(ctype_digit(trim($s)) && strlen(trim($s)) <= 18, fn ($q2) => $q2->orWhere('id', (int) trim($s)))
                             ->orWhere('sku', 'ilike', "%$s%")
                             ->orWhere('barcode', 'ilike', "%$s%")
                             ->orWhereHas('category', fn($c) => $c->where('name', 'ilike', "%$s%"))

@@ -98,8 +98,8 @@ class ClientTickets19To25Test extends TestCase
 
         // QA re-test: every charge, right under the Vendor Invoice, adds up to the total.
         $this->get(route('warehouse.purchase-orders.show', $po))->assertOk()
-            ->assertSeeInOrder(['Vendor Invoice:', 'INV-77', 'Subtotal (items):', '$200.00', 'Duties:', '$10.00', 'Shipping Cost:', '$5.00',
-                'Taxes / Brokerage Fee:', '$2.50', 'Transportation:', '$4.00', 'Demurrage:', '$3.00', 'Freight:', '$1.00', 'Total Amount:', '$225.50'], false);
+            ->assertSeeInOrder(['Vendor Invoice:', 'INV-77', 'Subtotal (items):', '$200.00', 'Duties:', '$10.00', 'Shipping Cost/Freight:', '$5.00',
+                'Taxes / Brokerage Fee:', '$2.50', 'Transportation/Fuel Cost:', '$4.00', 'Demurrage:', '$3.00', 'Freight:', '$1.00', 'Total Amount:', '$225.50'], false);
     }
 
     public function test_order_summary_without_fees_still_shows_the_breakdown(): void

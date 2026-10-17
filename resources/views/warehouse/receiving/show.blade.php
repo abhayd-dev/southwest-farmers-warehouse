@@ -276,7 +276,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label fw-semibold">Shipping Cost ($)</label>
+                                        <label class="form-label fw-semibold">Shipping Cost/Freight ($)</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i
                                                     class="mdi mdi-truck-delivery"></i></span>
@@ -295,7 +295,7 @@
                                 </div>
                                 <div class="row mb-4">
                                     <div class="col-md-3">
-                                        <label class="form-label fw-semibold">Transportation Cost ($)</label>
+                                        <label class="form-label fw-semibold">Transportation/Fuel Cost ($)</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-light"><i class="mdi mdi-truck"></i></span>
                                             <input type="number" name="transportation_cost" class="form-control cost-input" step="0.01"

@@ -279,13 +279,13 @@
                         @endif
                         @if ($po->shipping_cost > 0)
                             <tr>
-                                <td class="text-right"><strong>Shipping Cost:</strong></td>
+                                <td class="text-right"><strong>Shipping Cost/Freight:</strong></td>
                                 <td class="text-right">${{ number_format($po->shipping_cost, 2) }}</td>
                             </tr>
                         @endif
                         @if ($po->transportation_cost > 0)
                             <tr>
-                                <td class="text-right"><strong>Transportation Cost:</strong></td>
+                                <td class="text-right"><strong>Transportation/Fuel Cost:</strong></td>
                                 <td class="text-right">${{ number_format($po->transportation_cost, 2) }}</td>
                             </tr>
                         @endif

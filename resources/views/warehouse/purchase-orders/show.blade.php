@@ -292,9 +292,9 @@
                             // so the total is easy to check.
                             $summaryLines = [
                                 'Duties' => (float) $purchaseOrder->duties,
-                                'Shipping Cost' => (float) $purchaseOrder->shipping_cost,
+                                'Shipping Cost/Freight' => (float) $purchaseOrder->shipping_cost,
                                 'Taxes / Brokerage Fee' => (float) $purchaseOrder->taxes,
-                                'Transportation' => (float) $purchaseOrder->transportation_cost,
+                                'Transportation/Fuel Cost' => (float) $purchaseOrder->transportation_cost,
                                 'Demurrage' => (float) $purchaseOrder->demurrage,
                                 'Freight' => (float) $purchaseOrder->freight,
                             ];

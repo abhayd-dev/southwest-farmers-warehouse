@@ -114,7 +114,7 @@
                                         value="{{ old('duties', $purchaseOrder->duties) }}">
                                 </div>
                                 <div class="col-6 col-md-4">
-                                    <label class="form-label fw-semibold">Shipping ($)</label>
+                                    <label class="form-label fw-semibold">Shipping Cost/Freight ($)</label>
                                     <input type="number" name="shipping_cost" class="form-control correct-overhead" min="0" step="0.01"
                                         value="{{ old('shipping_cost', $purchaseOrder->shipping_cost) }}">
                                 </div>
@@ -124,7 +124,7 @@
                                         value="{{ old('taxes', $purchaseOrder->taxes) }}">
                                 </div>
                                 <div class="col-6 col-md-4">
-                                    <label class="form-label fw-semibold">Transportation ($)</label>
+                                    <label class="form-label fw-semibold">Transportation/Fuel Cost ($)</label>
                                     <input type="number" name="transportation_cost" class="form-control correct-overhead" min="0" step="0.01"
                                         value="{{ old('transportation_cost', $purchaseOrder->transportation_cost) }}">
                                 </div>
